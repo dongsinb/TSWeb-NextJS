@@ -1,0 +1,160 @@
+"use client";
+import React, { useEffect, useRef, useState } from "react";
+import styles from "./betrimex.module.css";
+
+const Betrimex = () => {
+  const [formData, setFormData] = useState({
+    lotCode: "",
+    supplier: "",
+    address: "",
+    phoneNumber: "",
+    coconutType: "",
+  });
+
+  const [confirmedSupplier, setConfirmedSupplier] = useState("");
+  const [confirmedCustomer, setConfirmedCustomer] = useState({});
+  const [count, setCount] = useState(0);
+
+  // Correct use of useEffect at the top level
+  useEffect(() => {
+    console.log("confirmedCustomer updated: ", confirmedCustomer);
+  }, [confirmedCustomer]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    console.log("Change detected");
+    console.log("Input name:", name);
+    console.log("Input value:", value);
+
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
+  };
+
+  const handleConfirmClick = () => {
+    setConfirmedSupplier(formData.supplier);
+    setConfirmedCustomer({ ...formData });
+    console.log("Mã Lô dừa:", formData.lotCode);
+    console.log("Nhà cung cấp:", formData.supplier);
+    console.log("Địa chỉ:", formData.address);
+    console.log("Số điện thoại:", formData.phoneNumber);
+    console.log("Loại dừa:", formData.coconutType);
+
+    // Reset form data after confirmation
+    setFormData({
+      lotCode: "",
+      supplier: "",
+      address: "",
+      phoneNumber: "",
+      coconutType: "",
+    });
+  };
+
+  const handleStopClick = () => {
+    // Increment count when the Stop button is clicked
+    console.log("count: ", count);
+    console.log("confirmedCustomer: ", confirmedCustomer);
+    const result = { ...confirmedCustomer, count };
+    console.log("result: ", result);
+  };
+
+  // Function to increment the count
+  const IncrementCount = () => {
+    setCount((prevCount) => prevCount + 1);
+  };
+
+  return (
+    <div>
+      <div id="dashboard-section" className={styles.section}>
+        <div className={styles.customerInfo}>
+          <div className={styles.label}>
+            <h2 className={styles.text}>Thông tin khách hàng</h2>
+          </div>
+          <div className={styles.inputData}>
+            <div className={styles.codeInput}>
+              <p className={styles.labelText}> Mã Lô dừa</p>
+              <input
+                type="text"
+                className={styles.inputText}
+                placeholder=""
+                name="lotCode"
+                value={formData.lotCode}
+                onChange={handleChange}
+              />
+            </div>
+            <div className={styles.codeInput}>
+              <p className={styles.labelText}> Nhà cung cấp</p>
+              <input
+                type="text"
+                className={styles.inputText}
+                placeholder=""
+                name="supplier"
+                value={formData.supplier}
+                onChange={handleChange}
+              />
+            </div>
+            <div className={styles.codeInput}>
+              <p className={styles.labelText}> Địa chỉ</p>
+              <input
+                type="text"
+                className={styles.inputText}
+                placeholder=""
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+              />
+            </div>
+            <div className={styles.codeInput}>
+              <p className={styles.labelText}> Số điện thoại</p>
+              <input
+                type="text"
+                className={styles.inputText}
+                placeholder=""
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+              />
+            </div>
+            <div className={styles.codeInput}>
+              <p className={styles.labelText}> Loại dừa</p>
+              <input
+                type="text"
+                className={styles.inputText}
+                placeholder=""
+                name="coconutType"
+                value={formData.coconutType}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+          <div className={styles.btn}>
+            <button className={styles.btnConfirm} onClick={handleConfirmClick}>
+              Xác nhận
+            </button>
+            <button className={styles.btnStop} onClick={handleStopClick}>
+              Dừng
+            </button>
+            <button
+              className={styles.btnCount}
+              onClick={() => IncrementCount()}
+            >
+              Test Increment count
+            </button>
+          </div>
+        </div>
+        <div className={styles.countingStatus}>
+          <div>
+            <h3 className={styles.label}>
+              Đang lấy dừa từ nhà cùng cấp: <span>{confirmedSupplier}</span>
+            </h3>
+          </div>
+          <h3 className={styles.label}>Số lượng</h3>
+          <div className={styles.counting}>{count}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Betrimex;

@@ -1,7 +1,10 @@
+import Betrimex from "@/components/betrimex/betrimex";
+
 export default function Home() {
   return (
     <main>
-      <div>TSTech</div>
+      <p>test</p>
+      <Betrimex></Betrimex>
     </main>
   );
 }

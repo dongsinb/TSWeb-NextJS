@@ -1,0 +1,84 @@
+.section {
+  display: flex;
+  /* flex-direction: column; */
+  border-bottom: 2px solid #ccc;
+}
+
+.label {
+  color: #fff;
+}
+
+.customerInfo {
+  flex: 1;
+  border-right: 2px solid #ccc;
+  margin-left: 10px;
+}
+
+.countingStatus {
+  flex: 1;
+  margin: 10px 10px;
+}
+
+.inputData {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.codeInput {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  margin: 5px 0px;
+}
+
+.labelText {
+  width: 150px;
+  color: #fff;
+}
+
+.inputText {
+  min-width: 300px;
+  max-width: 500px;
+}
+
+.btn {
+  display: flex;
+  flex-direction: row;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.btnConfirm {
+  margin: 0px 80px;
+  background-color: rgb(130, 238, 193);
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btnStop {
+  background-color: rgb(130, 238, 193);
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.counting {
+  margin-top: 10px;
+  border-radius: 50%;
+  width: 200px;
+  height: 200px;
+  border: 2px solid #ccc;
+  font-size: 40px;
+  color: #fff;
+
+  /* Center the content using Flexbox */
+  display: flex;
+  align-items: center; /* Vertical center alignment */
+  justify-content: center; /* Horizontal center alignment */
+}
