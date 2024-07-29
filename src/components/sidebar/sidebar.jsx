@@ -9,7 +9,7 @@ import Link from "next/link";
 // import { SidebarContext } from "@/app/context/SidebarContext";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
+import styles from "./sidebar.module.css";
 
 const sidebarItems = [
   {
@@ -37,7 +37,7 @@ const sidebarItems = [
 const Sidebar = () => {
   const router = useRouter();
   // const { isCollapsed, toggleSidebarcollapse } = useContext(SidebarContext);
-  
+
   // console.log("toggleSidebarcollapse: ", toggleSidebarcollapse)
   const [isCollapsed, setCollapse] = useState(true);
 
@@ -49,35 +49,41 @@ const Sidebar = () => {
     setCollapse(!isCollapsed); // Toggle the state
   };
   return (
-    <div className="sidebar__wrapper">
-      <button className="btn" onClick={() => handleToggleSidebarcollapse()}>
+    <div className={styles.sidebar__wrapper}>
+      <button
+        className={styles.btn}
+        onClick={() => handleToggleSidebarcollapse()}
+      >
         {isCollapsed ? <MdKeyboardArrowRight /> : <MdKeyboardArrowLeft />}
       </button>
-      <aside className="sidebar" data-collapse={isCollapsed}>
-        <div className="sidebar__top">
+      <aside
+        className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ""}`}
+        data-collapse={isCollapsed}
+      >
+        <div className={styles.sidebar__top}>
           <Image
             width={80}
             height={80}
-            className="sidebar__logo"
+            className={styles.sidebar__logo}
             src="/tstech.ico"
             alt="logo"
           />
-          <p className="sidebar__logo-name">TS Tech</p>
+          <p className={styles.sidebar__logo_name}>TS Tech</p>
         </div>
-        <ul className="sidebar__list">
+        <ul className={styles.sidebar__list}>
           {sidebarItems.map(({ name, href, icon: Icon }) => {
             return (
-              <li className="sidebar__item" key={name}>
+              <li className={styles.sidebar__item} key={name}>
                 <Link
-                  className={`sidebar__link ${
-                    router.pathname === href ? "sidebar__link--active" : ""
+                  className={`${styles.sidebar__link} ${
+                    router.pathname === href ? styles.sidebar__link_active : ""
                   }`}
                   href={href}
                 >
-                  <span className="sidebar__icon">
+                  <span className={styles.sidebar__icon}>
                     <Icon />
                   </span>
-                  <span className="sidebar__name">{name}</span>
+                  <span className={styles.sidebar__name}>{name}</span>
                 </Link>
               </li>
             );
