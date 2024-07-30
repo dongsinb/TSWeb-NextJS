@@ -7,9 +7,9 @@ import { FiMail } from "react-icons/fi";
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import Link from "next/link";
 // import { SidebarContext } from "@/app/context/SidebarContext";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from "./sidebar.module.css";
+import { usePathname } from "next/navigation";
 
 const sidebarItems = [
   {
@@ -35,15 +35,8 @@ const sidebarItems = [
 ];
 
 const Sidebar = () => {
-  const router = useRouter();
-  // const { isCollapsed, toggleSidebarcollapse } = useContext(SidebarContext);
-
-  // console.log("toggleSidebarcollapse: ", toggleSidebarcollapse)
   const [isCollapsed, setCollapse] = useState(true);
-
-  // Log the current state to the console
-  console.log("isCollapsed: ", isCollapsed);
-
+  const pathname = usePathname();
   // Toggle the collapse state of the sidebar
   const handleToggleSidebarcollapse = () => {
     setCollapse(!isCollapsed); // Toggle the state
@@ -76,7 +69,7 @@ const Sidebar = () => {
               <li className={styles.sidebar__item} key={name}>
                 <Link
                   className={`${styles.sidebar__link} ${
-                    router.pathname === href ? styles.sidebar__link_active : ""
+                    pathname === href && styles.sidebar__link_active
                   }`}
                   href={href}
                 >

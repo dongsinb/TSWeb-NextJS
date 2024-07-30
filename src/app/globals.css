@@ -1,9 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&display=swap");
 
 :root {
-  --color-bg: rgb(27, 29, 35);
-  --color-border: #e5e7eb;
-  --color-sidebar-item: #f3f4f6;
+  --bg-color: rgb(27, 29, 35);
+  --soft-bg-color: rgb(39, 44, 54);
+  --text: white;
 }
 
 * {
@@ -13,17 +13,18 @@
 }
 
 body {
-  background-color: rgb(39, 44, 54);
+  background-color: var(--soft-bg-color);
   font-family: "Roboto", sans-serif;
 }
 
-.layout {
+.container {
   display: flex;
   height: 100vh;
   position: relative;
   gap: 2rem;
 }
 
-.layout__main-content {
+.content {
   flex-grow: 1;
+  padding: 20px;
 }
