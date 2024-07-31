@@ -33,7 +33,7 @@ export default function RootLayout({
           <Sidebar />
           <div className="content">
             <HeaderTS></HeaderTS>
-            <main>{children}</main>
+            {children}
           </div>
         </div>
       </body>
