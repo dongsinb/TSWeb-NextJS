@@ -1,6 +1,10 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import styles from "./betrimex.module.css";
+import Button from "react-bootstrap/Button";
+// import { ToastContainer, toast } from "react-toastify";
+// import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 
 const Betrimex = () => {
   const [formData, setFormData] = useState({
@@ -49,6 +53,9 @@ const Betrimex = () => {
       phoneNumber: "",
       coconutType: "",
     });
+    setIsButtonDisabled((prev) => !prev);
+    setCount(0);
+    toast.success("Nhập thông tin nhà cung cấp thành công!");
   };
 
   const handleStopClick = () => {
@@ -57,12 +64,16 @@ const Betrimex = () => {
     console.log("confirmedCustomer: ", confirmedCustomer);
     const result = { ...confirmedCustomer, count };
     console.log("result: ", result);
+    setIsButtonDisabled(false);
   };
 
   // Function to increment the count
   const IncrementCount = () => {
     setCount((prevCount) => prevCount + 1);
   };
+
+  // Disable button after click start
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   return (
     <div>
@@ -129,10 +140,18 @@ const Betrimex = () => {
             </div>
           </div>
           <div className={styles.btn}>
-            <button className={styles.btnConfirm} onClick={handleConfirmClick}>
+            <button
+              className={styles.btnConfirm}
+              disabled={isButtonDisabled}
+              onClick={handleConfirmClick}
+            >
               Xác nhận
             </button>
-            <button className={styles.btnStop} onClick={handleStopClick}>
+            <button
+              className={styles.btnStop}
+              disabled={!isButtonDisabled}
+              onClick={handleStopClick}
+            >
               Dừng
             </button>
             <button
@@ -141,6 +160,7 @@ const Betrimex = () => {
             >
               Test Increment count
             </button>
+            <Button variant="primary">Primary</Button>
           </div>
         </div>
         <div className={styles.countingStatus}>

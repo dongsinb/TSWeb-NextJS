@@ -13,12 +13,17 @@
   box-sizing: border-box;
 }
 
+ol,
+ul {
+  padding-left: 0rem !important;
+}
+
 body {
-  background-color: var(--soft-bg-color);
+  background-color: var(--soft-bg-color) !important;
   font-family: "Roboto", sans-serif;
 }
 
-.container {
+.containerTS {
   display: flex;
   min-height: 100vh;
   /* position: relative; */
