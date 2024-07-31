@@ -3,7 +3,8 @@
 :root {
   --bg-color: rgb(27, 29, 35);
   --soft-bg-color: rgb(39, 44, 54);
-  --text: white;
+  --text-color: white;
+  --soft-text-color: #b7bac1;
 }
 
 * {
@@ -19,12 +20,15 @@ body {
 
 .container {
   display: flex;
-  height: 100vh;
-  position: relative;
-  gap: 2rem;
+  min-height: 100vh;
+  /* position: relative; */
+  gap: 10px;
 }
 
 .content {
+  display: flex;
+  flex-direction: column;
   flex-grow: 1;
   padding: 20px;
+  gap: 10px;
 }

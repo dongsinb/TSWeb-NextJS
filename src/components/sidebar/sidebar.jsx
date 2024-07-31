@@ -61,7 +61,7 @@ const Sidebar = () => {
             src="/tstech.ico"
             alt="logo"
           />
-          <p className={styles.sidebar__logo_name}>TS Tech</p>
+          <h1 className={styles.sidebar__logo_name}>TS Tech</h1>
         </div>
         <ul className={styles.sidebar__list}>
           {sidebarItems.map(({ name, href, icon: Icon }) => {
