@@ -30,7 +30,7 @@ const UserDropdown = () => {
           <Link href="/settings" className={styles.dropdownItem}>
             Settings
           </Link>
-          <Link href="/logout" className={styles.dropdownItem}>
+          <Link href="/login" className={styles.dropdownItem}>
             Logout
           </Link>
         </div>
