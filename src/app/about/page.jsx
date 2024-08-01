@@ -9,7 +9,7 @@ function AboutPage() {
     {
       address: "Bình Dương",
       coconutType: "Loại 1",
-      count: 10,
+      quantity: 10,
       lotCode: "D10",
       phoneNumber: "0123456789",
       supplier: "Betrimex",
@@ -17,7 +17,7 @@ function AboutPage() {
     {
       address: "Đồng Nai",
       coconutType: "Loại 2",
-      count: 90,
+      quantity: 90,
       lotCode: "D90",
       phoneNumber: "012345999999",
       supplier: "Olam",

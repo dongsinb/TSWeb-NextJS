@@ -17,7 +17,7 @@ const Betrimex = () => {
 
   const [confirmedSupplier, setConfirmedSupplier] = useState("");
   const [confirmedCustomer, setConfirmedCustomer] = useState({});
-  const [count, setCount] = useState(0);
+  const [quantity, setQuantity] = useState(0);
 
   // Correct use of useEffect at the top level
   useEffect(() => {
@@ -37,13 +37,29 @@ const Betrimex = () => {
   };
 
   const handleConfirmClick = () => {
+    if (!formData.supplier) {
+      toast.error("Chưa nhập tên nhà cung cấp!");
+      return;
+    }
+    if (!formData.lotCode) {
+      toast.error("Chưa nhập loại dừa!");
+      return;
+    }
+    if (!formData.lotCode) {
+      toast.error("Chưa nhập mã lô dừa!");
+      return;
+    }
+    if (!formData.phoneNumber) {
+      toast.error("Chưa nhập số điện thoại!");
+      return;
+    }
     setConfirmedSupplier(formData.supplier);
     setConfirmedCustomer({ ...formData });
     console.log("Mã Lô dừa:", formData.lotCode);
     console.log("Nhà cung cấp:", formData.supplier);
     console.log("Địa chỉ:", formData.address);
     console.log("Số điện thoại:", formData.phoneNumber);
-    console.log("Loại dừa:", formData.coconutType);
+    console.log("Loại dừa:", formData.lotCode);
 
     // Reset form data after confirmation
     setFormData({
@@ -54,22 +70,22 @@ const Betrimex = () => {
       coconutType: "",
     });
     setIsButtonDisabled((prev) => !prev);
-    setCount(0);
+    setQuantity(0);
     toast.success("Nhập thông tin nhà cung cấp thành công!");
   };
 
   const handleStopClick = () => {
     // Increment count when the Stop button is clicked
-    console.log("count: ", count);
+    console.log("quantity: ", quantity);
     console.log("confirmedCustomer: ", confirmedCustomer);
-    const result = { ...confirmedCustomer, count };
+    const result = { ...confirmedCustomer, quantity };
     console.log("result: ", result);
     setIsButtonDisabled(false);
   };
 
   // Function to increment the count
-  const IncrementCount = () => {
-    setCount((prevCount) => prevCount + 1);
+  const IncrementQuantity = () => {
+    setQuantity((prevQuantity) => prevQuantity + 1);
   };
 
   // Disable button after click start
@@ -156,9 +172,9 @@ const Betrimex = () => {
             </button>
             <button
               className={styles.btnCount}
-              onClick={() => IncrementCount()}
+              onClick={() => IncrementQuantity()}
             >
-              Test Increment count
+              Test Increment Quantity
             </button>
             <Button variant="primary">Primary</Button>
           </div>
@@ -170,7 +186,7 @@ const Betrimex = () => {
             </h3>
           </div>
           <h3 className={styles.label}>Số lượng</h3>
-          <div className={styles.counting}>{count}</div>
+          <div className={styles.counting}>{quantity}</div>
         </div>
       </div>
     </div>

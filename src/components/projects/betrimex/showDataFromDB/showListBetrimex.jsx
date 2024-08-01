@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Table, Button } from "react-bootstrap";
 import styles from "./showListBetrimex.module.css";
-import CreateModalEdit from "@/components/projects/betrimex/showDataFromDB/createModalEdit";
+import CreateModalEdit from "@/components/projects/betrimex/UpdateData/createModalEdit";
 
 function ShowListBetrimex({ data }) {
   console.log("data from DB: ", data);
+  const [itemUpdate, setItemUpdate] = useState(null);
   const [showModalCreate, setShowModalCreate] = useState(false);
   return (
     <div className={styles.table_layout}>
@@ -31,11 +32,12 @@ function ShowListBetrimex({ data }) {
                 <td>{item.address}</td>
                 <td>{item.phoneNumber}</td>
                 <td>{item.coconutType}</td>
-                <td>{item.count}</td>
+                <td>{item.quantity}</td>
                 <td>
                   <Button
                     onClick={() => {
                       setShowModalCreate(true);
+                      setItemUpdate(item);
                     }}
                   >
                     Edit
@@ -49,6 +51,7 @@ function ShowListBetrimex({ data }) {
       <CreateModalEdit
         showModalEdit={showModalCreate}
         setShowModalEdit={setShowModalCreate}
+        itemUpdate={itemUpdate}
       />
     </div>
   );
