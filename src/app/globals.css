@@ -21,11 +21,14 @@ ul {
 body {
   background-color: var(--soft-bg-color) !important;
   font-family: "Roboto", sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .containerTS {
   display: flex;
-  min-height: 100vh;
+  flex: 1;
   /* position: relative; */
   gap: 10px;
 }
@@ -35,6 +38,7 @@ body {
   flex-direction: column;
   flex-grow: 1;
   padding: 20px;
+  background-color: var(--soft-bg-color);
   gap: 10px;
-  height: 100vh;
+  overflow-y: auto; /* Enables scrolling if content overflows */
 }

@@ -13,6 +13,7 @@ function ShowListBetrimex({ data }) {
         <thead>
           <tr>
             <th>#</th>
+            <th>Time</th>
             <th>Supplier</th>
             <th>Lot code</th>
             <th>Address</th>
@@ -27,6 +28,7 @@ function ShowListBetrimex({ data }) {
             return (
               <tr className={styles.tableRow}>
                 <td>{i}</td>
+                <td>{item.time}</td>
                 <td>{item.supplier}</td>
                 <td>{item.lotCode}</td>
                 <td>{item.address}</td>

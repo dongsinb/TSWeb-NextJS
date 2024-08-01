@@ -4,6 +4,7 @@ import { AiOutlineHome } from "react-icons/ai";
 import { BsPeople } from "react-icons/bs";
 import { TiContacts } from "react-icons/ti";
 import { FiMail } from "react-icons/fi";
+import { TiEye } from "react-icons/ti";
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import Link from "next/link";
 // import { SidebarContext } from "@/app/context/SidebarContext";
@@ -31,6 +32,11 @@ const sidebarItems = [
     name: "Contact",
     href: "/contact",
     icon: TiContacts,
+  },
+  {
+    name: "AFC",
+    href: "/afc",
+    icon: TiEye,
   },
 ];
 

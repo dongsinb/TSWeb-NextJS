@@ -75,10 +75,10 @@ const Betrimex = () => {
   };
 
   const handleStopClick = () => {
-    // Increment count when the Stop button is clicked
+    const time = new Date().toLocaleString();
     console.log("quantity: ", quantity);
     console.log("confirmedCustomer: ", confirmedCustomer);
-    const result = { ...confirmedCustomer, quantity };
+    const result = { ...confirmedCustomer, quantity, time };
     console.log("result: ", result);
     setIsButtonDisabled(false);
   };

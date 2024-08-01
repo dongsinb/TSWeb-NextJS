@@ -13,6 +13,7 @@ function AboutPage() {
       lotCode: "D10",
       phoneNumber: "0123456789",
       supplier: "Betrimex",
+      time: "11:39:21 1/8/2024",
     },
     {
       address: "Đồng Nai",
@@ -21,6 +22,7 @@ function AboutPage() {
       lotCode: "D90",
       phoneNumber: "012345999999",
       supplier: "Olam",
+      time: "11:43:21 1/8/2024",
     },
   ];
   console.log("data: ", data);
