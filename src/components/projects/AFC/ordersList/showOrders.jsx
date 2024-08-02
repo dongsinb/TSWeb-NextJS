@@ -2,18 +2,22 @@
 import React, { useState } from "react";
 import styles from "./showOrders.module.css";
 import { Table, Button } from "react-bootstrap";
+import { useRouter } from "next/navigation";
 
 function ShowOrders(props) {
   const { datas } = props;
+  const router = useRouter();
   const [expandedRow, setExpandedRow] = useState(null);
 
   const toggleRow = (index) => {
     setExpandedRow(expandedRow === index ? null : index);
   };
 
-  const handleCallOrder = (_id) => {
-    alert(`Called for item with _id: ${_id}`);
-    // Add your logic here to handle the action
+  const handleCallOrder = (data) => {
+    alert(`Called for item with _id: ${data._id}`);
+    console.log("dataSend: ", data);
+    localStorage.setItem("orderData", JSON.stringify(data));
+    router.push("/dashboard/countingAFC");
   };
 
   return (
@@ -78,7 +82,7 @@ function ShowOrders(props) {
                 )}
               </td>
               <td>
-                <Button onClick={() => handleCallOrder(data._id)}>
+                <Button onClick={() => handleCallOrder(data)}>
                   Gọi vào kho
                 </Button>
               </td>

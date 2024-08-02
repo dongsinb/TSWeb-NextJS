@@ -29,8 +29,8 @@ const sidebarItems = [
     icon: FiMail,
   },
   {
-    name: "Contact",
-    href: "/dashboard/contact",
+    name: "Coungting AFC",
+    href: "/dashboard/countingAFC",
     icon: TiContacts,
   },
   {
