@@ -15,27 +15,27 @@ import { usePathname } from "next/navigation";
 const sidebarItems = [
   {
     name: "Home",
-    href: "/",
+    href: "/dashboard",
     icon: AiOutlineHome,
   },
   {
     name: "About",
-    href: "/about",
+    href: "/dashboard/about",
     icon: BsPeople,
   },
   {
     name: "Mails",
-    href: "/mails",
+    href: "/dashboard/mails",
     icon: FiMail,
   },
   {
     name: "Contact",
-    href: "/contact",
+    href: "/dashboard/contact",
     icon: TiContacts,
   },
   {
     name: "AFC",
-    href: "/afc",
+    href: "/dashboard/afc",
     icon: TiEye,
   },
 ];

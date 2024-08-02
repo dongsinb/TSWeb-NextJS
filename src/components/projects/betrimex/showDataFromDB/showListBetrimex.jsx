@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Table, Button } from "react-bootstrap";
 import styles from "./showListBetrimex.module.css";
-import CreateModalEdit from "@/components/projects/betrimex/UpdateData/createModalEdit";
+import CreateModalEdit from "../../betrimex/UpdateData/createModalEdit";
 
 function ShowListBetrimex({ data }) {
   console.log("data from DB: ", data);

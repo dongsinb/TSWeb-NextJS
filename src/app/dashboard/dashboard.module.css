@@ -1,0 +1,22 @@
+.container {
+  display: flex;
+}
+
+.page {
+  display: flex;
+  min-height: 100vh;
+  flex: 1;
+  /* position: relative; */
+  gap: 10px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  padding: 20px;
+  gap: 10px;
+  height: 100vh;
+  background-color: var(--soft-bg-color);
+  overflow-y: auto; /* Enables scrolling if content overflows */
+}

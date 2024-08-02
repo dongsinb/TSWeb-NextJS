@@ -3,7 +3,7 @@ import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import styles from "./afc.module.css";
-import ShowOrders from "@/components/projects/AFC/ordersList/showOrders";
+import ShowOrders from "../../../components/projects/AFC/ordersList/showOrders";
 
 function AFCPage(props) {
   const datas = [

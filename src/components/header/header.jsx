@@ -1,6 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
-import UserDropdown from "@/components/userDropdown/userDropdown";
+import UserDropdown from "../../components/userDropdown/userDropdown";
 import styles from "./header.module.css";
 
 const HeaderTS = () => {

@@ -25,20 +25,3 @@ body {
   display: flex;
   flex-direction: column;
 }
-
-.containerTS {
-  display: flex;
-  flex: 1;
-  /* position: relative; */
-  gap: 10px;
-}
-
-.content {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  padding: 20px;
-  background-color: var(--soft-bg-color);
-  gap: 10px;
-  overflow-y: auto; /* Enables scrolling if content overflows */
-}

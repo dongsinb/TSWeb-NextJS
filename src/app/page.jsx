@@ -1,4 +1,4 @@
-import Betrimex from "@/components/projects/betrimex/MainUI/betrimex";
+import Betrimex from "../components/projects/betrimex/MainUI/betrimex";
 
 export default function Home() {
   return (

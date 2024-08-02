@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import ShowListBetrimex from "@/components/projects/betrimex/showDataFromDB/showListBetrimex";
+import ShowListBetrimex from "../../../components/projects/betrimex/showDataFromDB/showListBetrimex";
 import styles from "./about.module.css";
 
 function AboutPage() {
