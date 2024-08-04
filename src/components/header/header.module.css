@@ -13,3 +13,16 @@
   font-weight: bold;
   text-transform: capitalize;
 }
+
+.user {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--soft-text-color);
+}
+
+.userImage {
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+}

@@ -22,7 +22,7 @@ const Layout = ({ children }) => {
       <div className={styles.page}>
         <Sidebar />
         <div className={styles.content}>
-          <HeaderTS></HeaderTS>
+          <HeaderTS user="admin"></HeaderTS>
           {children}
         </div>
       </div>

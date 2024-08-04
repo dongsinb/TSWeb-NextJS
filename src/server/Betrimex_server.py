@@ -1,9 +1,10 @@
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
 
 app = Flask(__name__)
+CORS(app)
 
 class DBManagerment():
     def __init__(self, uri, dbname, collectionname) -> None:
@@ -29,10 +30,14 @@ dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09
 # Members API Route
 @app.route("/returnData")
 def returnData():
-    try:
-        return jsonify(dbmanager.get_all_documents())
-    except Exception as e:
-        return jsonify({"error": str(e)})
+    auth = request.authorization
+    print(auth.username, auth.password)
+    users = dbmanager.get_all_documents()[0]
+    print(users)
+    if (auth.username == users['username']) and (auth.password == users['password']):
+        return jsonify({"status": "ok"})
+    else:
+        return jsonify({"error": "Unauthorized"}), 401
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
