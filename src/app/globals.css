@@ -5,6 +5,10 @@
   --soft-bg-color: rgb(39, 44, 54);
   --text-color: white;
   --soft-text-color: #b7bac1;
+  --positive-button-color: rgb(21, 143, 143);
+  --highlight-positive-button-color: rgb(24, 160, 160);
+  --negative-button-color: rgb(85, 12, 42);
+  --highlight-negative-button-color: rgb(107, 16, 54);
 }
 
 * {

@@ -7,37 +7,54 @@ app = Flask(__name__)
 CORS(app)
 
 class DBManagerment():
-    def __init__(self, uri, dbname, collectionname) -> None:
+    def __init__(self, uri, dbname) -> None:
         client = MongoClient(uri)
         dbs = client.list_database_names()
         print(dbs)
         try:
             self.db = client[dbname]
-            self.collection = self.db[collectionname]
+            self.userData_collections = self.db["users"]
+            self.infoData_collections = self.db["data"]
         except Exception as e:
             print(e)
 
-    def get_all_documents(self):
+    def get_userData(self):
         docs = []
-        cursor = self.collection.find({})
+        cursor = self.userData_collections.find({})
         for document in cursor:
             document['_id'] = str(document['_id'])  # convert object_id from mongodb to string, then parse to json to send client
             docs.append(document)
         return docs
 
-dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09slu1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", dbname="Betrimex", collectionname="users")
+    def get_infoData(self):
+        docs = []
+        cursor = self.infoData_collections.find({})
+        for document in cursor:
+            document['_id'] = str(document['_id'])  # convert object_id from mongodb to string, then parse to json to send client
+            docs.append(document)
+        return docs
 
-# Members API Route
-@app.route("/returnData")
-def returnData():
+dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09slu1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", dbname="Betrimex")
+
+# Check user login data
+@app.route("/checkLogin")
+def checkLogin():
     auth = request.authorization
     print(auth.username, auth.password)
-    users = dbmanager.get_all_documents()[0]
+    users = dbmanager.get_userData()[0]
     print(users)
     if (auth.username == users['username']) and (auth.password == users['password']):
         return jsonify({"status": "ok"})
     else:
         return jsonify({"error": "Unauthorized"}), 401
+
+# Get data
+@app.route("/getData")
+def getData():
+    data = dbmanager.get_infoData()
+    print(data)
+    return jsonify(data)
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

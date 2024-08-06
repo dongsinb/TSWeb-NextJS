@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import { useRouter } from "next/navigation";
+import axios from "axios";
 import styles from "./login.module.css";
 import { toast } from "react-toastify";
 
@@ -12,15 +12,15 @@ const Login = () => {
   const router = useRouter();
 
   const handleBack = () => {
-    router.push('/');
-  }
+    router.push("/");
+  };
 
   const handleLogin = async () => {
-    try{
+    try {
       // event.preventDefault();
-      console.log(username)
-      console.log(password)
-      const response = await axios.get("http://localhost:5000/returnData", {
+      console.log(username);
+      console.log(password);
+      const response = await axios.get("http://localhost:5000/checkLogin", {
         auth: {
           username,
           password,
@@ -29,10 +29,10 @@ const Login = () => {
       console.log(response); // Debug log to check response
       if (response.status === 200) {
         toast("Login successfull");
-        router.push('/dashboard');
+        router.push("/dashboard");
       }
     } catch (error) {
-      alert('Login failed. Please check your username or password.');
+      alert("Login failed. Please check your username or password.");
     }
   };
 
@@ -54,8 +54,12 @@ const Login = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button onClick={handleLogin} className={styles.login}>Login</button>
-        <button onClick={handleBack} className={styles.back}>Back</button>
+        <button onClick={handleLogin} className={styles.login}>
+          Login
+        </button>
+        <button onClick={handleBack} className={styles.back}>
+          Back
+        </button>
       </div>
     </div>
   );

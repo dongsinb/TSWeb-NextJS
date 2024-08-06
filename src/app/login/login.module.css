@@ -34,7 +34,7 @@
 
 .login {
   width: 100%;
-  background-color: rgb(21, 143, 143);
+  background-color: var(--positive-button-color);
   color: var(--text-color);
   border-radius: 5px;
   border: none;
@@ -42,12 +42,20 @@
   cursor: pointer;
 }
 
+.login:hover {
+  background-color: var(--highlight-positive-button-color);
+}
+
 .back {
   width: 100%;
-  background-color: rgb(80, 18, 18);
+  background-color: var(--negative-button-color);
   color: var(--text-color);
   border-radius: 5px;
   border: none;
   padding: 10px;
   cursor: pointer;
+}
+
+.back:hover {
+  background-color: var(--highlight-negative-button-color);
 }

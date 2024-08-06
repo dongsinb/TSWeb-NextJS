@@ -19,8 +19,8 @@ const sidebarItems = [
     icon: AiOutlineHome,
   },
   {
-    name: "About",
-    href: "/dashboard/about",
+    name: "Collections",
+    href: "/dashboard/collections",
     icon: BsPeople,
   },
   {
