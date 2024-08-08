@@ -1,0 +1,23 @@
+.container {
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.button {
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  border: none;
+  background-color: var(--positive-button-color);
+  color: var(--text-color);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  color: var(--soft-text-color);
+}
+
+.button:hover {
+  background-color: var(--highlight-positive-button-color);
+}

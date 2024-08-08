@@ -1,3 +1,41 @@
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.top {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 20px;
+  align-items: center;
+}
+
 .label {
   color: var(--text-color);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--bg-color);
+  padding: 10px;
+  border-radius: 10px;
+  width: max-content;
+}
+
+.iconSearch {
+  color: var(--soft-text-color);
+}
+
+.input {
+  background-color: transparent;
+  border: none;
+  color: var(--text-color);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--soft-text-color);
 }

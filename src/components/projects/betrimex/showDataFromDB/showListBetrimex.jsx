@@ -4,7 +4,6 @@ import styles from "./showListBetrimex.module.css";
 import CreateModalEdit from "../../betrimex/UpdateData/createModalEdit";
 
 function ShowListBetrimex({ data }) {
-  console.log("data from DB: ", data);
   const [itemUpdate, setItemUpdate] = useState(null);
   const [showModalCreate, setShowModalCreate] = useState(false);
   return (

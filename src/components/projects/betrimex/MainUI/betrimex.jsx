@@ -41,7 +41,7 @@ const Betrimex = () => {
       toast.error("Chưa nhập tên nhà cung cấp!");
       return;
     }
-    if (!formData.lotCode) {
+    if (!formData.coconutType) {
       toast.error("Chưa nhập loại dừa!");
       return;
     }
@@ -59,7 +59,7 @@ const Betrimex = () => {
     console.log("Nhà cung cấp:", formData.supplier);
     console.log("Địa chỉ:", formData.address);
     console.log("Số điện thoại:", formData.phoneNumber);
-    console.log("Loại dừa:", formData.lotCode);
+    console.log("Loại dừa:", formData.coconutType);
 
     // Reset form data after confirmation
     setFormData({

@@ -26,9 +26,12 @@ class DBManagerment():
             docs.append(document)
         return docs
 
-    def get_infoData(self):
+    def get_infoData(self, query):
         docs = []
-        cursor = self.infoData_collections.find({})
+        if not query:
+            cursor = self.infoData_collections.find()
+        else:
+            cursor = self.infoData_collections.find(query)
         for document in cursor:
             document['_id'] = str(document['_id'])  # convert object_id from mongodb to string, then parse to json to send client
             docs.append(document)
@@ -49,10 +52,11 @@ def checkLogin():
         return jsonify({"error": "Unauthorized"}), 401
 
 # Get data
-@app.route("/getData")
+@app.route("/getData", methods=["POST"])
 def getData():
-    data = dbmanager.get_infoData()
-    print(data)
+    if request.method == 'POST':
+        query = request.json
+    data = dbmanager.get_infoData(query)
     return jsonify(data)
 
 
