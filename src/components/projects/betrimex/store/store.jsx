@@ -1,12 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { MdSearch } from "react-icons/md";
-import Pagination from "./../../../components/pagination/pagination";
-import ShowListBetrimex from "../../../components/projects/betrimex/showDataFromDB/showListBetrimex";
-import styles from "./collections.module.css";
+import Pagination from "../../../pagination/pagination";
+import ShowListBetrimex from "../showDataFromDB/showListBetrimex";
+import styles from "./store.module.css";
 
-function CollectionsPage() {
-  const [q, setQuery] = useState({});
+const BetrimexStore = () => {
+  const [query, setQuery] = useState({});
+  const [text, setText] = useState("");
   const [data, setData] = useState([
     {
       address: "",
@@ -24,19 +25,25 @@ function CollectionsPage() {
       const res = await fetch("http://localhost:5000/getData", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(q),
+        body: JSON.stringify(query),
       });
       const result = await res.json();
       setData(result);
     };
     fetchData();
-  }, [q]);
+  }, [query]);
 
   const handleSearch = (e) => {
-    if (e.target.value) {
-      setQuery({ supplier: e.target.value });
-    } else {
-      setQuery({});
+    setText(e.target.value);
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      if (text) {
+        setQuery({ supplier: text });
+      } else {
+        setQuery({});
+      }
     }
   };
 
@@ -51,6 +58,7 @@ function CollectionsPage() {
             placeholder={"Search order ..."}
             className={styles.input}
             onChange={handleSearch}
+            onKeyDown={handleKeyDown} // type text to search box and enter -> start search
           />
         </div>
       </div>
@@ -58,6 +66,6 @@ function CollectionsPage() {
       <Pagination />
     </div>
   );
-}
+};
 
-export default CollectionsPage;
+export default BetrimexStore;

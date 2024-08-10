@@ -17,7 +17,7 @@ function ShowOrders(props) {
     alert(`Called for item with _id: ${data._id}`);
     console.log("dataSend: ", data);
     localStorage.setItem("orderData", JSON.stringify(data));
-    router.push("/dashboard/countingAFC");
+    router.push("/home/countingAFC");
   };
 
   return (

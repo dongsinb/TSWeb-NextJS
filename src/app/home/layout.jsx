@@ -2,7 +2,7 @@ import HeaderTS from "../../components/header/header";
 import Sidebar from "../../components/sidebar/sidebar";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
-import styles from "./dashboard.module.css";
+import styles from "./home.module.css";
 
 const Layout = ({ children }) => {
   return (

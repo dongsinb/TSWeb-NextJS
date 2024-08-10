@@ -1,12 +1,12 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import styles from "./betrimex.module.css";
+import styles from "./home.module.css";
 import Button from "react-bootstrap/Button";
 // import { ToastContainer, toast } from "react-toastify";
 // import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
 
-const Betrimex = () => {
+const BetrimexHome = () => {
   const [formData, setFormData] = useState({
     lotCode: "",
     supplier: "",
@@ -93,7 +93,7 @@ const Betrimex = () => {
 
   return (
     <div>
-      <div id="dashboard-section" className={styles.section}>
+      <div className={styles.section}>
         <div className={styles.customerInfo}>
           <div className={styles.label}>
             <h2 className={styles.text}>Thông tin khách hàng</h2>
@@ -193,4 +193,4 @@ const Betrimex = () => {
   );
 };
 
-export default Betrimex;
+export default BetrimexHome;

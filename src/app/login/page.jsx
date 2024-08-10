@@ -29,7 +29,7 @@ const Login = () => {
       console.log(response); // Debug log to check response
       if (response.status === 200) {
         toast("Login successfull");
-        router.push("/dashboard");
+        router.push("/home");
       }
     } catch (error) {
       alert("Login failed. Please check your username or password.");

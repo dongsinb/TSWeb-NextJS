@@ -1,13 +1,12 @@
 "use client";
 import Image from "next/image";
 import { AiOutlineHome } from "react-icons/ai";
-import { BsPeople } from "react-icons/bs";
+import { FaRegWindowRestore } from "react-icons/fa6";
 import { TiContacts } from "react-icons/ti";
-import { FiMail } from "react-icons/fi";
+import { IoMdInformationCircleOutline } from "react-icons/io";
 import { TiEye } from "react-icons/ti";
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import Link from "next/link";
-// import { SidebarContext } from "@/app/context/SidebarContext";
 import { useState } from "react";
 import styles from "./sidebar.module.css";
 import { usePathname } from "next/navigation";
@@ -15,27 +14,27 @@ import { usePathname } from "next/navigation";
 const sidebarItems = [
   {
     name: "Home",
-    href: "/dashboard",
+    href: "/home",
     icon: AiOutlineHome,
   },
   {
-    name: "Collections",
-    href: "/dashboard/collections",
-    icon: BsPeople,
+    name: "Store",
+    href: "/home/store",
+    icon: FaRegWindowRestore,
   },
   {
-    name: "Mails",
-    href: "/dashboard/mails",
-    icon: FiMail,
+    name: "Information",
+    href: "/home/info",
+    icon: IoMdInformationCircleOutline,
   },
   {
     name: "Coungting AFC",
-    href: "/dashboard/countingAFC",
+    href: "/home/countingAFC",
     icon: TiContacts,
   },
   {
     name: "AFC",
-    href: "/dashboard/afc",
+    href: "/home/afc",
     icon: TiEye,
   },
 ];
