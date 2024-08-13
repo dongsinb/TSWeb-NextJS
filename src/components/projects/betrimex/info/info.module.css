@@ -1,4 +1,10 @@
 .container {
   display: flex;
   color: var(--text-color);
+  flex-direction: column;
+}
+
+.address {
+  display: flex;
+  flex-direction: column;
 }

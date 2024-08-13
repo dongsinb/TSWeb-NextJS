@@ -63,7 +63,7 @@ const BetrimexStore = () => {
         </div>
       </div>
       <ShowListBetrimex data={data} />
-      <Pagination />
+      {/* <Pagination /> */}
     </div>
   );
 };
