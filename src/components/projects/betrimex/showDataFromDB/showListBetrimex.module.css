@@ -5,3 +5,8 @@
 .tableRow {
   vertical-align: middle;
 }
+
+.showPagination {
+  display: flex;
+  justify-content: center;
+}

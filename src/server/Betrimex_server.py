@@ -44,6 +44,7 @@ dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09
 def checkLogin():
     auth = request.authorization
     print(auth.username, auth.password)
+    print(dbmanager.get_userData())
     users = dbmanager.get_userData()[0]
     print(users)
     if (auth.username == users['username']) and (auth.password == users['password']):

@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import styles from "./showOrders.module.css";
 import { Table, Button } from "react-bootstrap";
 import { useRouter } from "next/navigation";
+import AdvancedPagination from "../../../pagination/pagination";
 
 function ShowOrders(props) {
   const { datas } = props;
@@ -20,6 +21,20 @@ function ShowOrders(props) {
     router.push("/home/countingAFC");
   };
 
+  //Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // Chỉ hiển thị 1 item mỗi trang
+
+  // Lấy index của item đầu tiên và cuối cùng trong trang hiện tại
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+  // Lấy dữ liệu của trang hiện tại
+  const currentItems = datas.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Thay đổi trang khi click vào pagination
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   return (
     <div className={styles.table_layout}>
       <Table striped bordered hover>
@@ -34,15 +49,15 @@ function ShowOrders(props) {
           </tr>
         </thead>
         <tbody>
-          {datas.map((data, i) => (
+          {currentItems.map((data, i) => (
             <tr key={data._id} className={styles.tableRow}>
-              <td>{i + 1}</td>
+              <td>{indexOfFirstItem + i + 1}</td>
               <td>{data.date}</td>
               <td>{data.license_plate}</td>
               <td>{data.status}</td>
               <td>
                 <Button onClick={() => toggleRow(i)}>
-                  {expandedRow === i ? "Hide Details" : "Show Details"}
+                  {expandedRow === i ? "Ẩn" : "Hiển thị chi tiết"}
                 </Button>
                 {expandedRow === i && (
                   <div className={styles.details}>
@@ -90,6 +105,14 @@ function ShowOrders(props) {
           ))}
         </tbody>
       </Table>
+      <div className={styles.showPagination}>
+        <AdvancedPagination
+          totalItems={datas.length}
+          itemsPerPage={itemsPerPage}
+          currentPage={currentPage}
+          paginate={paginate}
+        />
+      </div>
     </div>
   );
 }

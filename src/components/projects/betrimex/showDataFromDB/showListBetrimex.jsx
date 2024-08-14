@@ -8,7 +8,7 @@ function ShowListBetrimex({ data }) {
   const [itemUpdate, setItemUpdate] = useState(null);
   const [showModalCreate, setShowModalCreate] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // Chỉ hiển thị 1 item mỗi trang
+  const itemsPerPage = 5; // Chỉ hiển thị 1 item mỗi trang
 
   // Lấy index của item đầu tiên và cuối cùng trong trang hiện tại
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -25,14 +25,14 @@ function ShowListBetrimex({ data }) {
         <thead>
           <tr>
             <th>#</th>
-            <th>Time</th>
-            <th>Supplier</th>
-            <th>Lot code</th>
-            <th>Address</th>
-            <th>Phone Number</th>
-            <th>Type</th>
-            <th>Quantity</th>
-            <th>Action</th>
+            <th>Thời gian</th>
+            <th>Nhà cung cấp</th>
+            <th>Mã lô</th>
+            <th>Địa chỉ</th>
+            <th>Số điện thoại</th>
+            <th>Loại dừa</th>
+            <th>Số lượng</th>
+            <th>Hành động</th>
           </tr>
         </thead>
         <tbody>
@@ -54,7 +54,7 @@ function ShowListBetrimex({ data }) {
                       setItemUpdate(item);
                     }}
                   >
-                    Edit
+                    Chỉnh sửa
                   </Button>
                 </td>
               </tr>
@@ -62,12 +62,14 @@ function ShowListBetrimex({ data }) {
           })}
         </tbody>
       </Table>
-      <AdvancedPagination
-        totalItems={data.length}
-        itemsPerPage={itemsPerPage}
-        currentPage={currentPage}
-        paginate={paginate}
-      />
+      <div className={styles.showPagination}>
+        <AdvancedPagination
+          totalItems={data.length}
+          itemsPerPage={itemsPerPage}
+          currentPage={currentPage}
+          paginate={paginate}
+        />
+      </div>
       <CreateModalEdit
         showModalEdit={showModalCreate}
         setShowModalEdit={setShowModalCreate}

@@ -176,7 +176,6 @@ const BetrimexHome = () => {
             >
               Test Increment Quantity
             </button>
-            <Button variant="primary">Primary</Button>
           </div>
         </div>
         <div className={styles.countingStatus}>
