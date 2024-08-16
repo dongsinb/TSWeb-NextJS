@@ -1,0 +1,11 @@
+.ModalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Thêm khoảng cách giữa các nút */
+}
+
+.showOrders {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Thêm khoảng cách giữa các nút */
+}

@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
@@ -13,8 +14,11 @@ function AFCPage(props) {
       license_plate: "80B-33333",
       status: "Waitting",
       orderslist: {
-        oder_1: { 1040: 5, "1020-25": 40 },
-        oder_2: { "VV1-25": 10, "CA01-25-40": 10 },
+        order_1: { 1040: 5, "1020-25": 40 },
+        order_2: { "VV1-25": 10, "CA01-25-40": 10 },
+        order_10: { "301SP-25": 20, "CE22-25-40": 10 },
+        order_19: { "302SP-25": 40, "CA44-25-40": 50 },
+        order_99: { "302SP-25": 450, "CA01-25-30": 150 },
       },
     },
     {

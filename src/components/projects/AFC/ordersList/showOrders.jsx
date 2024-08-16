@@ -4,6 +4,7 @@ import styles from "./showOrders.module.css";
 import { Table, Button } from "react-bootstrap";
 import { useRouter } from "next/navigation";
 import AdvancedPagination from "../../../pagination/pagination";
+import CreateModeCall from "../createModalCall/createModalCall";
 
 function ShowOrders(props) {
   const { datas } = props;
@@ -14,11 +15,21 @@ function ShowOrders(props) {
     setExpandedRow(expandedRow === index ? null : index);
   };
 
+  const [showModalCall, setShowModalCall] = useState(false);
+  const [calledOrder, setCallOrder] = useState(null);
+
+  const [confirmOrder, setConfirmOrder] = useState(null);
+
   const handleCallOrder = (data) => {
-    alert(`Called for item with _id: ${data._id}`);
+    // alert(`Called for item with _id: ${data._id}`);
+    setShowModalCall(true);
+    setCallOrder(data);
+
     console.log("dataSend: ", data);
-    localStorage.setItem("orderData", JSON.stringify(data));
-    router.push("/home/countingAFC");
+    // localStorage.setItem("orderData", JSON.stringify(data));
+    // localStorage.setItem("confirmOrder", JSON.stringify(confirmOrder));
+    // setCallOrder(data);
+    // router.push("/home/countingAFC");
   };
 
   //Pagination
@@ -113,6 +124,12 @@ function ShowOrders(props) {
           paginate={paginate}
         />
       </div>
+      <CreateModeCall
+        showModalCall={showModalCall}
+        setShowModalCall={setShowModalCall}
+        calledOrder={calledOrder}
+        setConfirmOrder={setConfirmOrder}
+      />
     </div>
   );
 }
