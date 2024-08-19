@@ -5,7 +5,8 @@ from pymongo.mongo_client import MongoClient
 from bson.objectid import ObjectId
 
 app = Flask(__name__)
-CORS(app, resources={r"/updateData": {"origins": "http://localhost:3000"},
+CORS(app, resources={r"/checkLogin": {"origins": "http://localhost:3000"},
+                     r"/updateData": {"origins": "http://localhost:3000"},
                      r"/getData": {"origins": "http://localhost:3000"},
                      r"/insertData": {"origins": "http://localhost:3000"}})
 
