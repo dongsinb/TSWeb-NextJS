@@ -5,8 +5,7 @@ import Form from "react-bootstrap/Form";
 import styles from "./updateData.module.css";
 
 function CreateModalEdit(props) {
-  const { showModalEdit, setShowModalEdit, itemUpdate } = props;
-  console.log("itemUpdate: ", itemUpdate);
+  const { showModalEdit, setShowModalEdit, itemUpdate, reloadData } = props;
 
   const [lotCode, setLotCode] = useState("");
   const [supplier, setSupplier] = useState("");
@@ -14,6 +13,8 @@ function CreateModalEdit(props) {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [coconutType, setCoconutType] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [id, setID] = useState("");
+
   useEffect(() => {
     if (itemUpdate) {
       setLotCode(itemUpdate.lotCode);
@@ -22,19 +23,59 @@ function CreateModalEdit(props) {
       setPhoneNumber(itemUpdate.phoneNumber);
       setCoconutType(itemUpdate.coconutType);
       setQuantity(itemUpdate.quantity);
+      setID(itemUpdate._id);
     }
   }, [itemUpdate]);
 
+  const updateData = async (data) => {
+    const res = await fetch("http://localhost:5000/updateData", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const isUpdate = await res.json();
+    if (isUpdate) {
+      reloadData();
+    }
+  };
+
   const handleSaveClick = () => {
-    const dataUpdate = {
-      lotCode,
-      supplier,
-      address,
-      phoneNumber,
-      coconutType,
-      quantity,
+    // const dataUpdate = {
+    //   id,
+    //   lotCode,
+    //   supplier,
+    //   address,
+    //   phoneNumber,
+    //   coconutType,
+    //   quantity,
+    // };
+    // console.log("dataUpdate", dataUpdate);
+
+    // setUpdateData({
+    //   documentId: itemUpdate._id,
+    //   updateFields: {
+    //     address: itemUpdate.address,
+    //     coconutType: itemUpdate.coconutType,
+    //     quantity: itemUpdate.quantity,
+    //     lotCode: itemUpdate.lotCode,
+    //     phoneNumber: itemUpdate.phoneNumber,
+    //     supplier: itemUpdate.supplier,
+    //   },
+    // });
+
+    const data = {
+      documentId: id,
+      updateFields: {
+        address: address,
+        coconutType: coconutType,
+        quantity: quantity,
+        lotCode: lotCode,
+        phoneNumber: phoneNumber,
+        supplier: supplier,
+      },
     };
-    console.log("dataUpdate", dataUpdate);
+    updateData(data);
+
     closeModal();
   };
 

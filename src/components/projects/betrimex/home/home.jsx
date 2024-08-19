@@ -15,9 +15,20 @@ const BetrimexHome = () => {
     coconutType: "",
   });
 
-  const [confirmedSupplier, setConfirmedSupplier] = useState("");
   const [confirmedCustomer, setConfirmedCustomer] = useState({});
   const [quantity, setQuantity] = useState(0);
+
+  const insertData = async (data) => {
+    const res = await fetch("http://localhost:5000/insertData", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const isInsert = await res.json();
+    if (isInsert) {
+      toast.success("Đã lưu dữ liệu thành công!");
+    }
+  };
 
   // Correct use of useEffect at the top level
   useEffect(() => {
@@ -45,6 +56,10 @@ const BetrimexHome = () => {
       toast.error("Chưa nhập loại dừa!");
       return;
     }
+    if (!formData.address) {
+      toast.error("Chưa nhập địa chỉ!");
+      return;
+    }
     if (!formData.lotCode) {
       toast.error("Chưa nhập mã lô dừa!");
       return;
@@ -53,7 +68,6 @@ const BetrimexHome = () => {
       toast.error("Chưa nhập số điện thoại!");
       return;
     }
-    setConfirmedSupplier(formData.supplier);
     setConfirmedCustomer({ ...formData });
     console.log("Mã Lô dừa:", formData.lotCode);
     console.log("Nhà cung cấp:", formData.supplier);
@@ -78,9 +92,15 @@ const BetrimexHome = () => {
     const time = new Date().toLocaleString();
     console.log("quantity: ", quantity);
     console.log("confirmedCustomer: ", confirmedCustomer);
-    const result = { ...confirmedCustomer, quantity, time };
-    console.log("result: ", result);
+    const data = {
+      ...confirmedCustomer,
+      quantity: String(quantity),
+      time,
+    };
+    console.log("data: ", data);
+    insertData(data);
     setIsButtonDisabled(false);
+    setQuantity(0);
   };
 
   // Function to increment the count
@@ -181,7 +201,8 @@ const BetrimexHome = () => {
         <div className={styles.countingStatus}>
           <div>
             <h3 className={styles.label}>
-              Đang lấy dừa từ nhà cùng cấp: <span>{confirmedSupplier}</span>
+              Đang lấy dừa từ nhà cùng cấp:{" "}
+              <span>{confirmedCustomer.supplier}</span>
             </h3>
           </div>
           <h3 className={styles.label}>Số lượng</h3>

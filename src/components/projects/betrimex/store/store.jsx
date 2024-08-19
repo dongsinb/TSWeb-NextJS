@@ -20,17 +20,18 @@ const BetrimexStore = () => {
     },
   ]);
 
+  const reloadData = async () => {
+    const res = await fetch("http://localhost:5000/getData", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(query),
+    });
+    const result = await res.json();
+    setData(result);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      const res = await fetch("http://localhost:5000/getData", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(query),
-      });
-      const result = await res.json();
-      setData(result);
-    };
-    fetchData();
+    reloadData();
   }, [query]);
 
   const handleSearch = (e) => {
@@ -62,7 +63,7 @@ const BetrimexStore = () => {
           />
         </div>
       </div>
-      <ShowListBetrimex data={data} />
+      <ShowListBetrimex data={data} reloadData={reloadData} />
       {/* <Pagination /> */}
     </div>
   );

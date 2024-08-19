@@ -4,7 +4,8 @@ import styles from "./showListBetrimex.module.css";
 import AdvancedPagination from "../../../pagination/pagination";
 import CreateModalEdit from "../../betrimex/UpdateData/createModalEdit";
 
-function ShowListBetrimex({ data }) {
+function ShowListBetrimex(props) {
+  const { data, reloadData } = props;
   const [itemUpdate, setItemUpdate] = useState(null);
   const [showModalCreate, setShowModalCreate] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -74,6 +75,7 @@ function ShowListBetrimex({ data }) {
         showModalEdit={showModalCreate}
         setShowModalEdit={setShowModalCreate}
         itemUpdate={itemUpdate}
+        reloadData={reloadData}
       />
     </div>
   );
