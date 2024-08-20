@@ -1,10 +1,11 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import styles from "./afc.module.css";
 import ShowOrders from "../../../components/projects/AFC/ordersList/showOrders";
+import ExcelJS from "exceljs";
 
 function AFCPage(props) {
   const datas = [
@@ -43,6 +44,27 @@ function AFCPage(props) {
       orderslist: { Don10: { 2040: 50, "1050-25": 100 } },
     },
   ];
+  const [fileData, setFileData] = useState([]);
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const workbook = new ExcelJS.Workbook();
+      try {
+        // Đọc file Excel
+        await workbook.xlsx.load(file);
+        const worksheet = workbook.worksheets[0];
+        const jsonData = worksheet.getSheetValues();
+
+        // Xử lý dữ liệu và cập nhật state
+        console.log("Data from file:", jsonData);
+        setFileData(jsonData); // Lưu dữ liệu vào state
+      } catch (err) {
+        console.error("Failed to read file. Ensure it is a valid Excel file.");
+      }
+    }
+  };
+
   return (
     <div className={styles.showLayout}>
       <h5 className={styles.label}>Danh sách xe</h5>
@@ -53,6 +75,16 @@ function AFCPage(props) {
         </Button>
       </InputGroup>
       <ShowOrders datas={datas}></ShowOrders>
+      {/* Placeholder and File Upload */}
+      <div className="mt-4">
+        <Form.Group>
+          <Form.Control
+            type="file"
+            accept=".xlsx, .xls"
+            onChange={handleFileUpload}
+          />
+        </Form.Group>
+      </div>
     </div>
   );
 }

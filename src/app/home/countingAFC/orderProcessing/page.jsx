@@ -2,17 +2,18 @@
 import React, { useState } from "react";
 import styles from "./orderProcessing.module.css";
 import { v4 as uuidv4 } from "uuid";
-import { Form, Button, Table, ListGroup, ListGroupItem } from "react-bootstrap";
+import { Form, Button, Table, ListGroup } from "react-bootstrap";
 import Image from "next/image";
+
 const OrderProcessing = () => {
-  const datas = [
+  const [datas, setDatas] = useState([
     {
       id: uuidv4(),
       gate: "Cổng 1",
       license_plate: "18C-123456",
       content: "Không nhận diện được",
       image: "/imgSP_0.png",
-      ordersList: [
+      itemsList: [
         "Order 1",
         "Order 2",
         "Order 10",
@@ -32,37 +33,90 @@ const OrderProcessing = () => {
       license_plate: "18C-884568",
       content: "Không nhận diện được",
       image: "/imgSP_1.png",
-      ordersList: ["Order5", "Order9"],
+      itemsList: ["Order5", "Order9"],
       isConfirm: false,
     },
-  ];
-  // Trạng thái lưu trữ đơn hàng được chọn cho mỗi hàng
-  const [selectedOrders, setSelectedOrders] = useState({});
+    {
+      id: uuidv4(),
+      gate: "Cổng 1",
+      license_plate: "18C-884568",
+      content: "Không nhận diện được",
+      image: "/imgSP_1.png",
+      itemsList: ["Order2", "Order9"],
+      isConfirm: false,
+    },
+    {
+      id: uuidv4(),
+      gate: "Cổng 1",
+      license_plate: "18C-884568",
+      content: "Không nhận diện được",
+      image: "/imgSP_1.png",
+      itemsList: ["Order5", "Order89"],
+      isConfirm: false,
+    },
+    {
+      id: uuidv4(),
+      gate: "Cổng 1",
+      license_plate: "18C-884568",
+      content: "Không nhận diện được",
+      image: "/imgSP_1.png",
+      itemsList: ["Order45", "Order3"],
+      isConfirm: false,
+    },
+    {
+      id: uuidv4(),
+      gate: "Cổng 1",
+      license_plate: "18C-884568",
+      content: "Không nhận diện được",
+      image: "/imgSP_1.png",
+      itemsList: ["Order9", "Order5"],
+      isConfirm: false,
+    },
+  ]);
 
-  const handleSelectOrder = (order, rowIndex) => {
-    setSelectedOrders((prevState) => ({
+  const [selectedItems, setSelectedItems] = useState({});
+
+  const handleSelectItem = (item, rowIndex) => {
+    setSelectedItems((prevState) => ({
       ...prevState,
-      [rowIndex]: order,
+      [rowIndex]: item,
     }));
   };
 
   const handleSubmit = (rowIndex) => {
     const selectedData = datas[rowIndex];
-    const selectedOrder = selectedOrders[rowIndex];
-    console.log("Selected Order: ", selectedOrder);
+    const selectedItem = selectedItems[rowIndex];
+    console.log("Selected Item: ", selectedItem);
     console.log("Data for this row: ", selectedData);
 
-    // Bạn có thể làm gì đó với selectedOrder và selectedData ở đây
+    // Xóa hàng khỏi dữ liệu
+    setDatas((prevDatas) => prevDatas.filter((_, index) => index !== rowIndex));
+
+    // Xóa đơn hàng đã chọn
+    setSelectedItems((prevState) => {
+      const newState = { ...prevState };
+      delete newState[rowIndex];
+      return newState;
+    });
+
     alert(
-      `Selected Order: ${selectedOrder}, Data: ${JSON.stringify(selectedData)}`
+      `Selected Item: ${selectedItem}, Data: ${JSON.stringify(selectedData)}`
     );
   };
 
   const handleNg = (rowIndex) => {
     const selectedData = datas[rowIndex];
     console.log("NG Button clicked for row: ", selectedData);
+    // Xóa hàng khỏi dữ liệu
+    setDatas((prevDatas) => prevDatas.filter((_, index) => index !== rowIndex));
 
-    // Bạn có thể làm gì đó với selectedData ở đây
+    // Xóa đơn hàng đã chọn
+    setSelectedItems((prevState) => {
+      const newState = { ...prevState };
+      delete newState[rowIndex];
+      return newState;
+    });
+
     alert(`NG clicked for Data: ${JSON.stringify(selectedData)}`);
   };
 
@@ -114,34 +168,44 @@ const OrderProcessing = () => {
                 </td>
                 <td>
                   <div className={styles.processingCell}>
-                    <div
-                      style={{
-                        width: "350px",
-                        height: "200px",
-                        overflowY: "auto",
-                        border: "1px solid lightgrey",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      <ListGroup>
-                        {data.ordersList.map((order) => (
-                          <ListGroup.Item key={order}>
-                            <Form.Check
-                              type="radio"
-                              name={`orderRadio-${i}`}
-                              id={order}
-                              checked={selectedOrders[i] === order}
-                              onChange={() => handleSelectOrder(order, i)}
-                              label={order}
-                            />
-                          </ListGroup.Item>
+                    <div>
+                      <Form.Control
+                        type="text"
+                        placeholder={
+                          selectedItems[i] || "Chọn mã bao tương ứng ..."
+                        }
+                        readOnly
+                        className="mb-3"
+                      />
+                      <ListGroup
+                        style={{
+                          width: "350px",
+                          height: "200px",
+                          overflowY: "scroll",
+                          border: "1px solid lightgrey",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        {data.itemsList.map((item) => (
+                          <Button
+                            key={item}
+                            variant={
+                              selectedItems[i] === item
+                                ? "primary"
+                                : "outline-secondary"
+                            }
+                            onClick={() => handleSelectItem(item, i)}
+                            style={{ marginBottom: "5px", width: "100%" }}
+                          >
+                            {item}
+                          </Button>
                         ))}
                       </ListGroup>
                     </div>
-                    <div class="mt-3">
+                    <div className="mt-3">
                       <Button
                         onClick={() => handleSubmit(i)}
-                        disabled={!selectedOrders[i]}
+                        disabled={!selectedItems[i]}
                       >
                         OK
                       </Button>
