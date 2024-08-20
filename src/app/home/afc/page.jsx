@@ -75,7 +75,7 @@ function AFCPage(props) {
         </Button>
       </InputGroup>
       <ShowOrders datas={datas}></ShowOrders>
-      {/* Placeholder and File Upload */}
+      {/* File Upload */}
       <div className="mt-4">
         <Form.Group>
           <Form.Control

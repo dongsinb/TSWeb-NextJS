@@ -176,20 +176,12 @@ const BetrimexHome = () => {
             </div>
           </div>
           <div className={styles.btn}>
-            <button
-              className={styles.btnConfirm}
-              disabled={isButtonDisabled}
-              onClick={handleConfirmClick}
-            >
+            <Button disabled={isButtonDisabled} onClick={handleConfirmClick}>
               Xác nhận
-            </button>
-            <button
-              className={styles.btnStop}
-              disabled={!isButtonDisabled}
-              onClick={handleStopClick}
-            >
+            </Button>
+            <Button disabled={!isButtonDisabled} onClick={handleStopClick}>
               Dừng
-            </button>
+            </Button>
             <button
               className={styles.btnCount}
               onClick={() => IncrementQuantity()}

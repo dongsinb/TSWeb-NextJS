@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useState } from "react";
 import styles from "./sidebar.module.css";
 import { usePathname } from "next/navigation";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
 const sidebarItems = [
   {
@@ -42,16 +43,15 @@ const sidebarItems = [
 const Sidebar = () => {
   const [isCollapsed, setCollapse] = useState(true);
   const pathname = usePathname();
+
   // Toggle the collapse state of the sidebar
-  const handleToggleSidebarcollapse = () => {
-    setCollapse(!isCollapsed); // Toggle the state
+  const handleToggleSidebarCollapse = () => {
+    setCollapse(!isCollapsed);
   };
+
   return (
     <div className={styles.sidebar__wrapper}>
-      <button
-        className={styles.btn}
-        onClick={() => handleToggleSidebarcollapse()}
-      >
+      <button className={styles.btn} onClick={handleToggleSidebarCollapse}>
         {isCollapsed ? <MdKeyboardArrowRight /> : <MdKeyboardArrowLeft />}
       </button>
       <aside
@@ -69,9 +69,25 @@ const Sidebar = () => {
           <h1 className={styles.sidebar__logo_name}>TS Tech</h1>
         </div>
         <ul className={styles.sidebar__list}>
-          {sidebarItems.map(({ name, href, icon: Icon }) => {
-            return (
-              <li className={styles.sidebar__item} key={name}>
+          {sidebarItems.map(({ name, href, icon: Icon }) => (
+            <li className={styles.sidebar__item} key={name}>
+              {isCollapsed ? (
+                <OverlayTrigger
+                  placement="right"
+                  overlay={<Tooltip id={`tooltip-${name}`}>{name}</Tooltip>}
+                >
+                  <Link
+                    className={`${styles.sidebar__link} ${
+                      pathname === href && styles.sidebar__link_active
+                    }`}
+                    href={href}
+                  >
+                    <span className={styles.sidebar__icon}>
+                      <Icon />
+                    </span>
+                  </Link>
+                </OverlayTrigger>
+              ) : (
                 <Link
                   className={`${styles.sidebar__link} ${
                     pathname === href && styles.sidebar__link_active
@@ -83,9 +99,9 @@ const Sidebar = () => {
                   </span>
                   <span className={styles.sidebar__name}>{name}</span>
                 </Link>
-              </li>
-            );
-          })}
+              )}
+            </li>
+          ))}
         </ul>
       </aside>
     </div>
