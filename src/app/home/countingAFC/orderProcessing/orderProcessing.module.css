@@ -1,0 +1,14 @@
+.orderProcessingBody {
+  color: var(--text-color);
+}
+
+.tableRow {
+  vertical-align: middle;
+  text-align: center;
+}
+
+.processingCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
