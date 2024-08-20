@@ -13,7 +13,7 @@ const OrderProcessing = () => {
       license_plate: "18C-123456",
       content: "Không nhận diện được",
       image: "/imgSP_0.png",
-      ordersList: [
+      itemsList: [
         "Order 1",
         "Order 2",
         "Order 10",
@@ -33,7 +33,7 @@ const OrderProcessing = () => {
       license_plate: "18C-884568",
       content: "Không nhận diện được",
       image: "/imgSP_1.png",
-      ordersList: ["Order5", "Order9"],
+      itemsList: ["Order5", "Order9"],
       isConfirm: false,
     },
     {
@@ -42,7 +42,7 @@ const OrderProcessing = () => {
       license_plate: "18C-884568",
       content: "Không nhận diện được",
       image: "/imgSP_1.png",
-      ordersList: ["Order2", "Order9"],
+      itemsList: ["Order2", "Order9"],
       isConfirm: false,
     },
     {
@@ -51,7 +51,7 @@ const OrderProcessing = () => {
       license_plate: "18C-884568",
       content: "Không nhận diện được",
       image: "/imgSP_1.png",
-      ordersList: ["Order5", "Order89"],
+      itemsList: ["Order5", "Order89"],
       isConfirm: false,
     },
     {
@@ -60,7 +60,7 @@ const OrderProcessing = () => {
       license_plate: "18C-884568",
       content: "Không nhận diện được",
       image: "/imgSP_1.png",
-      ordersList: ["Order45", "Order3"],
+      itemsList: ["Order45", "Order3"],
       isConfirm: false,
     },
     {
@@ -69,44 +69,53 @@ const OrderProcessing = () => {
       license_plate: "18C-884568",
       content: "Không nhận diện được",
       image: "/imgSP_1.png",
-      ordersList: ["Order9", "Order5"],
+      itemsList: ["Order9", "Order5"],
       isConfirm: false,
     },
   ]);
 
-  const [selectedOrders, setSelectedOrders] = useState({});
+  const [selectedItems, setSelectedItems] = useState({});
 
-  const handleSelectOrder = (order, rowIndex) => {
-    setSelectedOrders((prevState) => ({
+  const handleSelectItem = (item, rowIndex) => {
+    setSelectedItems((prevState) => ({
       ...prevState,
-      [rowIndex]: order,
+      [rowIndex]: item,
     }));
   };
 
   const handleSubmit = (rowIndex) => {
     const selectedData = datas[rowIndex];
-    const selectedOrder = selectedOrders[rowIndex];
-    console.log("Selected Order: ", selectedOrder);
+    const selectedItem = selectedItems[rowIndex];
+    console.log("Selected Item: ", selectedItem);
     console.log("Data for this row: ", selectedData);
 
     // Xóa hàng khỏi dữ liệu
     setDatas((prevDatas) => prevDatas.filter((_, index) => index !== rowIndex));
 
     // Xóa đơn hàng đã chọn
-    setSelectedOrders((prevState) => {
+    setSelectedItems((prevState) => {
       const newState = { ...prevState };
       delete newState[rowIndex];
       return newState;
     });
 
     alert(
-      `Selected Order: ${selectedOrder}, Data: ${JSON.stringify(selectedData)}`
+      `Selected Item: ${selectedItem}, Data: ${JSON.stringify(selectedData)}`
     );
   };
 
   const handleNg = (rowIndex) => {
     const selectedData = datas[rowIndex];
     console.log("NG Button clicked for row: ", selectedData);
+    // Xóa hàng khỏi dữ liệu
+    setDatas((prevDatas) => prevDatas.filter((_, index) => index !== rowIndex));
+
+    // Xóa đơn hàng đã chọn
+    setSelectedItems((prevState) => {
+      const newState = { ...prevState };
+      delete newState[rowIndex];
+      return newState;
+    });
 
     alert(`NG clicked for Data: ${JSON.stringify(selectedData)}`);
   };
@@ -163,7 +172,7 @@ const OrderProcessing = () => {
                       <Form.Control
                         type="text"
                         placeholder={
-                          selectedOrders[i] || "Chọn mã bao tương ứng ..."
+                          selectedItems[i] || "Chọn mã bao tương ứng ..."
                         }
                         readOnly
                         className="mb-3"
@@ -177,18 +186,18 @@ const OrderProcessing = () => {
                           borderRadius: "4px",
                         }}
                       >
-                        {data.ordersList.map((order) => (
+                        {data.itemsList.map((item) => (
                           <Button
-                            key={order}
+                            key={item}
                             variant={
-                              selectedOrders[i] === order
+                              selectedItems[i] === item
                                 ? "primary"
                                 : "outline-secondary"
                             }
-                            onClick={() => handleSelectOrder(order, i)}
+                            onClick={() => handleSelectItem(item, i)}
                             style={{ marginBottom: "5px", width: "100%" }}
                           >
-                            {order}
+                            {item}
                           </Button>
                         ))}
                       </ListGroup>
@@ -196,7 +205,7 @@ const OrderProcessing = () => {
                     <div className="mt-3">
                       <Button
                         onClick={() => handleSubmit(i)}
-                        disabled={!selectedOrders[i]}
+                        disabled={!selectedItems[i]}
                       >
                         OK
                       </Button>
