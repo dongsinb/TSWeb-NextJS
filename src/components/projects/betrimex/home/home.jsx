@@ -5,6 +5,7 @@ import Button from "react-bootstrap/Button";
 // import { ToastContainer, toast } from "react-toastify";
 // import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
+import socketIOClient from "socket.io-client";
 
 const BetrimexHome = () => {
   const [formData, setFormData] = useState({
@@ -17,6 +18,8 @@ const BetrimexHome = () => {
 
   const [confirmedCustomer, setConfirmedCustomer] = useState({});
   const [quantity, setQuantity] = useState(0);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  // const [receiveData, setReceiveData] = useState({});
 
   const insertData = async (data) => {
     const res = await fetch("http://localhost:5000/insertData", {
@@ -30,17 +33,69 @@ const BetrimexHome = () => {
     }
   };
 
-  // Correct use of useEffect at the top level
+  const sendCommand = async (cmd) => {
+    const res = await fetch("http://localhost:5000/sendCmd", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cmd),
+    });
+    const isSend = await res.json();
+    if (isSend) {
+      console.log("Send command successfully !");
+    } else {
+      console.log("Send command unsuccessfully !");
+    }
+  };
+
+  // receive data from TS2D app each 500ms
   useEffect(() => {
-    console.log("confirmedCustomer updated: ", confirmedCustomer);
+    const listenData = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/receiveCmd"); // Adjust the URL as needed
+        if (response.ok) {
+          const data = await response.json();
+          const result = JSON.parse(data);
+          if (result.status === "reset") {
+            setQuantity(0);
+          }
+          if (result.status === "run") {
+            setQuantity(result.quantity);
+          }
+          if (result.status === "stop" && result.finish === "true") {
+            setQuantity(result.quantity);
+            const time = new Date().toLocaleString();
+            const data = {
+              ...confirmedCustomer,
+              quantity: String(result.quantity),
+              confirmTime: time,
+            };
+            insertData(data); // save final data to database
+
+            // Reset form data after confirmation
+            setFormData({
+              lotCode: "",
+              supplier: "",
+              address: "",
+              phoneNumber: "",
+              coconutType: "",
+            });
+            setQuantity(0);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    // Call listenData every 300 miliseconds, because data will return from TS2D every 500 miliseconds, then need to listen ealier a little bit
+    const intervalId = setInterval(listenData, 1000);
+
+    // Cleanup function to clear the interval when the component unmounts
+    return () => clearInterval(intervalId);
   }, [confirmedCustomer]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log("Change detected");
-    console.log("Input name:", name);
-    console.log("Input value:", value);
-
     setFormData((prevFormData) => ({
       ...prevFormData,
       [name]: value,
@@ -75,41 +130,16 @@ const BetrimexHome = () => {
     console.log("Số điện thoại:", formData.phoneNumber);
     console.log("Loại dừa:", formData.coconutType);
 
-    // Reset form data after confirmation
-    setFormData({
-      lotCode: "",
-      supplier: "",
-      address: "",
-      phoneNumber: "",
-      coconutType: "",
-    });
     setIsButtonDisabled((prev) => !prev);
     setQuantity(0);
+    sendCommand({ command: "start" }); // Start counting
     toast.success("Nhập thông tin nhà cung cấp thành công!");
   };
 
   const handleStopClick = () => {
-    const time = new Date().toLocaleString();
-    console.log("quantity: ", quantity);
-    console.log("confirmedCustomer: ", confirmedCustomer);
-    const data = {
-      ...confirmedCustomer,
-      quantity: String(quantity),
-      time,
-    };
-    console.log("data: ", data);
-    insertData(data);
     setIsButtonDisabled(false);
-    setQuantity(0);
+    sendCommand({ command: "stop" }); // Stop counting
   };
-
-  // Function to increment the count
-  const IncrementQuantity = () => {
-    setQuantity((prevQuantity) => prevQuantity + 1);
-  };
-
-  // Disable button after click start
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   return (
     <div>
@@ -182,12 +212,6 @@ const BetrimexHome = () => {
             <Button disabled={!isButtonDisabled} onClick={handleStopClick}>
               Dừng
             </Button>
-            <button
-              className={styles.btnCount}
-              onClick={() => IncrementQuantity()}
-            >
-              Test Increment Quantity
-            </button>
           </div>
         </div>
         <div className={styles.countingStatus}>
