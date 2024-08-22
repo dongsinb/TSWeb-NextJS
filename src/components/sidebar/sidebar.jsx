@@ -60,11 +60,12 @@ const Sidebar = () => {
       >
         <div className={styles.sidebar__top}>
           <Image
-            width={80}
-            height={80}
+            width={100}
+            height={100}
             className={styles.sidebar__logo}
             src="/tstech.ico"
             alt="logo"
+            priority
           />
           <h1 className={styles.sidebar__logo_name}>TS Tech</h1>
         </div>

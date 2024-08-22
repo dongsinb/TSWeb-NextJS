@@ -5,9 +5,12 @@ import { Table, Button } from "react-bootstrap";
 import { useRouter } from "next/navigation";
 import AdvancedPagination from "../../../pagination/pagination";
 import CreateModeCall from "../createModalCall/createModalCall";
+import { FaEdit } from "react-icons/fa";
+import CreateModalEditAFC from "../createModalEdit/createModalEdit";
 
 function ShowOrders(props) {
-  const { datas } = props;
+  const { datas, status } = props;
+  console.log("status: ", status);
   const router = useRouter();
   const [expandedRow, setExpandedRow] = useState(null);
 
@@ -46,6 +49,20 @@ function ShowOrders(props) {
   // Thay đổi trang khi click vào pagination
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+  // Edit click
+  const [showModalEdit, setShowModalEdit] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const handleEditOrder = (order) => {
+    setSelectedOrder(order);
+    setShowModalEdit(true);
+  };
+
+  const handleSaveOrder = (updatedOrder) => {
+    // Handle saving the updated order here
+    console.log("Updated Order:", updatedOrder);
+    // Optionally, update the orders list in your state or make an API call to save the changes
+  };
+
   return (
     <div className={styles.table_layout}>
       <Table striped bordered hover>
@@ -56,7 +73,9 @@ function ShowOrders(props) {
             <th>Biển số xe</th>
             <th>Trạng thái</th>
             <th>Đơn hàng</th>
-            <th>Gọi vào kho</th>
+            {status !== "Called" && status !== "Finished" && (
+              <th>Gọi vào kho</th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -75,7 +94,13 @@ function ShowOrders(props) {
                     <Table bordered size="sm" className={styles.ordersTable}>
                       <thead>
                         <tr>
-                          <th>Order</th>
+                          <th>
+                            <p className="mb-0">Order</p>
+                            <FaEdit
+                              className={styles.editIcon}
+                              onClick={() => handleEditOrder(data)}
+                            />
+                          </th>
                           <th>Item</th>
                           <th>Quantity</th>
                         </tr>
@@ -92,7 +117,7 @@ function ShowOrders(props) {
                                 >
                                   {index === 0 && (
                                     <td rowSpan={itemEntries.length}>
-                                      {orderName}
+                                      <p>{orderName}</p>
                                     </td>
                                   )}
                                   <td>{item}</td>
@@ -107,11 +132,13 @@ function ShowOrders(props) {
                   </div>
                 )}
               </td>
-              <td>
-                <Button onClick={() => handleCallOrder(data)}>
-                  Gọi vào kho
-                </Button>
-              </td>
+              {status !== "Called" && status !== "Finished" && (
+                <td>
+                  <Button onClick={() => handleCallOrder(data)}>
+                    Gọi vào kho
+                  </Button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
@@ -129,6 +156,12 @@ function ShowOrders(props) {
         setShowModalCall={setShowModalCall}
         calledOrder={calledOrder}
         setConfirmOrder={setConfirmOrder}
+      />
+      <CreateModalEditAFC
+        show={showModalEdit}
+        onHide={() => setShowModalEdit(false)}
+        orderData={selectedOrder}
+        onSave={handleSaveOrder}
       />
     </div>
   );
