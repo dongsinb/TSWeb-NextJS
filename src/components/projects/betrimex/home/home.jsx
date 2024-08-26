@@ -5,7 +5,6 @@ import Button from "react-bootstrap/Button";
 // import { ToastContainer, toast } from "react-toastify";
 // import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
-import socketIOClient from "socket.io-client";
 
 const BetrimexHome = () => {
   const [formData, setFormData] = useState({
@@ -51,35 +50,52 @@ const BetrimexHome = () => {
   useEffect(() => {
     const listenData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/receiveCmd"); // Adjust the URL as needed
+        const response = await fetch("http://localhost:5000/receiveCmd");
         if (response.ok) {
           const data = await response.json();
-          const result = JSON.parse(data);
-          if (result.status === "reset") {
-            setQuantity(0);
-          }
-          if (result.status === "run") {
-            setQuantity(result.quantity);
-          }
-          if (result.status === "stop" && result.finish === "true") {
-            setQuantity(result.quantity);
-            const time = new Date().toLocaleString();
-            const data = {
-              ...confirmedCustomer,
-              quantity: String(result.quantity),
-              confirmTime: time,
-            };
-            insertData(data); // save final data to database
+          console.log("data: ", data);
+          if (Array.isArray(data)) {
+            data.forEach((jsonString) => {
+              try {
+                const result = JSON.parse(jsonString);
+                console.log("Parsed data:", result);
+                //   const result = JSON.parse(data);
+                // console.log("status: ", result.status);
+                // console.log("finish: ", result.finish);
+                if (result.status === "reset") {
+                  setQuantity(0);
+                }
+                if (result.status === "run") {
+                  setQuantity(result.quantity);
+                }
+                if (result.status === "stop" && result.finish === "true") {
+                  setQuantity(result.quantity);
+                  const time = new Date().toLocaleString();
+                  const data = {
+                    ...confirmedCustomer,
+                    quantity: String(result.quantity),
+                    time: time,
+                  };
+                  console.log("data: ", data);
+                  insertData(data); // save final data to database
 
-            // Reset form data after confirmation
-            setFormData({
-              lotCode: "",
-              supplier: "",
-              address: "",
-              phoneNumber: "",
-              coconutType: "",
+                  // Reset form data after confirmation
+                  setFormData({
+                    lotCode: "",
+                    supplier: "",
+                    address: "",
+                    phoneNumber: "",
+                    coconutType: "",
+                  });
+                  setQuantity(0);
+                }
+              } catch (error) {
+                console.error("Error parsing JSON:", error);
+                console.error("jsonString: ", jsonString);
+              }
             });
-            setQuantity(0);
+          } else {
+            console.error("Data is not an array:", data);
           }
         }
       } catch (error) {

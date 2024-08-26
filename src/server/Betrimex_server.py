@@ -19,7 +19,7 @@ CORS(app, resources={r"/checkLogin": {"origins": "http://localhost:3000"},
 class TS2DConnection():
     def __init__(self) -> None:
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client_socket.connect(('192.168.100.164', 5000))
+        self.client_socket.connect(('192.168.100.134', 5000))
 
     def send_command(self, cmd):
         print("Command : ",cmd)
@@ -30,8 +30,11 @@ class TS2DConnection():
             return False
 
     def receive_command(self):
-        response = self.client_socket.recv(1024).decode('utf-8')
-        return response
+        data = self.client_socket.recv(1024).decode('utf-8')
+        responses = data.split('}{')
+        responses = [r if r.startswith('{') else '{'+r for r in responses]
+        responses = [r if r.endswith('}') else r+'}' for r in responses]
+        return responses
 
     def close_connection(self):
         self.client_socket.close()
