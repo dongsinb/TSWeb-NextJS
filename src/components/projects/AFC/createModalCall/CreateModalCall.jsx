@@ -9,7 +9,10 @@ import styles from "./createModalCall.module.css";
 function CreateModalCall(props) {
   const { showModalCall, setShowModalCall, calledOrder, setConfirmOrder } =
     props;
-  const handleClose = () => setShowModalCall(false);
+  const handleClose = () => {
+    setShowModalCall(false);
+    setIsChecked(false);
+  };
   const [isChecked, setIsChecked] = useState(false);
   const handleCheckboxChange = (e) => {
     setIsChecked(e.target.checked);
@@ -18,8 +21,11 @@ function CreateModalCall(props) {
   const [ordersList, setOrdersList] = useState([]);
 
   useEffect(() => {
-    if (calledOrder && calledOrder["orderslist"]) {
-      setOrdersList(Object.keys(calledOrder["orderslist"]));
+    if (calledOrder && calledOrder["Orders"]) {
+      const orders = calledOrder["Orders"].map(
+        (order) => Object.keys(order)[0]
+      );
+      setOrdersList(orders);
     } else {
       setOrdersList([]);
     }
@@ -45,15 +51,22 @@ function CreateModalCall(props) {
   }, [isChecked]);
 
   const confirmOrder = () => {
-    const confirmOrderinfo = Object.assign({}, calledOrder, {
-      isCombine: isChecked,
-      sortList: ordersList,
+    // Tạo danh sách các đơn hàng đã sắp xếp lại
+    const sortedOrders = ordersList.map((orderName) => {
+      return calledOrder["Orders"].find(
+        (order) => Object.keys(order)[0] === orderName
+      );
     });
+
+    const confirmOrderinfo = {
+      ...calledOrder,
+      isCombine: isChecked,
+      sortList: sortedOrders,
+    };
     setConfirmOrder(confirmOrderinfo);
-    console.log("confirmOrderinfo: ", confirmOrderinfo);
     console.log("ordersList: ", ordersList);
-    setShowModalCall(false);
     console.log("confirmOrderinfo: ", confirmOrderinfo);
+    setShowModalCall(false);
     localStorage.setItem("orderData", JSON.stringify(calledOrder));
     localStorage.setItem("confirmOrder", JSON.stringify(confirmOrderinfo));
   };
@@ -73,8 +86,12 @@ function CreateModalCall(props) {
           <Droppable droppableId="droppable">
             {(provided) => (
               <div ref={provided.innerRef} {...provided.droppableProps}>
-                {ordersList.map((item, index) => (
-                  <Draggable key={item} draggableId={item} index={index}>
+                {ordersList.map((orderName, index) => (
+                  <Draggable
+                    key={orderName}
+                    draggableId={orderName}
+                    index={index}
+                  >
                     {(provided) => (
                       <div
                         ref={provided.innerRef}
@@ -91,7 +108,7 @@ function CreateModalCall(props) {
                           textAlign: "center",
                         }}
                       >
-                        {item}
+                        {orderName}
                       </div>
                     )}
                   </Draggable>

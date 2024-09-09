@@ -13,58 +13,55 @@ function AFCPage(props) {
   const datas = [
     {
       _id: "6690a14e7fda34bff6b56f0c",
+      PlateNumber: "20C19248",
+      DateTimeIn: "2024-06-12T00:00:00+07:00",
+      status: "Waitting",
+      Orders: [
+        {
+          Order1: [
+            { ProductCode: "212G-25", ProductCount: 25, CurrentQuantity: 0 },
+            { ProductCode: "211G-25", ProductCount: 55, CurrentQuantity: 0 },
+            { ProductCode: "302S-25", ProductCount: 35, CurrentQuantity: 0 },
+            { ProductCode: "G200-25", ProductCount: 45, CurrentQuantity: 0 },
+          ],
+        },
+        {
+          Order2: [
+            { ProductCode: "VV1-25", ProductCount: 20, CurrentQuantity: 0 },
+            { ProductCode: "211G-25", ProductCount: 50, CurrentQuantity: 0 },
+          ],
+        },
+      ],
+    },
+    {
+      _id: "6695e58e196888685dac2aad",
+      PlateNumber: "30C12345",
+      DateTimeIn: "2024-06-12T00:00:00+07:00",
+      status: "Waitting",
+      Orders: [
+        {
+          "0061478858": [
+            { ProductCode: "VV1-25", ProductCount: 20, CurrentQuantity: 0 },
+            { ProductCode: "211G-25", ProductCount: 50, CurrentQuantity: 0 },
+          ],
+        },
+      ],
+    },
+  ];
+
+  const datasOld = [
+    {
+      _id: "6690a14e7fda34bff6b56f0c",
       date: "27-06-2024",
       license_plate: "80B-33333",
       status: "Waitting",
       orderslist: {
-        order_1: { 1040: 5, "1020-25": 40 },
+        order_1: { "1040-25": 5, "1020-25": 40 },
         order_2: { "VV1-25": 10, "CA01-25-40": 10 },
         order_10: { "301SP-25": 20, "CE22-25-40": 10 },
         order_19: { "302SP-25": 40, "CA44-25-40": 50 },
         order_99: { "302SP-25": 450, "CA01-25-30": 150 },
       },
-    },
-    {
-      _id: "6695e58e196888685dac2aad",
-      date: "27-06-2024",
-      license_plate: "80A-4545",
-      status: "Waitting",
-      orderslist: { Don1: { 1040: 5, "1020-25": 40 } },
-    },
-    {
-      _id: "6695e5ab196888685ac2aae",
-      date: "27-06-2024",
-      license_plate: "80A-5545",
-      status: "Waitting",
-      orderslist: { Don1: { 1040: 50, "1050-25": 100 } },
-    },
-    {
-      _id: "6695e60119688885dac2aaf",
-      date: "27-06-2024",
-      license_plate: "80A-8888",
-      status: "Waitting",
-      orderslist: { Don10: { 2040: 50, "1050-25": 100 } },
-    },
-    {
-      _id: "6695e60119688865dac2aaf",
-      date: "27-06-2024",
-      license_plate: "80A-8888",
-      status: "Finished",
-      orderslist: { Don10: { 2040: 50, "1050-25": 100 } },
-    },
-    {
-      _id: "6695e60196888685dac2aaf",
-      date: "27-06-2024",
-      license_plate: "80A-8888",
-      status: "Finished",
-      orderslist: { Don10: { 2040: 50, "1050-25": 100 } },
-    },
-    {
-      _id: "6695e01196888685dac2aaf",
-      date: "27-06-2024",
-      license_plate: "80A-8888",
-      status: "Called",
-      orderslist: { Don10: { 2040: 50, "1050-25": 100 } },
     },
   ];
 
@@ -81,14 +78,18 @@ function AFCPage(props) {
     if (file) {
       const workbook = new ExcelJS.Workbook();
       try {
-        // Đọc file Excel
         await workbook.xlsx.load(file);
         const worksheet = workbook.worksheets[0];
-        const jsonData = worksheet.getSheetValues();
+        const jsonData = worksheet.getRow();
+        const valueJ3 = worksheet.getCell("J3").value;
+        const valueJ7 = worksheet.getCell("J7").value;
+        const valueI8 = worksheet.getCell("I8").value;
 
-        // Xử lý dữ liệu và cập nhật state
-        console.log("Data from file:", jsonData);
-        setFileData(jsonData); // Lưu dữ liệu vào state
+        console.log("Value at J3:", valueJ3.result);
+        console.log("Value at J7:", valueJ7);
+        console.log("Value at I8:", valueI8);
+        // console.log("Data from file:", jsonData);
+        setFileData(jsonData);
       } catch (err) {
         console.error("Failed to read file. Ensure it is a valid Excel file.");
       }

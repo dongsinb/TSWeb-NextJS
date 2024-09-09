@@ -37,7 +37,7 @@ function ShowOrders(props) {
 
   //Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Chỉ hiển thị 1 item mỗi trang
+  const itemsPerPage = 2; // Chỉ hiển thị 1 item mỗi trang
 
   // Lấy index của item đầu tiên và cuối cùng trong trang hiện tại
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -82,8 +82,8 @@ function ShowOrders(props) {
           {currentItems.map((data, i) => (
             <tr key={data._id} className={styles.tableRow}>
               <td>{indexOfFirstItem + i + 1}</td>
-              <td>{data.date}</td>
-              <td>{data.license_plate}</td>
+              <td>{data.DateTimeIn}</td>
+              <td>{data.PlateNumber}</td>
               <td>{data.status}</td>
               <td>
                 <Button onClick={() => toggleRow(i)}>
@@ -95,38 +95,37 @@ function ShowOrders(props) {
                       <thead>
                         <tr>
                           <th>
-                            <p className="mb-0">Order</p>
+                            <p className="mb-0">Đơn hàng</p>
                             <FaEdit
                               className={styles.editIcon}
                               onClick={() => handleEditOrder(data)}
                             />
                           </th>
-                          <th>Item</th>
-                          <th>Quantity</th>
+                          <th>Mã SP</th>
+                          <th>Số Lượng</th>
+                          <th>Số Lượng HT</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {Object.entries(data.orderslist).map(
-                          ([orderName, items]) => {
-                            const itemEntries = Object.entries(items);
-                            return itemEntries.map(
-                              ([item, quantity], index) => (
-                                <tr
-                                  key={`${orderName}-${item}`}
-                                  className={styles.tableRow}
-                                >
-                                  {index === 0 && (
-                                    <td rowSpan={itemEntries.length}>
-                                      <p>{orderName}</p>
-                                    </td>
-                                  )}
-                                  <td>{item}</td>
-                                  <td>{quantity}</td>
-                                </tr>
-                              )
-                            );
-                          }
-                        )}
+                        {data.Orders.map((order, orderIndex) => {
+                          const [orderName, items] = Object.entries(order)[0];
+                          // Render
+                          return items.map((item, itemIndex) => (
+                            <tr
+                              key={`${orderName}-${item.ProductCode}`}
+                              className={styles.tableRow}
+                            >
+                              {itemIndex === 0 && (
+                                <td rowSpan={items.length}>
+                                  <p>{orderName}</p>
+                                </td>
+                              )}
+                              <td>{item.ProductCode}</td>
+                              <td>{item.ProductCount}</td>
+                              <td>{item.CurrentQuantity}</td>
+                            </tr>
+                          ));
+                        })}
                       </tbody>
                     </Table>
                   </div>

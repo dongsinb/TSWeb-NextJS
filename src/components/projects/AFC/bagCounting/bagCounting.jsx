@@ -10,30 +10,38 @@ const BagCounting = (props) => {
         <tbody>
           {/* Hiển thị status và license plate */}
           <tr className={styles.tableRow}>
-            <td colSpan="3">
+            <td colSpan="4">
               <strong>Status:</strong> {data.status}
             </td>
           </tr>
           <tr className={styles.tableRow}>
-            <td colSpan="3">
-              <strong>License Plate:</strong> {data.license_plate}
+            <td colSpan="4">
+              <strong>License Plate:</strong> {data.PlateNumber}
             </td>
           </tr>
           <tr className={styles.tableRow}>
-            <th>Order</th>
-            <th>Item</th>
-            <th>Quantity</th>
+            <th>Đơn Hàng</th>
+            <th>Sản phẩm</th>
+            <th>Số lượng</th>
+            <th>Số lượng HT</th>
           </tr>
           {/* Hiển thị các đơn hàng */}
-          {Object.entries(data.orderslist).map(([orderName, items]) => {
-            const itemEntries = Object.entries(items);
-            return itemEntries.map(([item, quantity], index) => (
-              <tr key={`${orderName}-${item}`} className={styles.tableRow}>
-                {index === 0 && (
-                  <td rowSpan={itemEntries.length}>{orderName}</td>
+          {data.Orders.map((order, orderIndex) => {
+            const [orderName, items] = Object.entries(order)[0];
+            // Render
+            return items.map((item, itemIndex) => (
+              <tr
+                key={`${orderName}-${item.ProductCode}`}
+                className={styles.tableRow}
+              >
+                {itemIndex === 0 && (
+                  <td rowSpan={items.length}>
+                    <p>{orderName}</p>
+                  </td>
                 )}
-                <td>{item}</td>
-                <td>{quantity}</td>
+                <td>{item.ProductCode}</td>
+                <td>{item.ProductCount}</td>
+                <td>{item.CurrentQuantity}</td>
               </tr>
             ));
           })}
