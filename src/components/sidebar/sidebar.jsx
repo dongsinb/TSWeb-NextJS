@@ -14,29 +14,24 @@ import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
 const sidebarItems = [
   {
-    name: "Home",
+    name: "Màn Hình Đếm",
     href: "/home",
     icon: AiOutlineHome,
   },
   {
-    name: "Store",
+    name: "Quản Lý Đơn Hàng",
     href: "/home/store",
     icon: FaRegWindowRestore,
   },
   {
-    name: "Information",
-    href: "/home/info",
-    icon: IoMdInformationCircleOutline,
-  },
-  {
-    name: "Coungting AFC",
-    href: "/home/countingAFC",
+    name: "Xử Lý Đơn Lỗi",
+    href: "/home/handlingError",
     icon: TiContacts,
   },
   {
-    name: "AFC",
-    href: "/home/afc",
-    icon: TiEye,
+    name: "Thông Tin",
+    href: "/home/info",
+    icon: IoMdInformationCircleOutline,
   },
 ];
 

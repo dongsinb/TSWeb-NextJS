@@ -1,9 +1,9 @@
-import BetrimexHome from "../../components/projects/betrimex/home/home";
+import AFCHome from "../../components/projects/AFC/home/home";
 
 const Home = () => {
   return (
     <div>
-      <BetrimexHome></BetrimexHome>
+      <AFCHome></AFCHome>
     </div>
   );
 };

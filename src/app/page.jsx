@@ -1,5 +1,5 @@
 "use client";
-import Betrimex from "../components/projects/betrimex/home/home";
+import AFC from "../components/projects/AFC/home/home";
 import HeaderTS from "../components/header/header";
 import { useEffect } from "react";
 
@@ -14,7 +14,7 @@ export default function Home() {
     <main>
       <div className="content">
         <HeaderTS user="guest"></HeaderTS>
-        <Betrimex></Betrimex>
+        <AFC></AFC>
       </div>
     </main>
   );

@@ -1,12 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import BagCounting from "../../../components/projects/AFC/bagCounting/bagCounting";
+import BagCounting from "../bagCounting/bagCounting";
 import { Button } from "react-bootstrap";
 import { useRouter } from "next/navigation";
 
-const CountingAFCPage = () => {
+const AFCHome = () => {
   const [data, setData] = useState(null);
   useEffect(() => {
+    console.log("test counting");
     const storedData = localStorage.getItem("confirmOrder");
     if (storedData) {
       setData(JSON.parse(storedData));
@@ -21,18 +22,13 @@ const CountingAFCPage = () => {
   if (!data) {
     return <div style={{ color: "white" }}>Chưa có đơn hàng được gọi</div>;
   }
-  const router = useRouter();
-  const checkErrorBag = () => {
-    router.push("/home/countingAFC/orderProcessing");
-  };
 
   return (
     <div>
-      <Button onClick={checkErrorBag}>Xử lý đơn hàng</Button>
       <h4 style={{ color: "white" }}>Counting AFC</h4>
       <BagCounting data={data}></BagCounting>
     </div>
   );
 };
 
-export default CountingAFCPage;
+export default AFCHome;

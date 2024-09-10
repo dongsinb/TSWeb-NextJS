@@ -1,11 +1,11 @@
 "use client";
 import React, { useState } from "react";
-import styles from "./orderProcessing.module.css";
+import styles from "./handlingError.module.css";
 import { v4 as uuidv4 } from "uuid";
 import { Form, Button, Table, ListGroup } from "react-bootstrap";
 import Image from "next/image";
 
-const OrderProcessing = () => {
+const HandlingError = () => {
   const [datas, setDatas] = useState([
     {
       id: uuidv4(),
@@ -224,4 +224,4 @@ const OrderProcessing = () => {
   );
 };
 
-export default OrderProcessing;
+export default HandlingError;
