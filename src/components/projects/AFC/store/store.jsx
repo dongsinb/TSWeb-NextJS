@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
@@ -8,6 +8,7 @@ import ShowOrders from "../ordersList/showOrders";
 import ExcelJS from "exceljs";
 import Tab from "react-bootstrap/Tab";
 import Tabs from "react-bootstrap/Tabs";
+import { DateTime } from "luxon";
 
 function AFCStore(props) {
   const { datas } = props;
@@ -18,15 +19,26 @@ function AFCStore(props) {
   const finishedOrders = filterOrdersByStatus("Finished");
   const calledOrders = filterOrdersByStatus("Called");
 
-  const [fileData, setFileData] = useState([]);
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
+  const [file, setFile] = useState(null);
+  const [excelData, setExcelData] = useState(null);
+
+  const handleFileUpload = (event) => {
+    const uploadedFile = event.target.files[0];
+    if (uploadedFile) {
+      setFile(uploadedFile);
+    }
+  };
+
+  useEffect(() => {
+    console.log("excelData: ", excelData);
+  }, [excelData]);
+
+  const handleAddOrder = async (event) => {
     if (file) {
       const workbook = new ExcelJS.Workbook();
       try {
         await workbook.xlsx.load(file);
         const worksheet = workbook.worksheets[0];
-        const jsonData = worksheet.getRow();
         const valueJ3 = worksheet.getCell("J3").value;
         const valueJ7 = worksheet.getCell("J7").value;
         const valueI8 = worksheet.getCell("I8").value;
@@ -34,11 +46,45 @@ function AFCStore(props) {
         console.log("Value at J3:", valueJ3.result);
         console.log("Value at J7:", valueJ7);
         console.log("Value at I8:", valueI8);
-        // console.log("Data from file:", jsonData);
-        setFileData(jsonData);
+
+        const rows = [];
+
+        let rowNumber = 11;
+
+        while (true) {
+          const cellB = worksheet.getCell(`B${rowNumber}`).value;
+          const cellG = worksheet.getCell(`G${rowNumber}`).value;
+
+          if (cellB === null || cellG === null) break;
+
+          rows.push({
+            ProductCode: cellB,
+            Quantity: cellG,
+            CurrentQuanity: 0,
+          });
+
+          rowNumber++;
+        }
+
+        const date = DateTime.fromJSDate(new Date(valueJ3.result));
+        const formattedDate = date.toISO();
+        console.log(formattedDate); // "2024-09-09T07:00:00.000+07:00"
+
+        setExcelData({
+          PlateNumber: valueI8,
+          DateTimeIn: formattedDate,
+          OrderName: valueJ7,
+          Orders: rows,
+          status: "Waitting",
+        });
       } catch (err) {
-        console.error("Failed to read file. Ensure it is a valid Excel file.");
+        console.error(
+          "Failed to read file. Ensure it is a valid Excel file.",
+          err
+        );
       }
+    } else {
+      console.error("No file selected.");
     }
   };
 
@@ -63,7 +109,11 @@ function AFCStore(props) {
                   accept=".xlsx, .xls"
                   onChange={handleFileUpload}
                 />
-                <Button variant="outline-secondary" id="button-addon2">
+                <Button
+                  variant="outline-secondary"
+                  id="button-addon2"
+                  onClick={handleAddOrder}
+                >
                   Thêm đơn hàng
                 </Button>
               </InputGroup>
