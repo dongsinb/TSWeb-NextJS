@@ -1,0 +1,5 @@
+/* nprogress-custom.css */
+
+#nprogress .bar {
+  height: 5px;
+}
