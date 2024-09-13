@@ -1,5 +1,5 @@
 # app.py
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, Response, jsonify, send_file
 from flask_cors import CORS
 from pymongo.mongo_client import MongoClient
 import numpy as np
@@ -25,21 +25,36 @@ class DBManagerment():
             print(e)
 
     def get_all_documents(self):
-        docs = []
-        cursor = self.collection.find({})
-        for document in cursor:
-            document['_id'] = str(document['_id'])  # convert object_id from mongodb to string, then parse to json to send client
-            docs.append(document)
-        return docs
+        data = {}
+        for status in ["Waiting", "Called", "Finished"]:
+            docs = []
+            doc_dict = {}
+            cursor = self.collection.find({"Status": status})
+            for document in cursor:
+                document['_id'] = str(document['_id'])  # convert object_id from mongodb to string, then parse to json to send client
+                date = document['DateTimeIn'].split('T')[0]
+                plateNumber = document['PlateNumber']
+                key = date + '_' + plateNumber
+                if key not in doc_dict:
+                    doc_dict[key] = copy.deepcopy(document)
+                    doc_dict[key]["Orders"] = {}
+                    doc_dict[key]["Orders"][document["OrderName"]] = copy.deepcopy(document["Orders"])
+                    doc_dict[key].pop('OrderName', None)
+                    doc_dict[key].pop('Status', None)
+                else:
+                    doc_dict[key]["Orders"][document["OrderName"]] = copy.deepcopy(document["Orders"])
+            if doc_dict:
+                for k, v in doc_dict.items():
+                    docs.append(v)
+            data[status] = docs
+        return data
 
     def get_documents_by_platenumber(self, plate_number):
         # Query the database
         date_time_dict = {}
         cursor = self.collection.find({"PlateNumber": plate_number})
         for document in cursor:
-            print(document['Status'])
             if document['Status'] == 'Waiting':
-                print(document)
                 date = document['DateTimeIn'].split('T')[0]
                 if date not in date_time_dict:
                     document['_id'] = str(document['_id'])  # convert object_id from mongodb to string, then parse to json to send client
@@ -147,7 +162,9 @@ def get_results():
 @app.route("/getAllData", methods=['POST'])
 def getAllData():
     try:
-        return jsonify(dbmanager.get_all_documents())
+        data = dbmanager.get_all_documents()
+        print(data)
+        return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)})
 
