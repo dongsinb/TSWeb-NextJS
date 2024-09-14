@@ -9,8 +9,7 @@ import base64
 import copy
 
 app = Flask(__name__)
-CORS(app, resources={r"/upload_img": {"origins": "http://localhost:3000"},
-                     r"/get_img": {"origins": "http://localhost:3000"}})
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 global_image = None
 ocr_results = None
@@ -119,6 +118,8 @@ class DBManagerment():
                 sorted_orders[idx] = copy.deepcopy(order)
         result = copy.deepcopy(self.waiting_orders[key])
         result["Orders"] = sorted_orders
+        result["SortList"] = copy.copy(sortList)
+        result["IsCombine"] = copy.copy(isCombine)
         return result
 
 
