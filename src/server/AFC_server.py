@@ -21,6 +21,7 @@ class DBManagerment():
         try:
             self.db = client[dbname]
             self.collection = self.db[collectionname]
+            self.waiting_orders = {}
         except Exception as e:
             print(e)
 
@@ -37,16 +38,20 @@ class DBManagerment():
                 key = date + '_' + plateNumber
                 if key not in doc_dict:
                     doc_dict[key] = copy.deepcopy(document)
-                    doc_dict[key]["Orders"] = {}
-                    doc_dict[key]["Orders"][document["OrderName"]] = copy.deepcopy(document["Orders"])
+                    doc_dict[key]["Orders"] = []
+                    order_dict = {document["OrderName"] : copy.deepcopy(document["Orders"])}
+                    doc_dict[key]["Orders"].append(order_dict)
                     doc_dict[key].pop('OrderName', None)
                     doc_dict[key].pop('Status', None)
                 else:
-                    doc_dict[key]["Orders"][document["OrderName"]] = copy.deepcopy(document["Orders"])
+                    order_dict = {document["OrderName"] : copy.deepcopy(document["Orders"])}
+                    doc_dict[key]["Orders"].append(order_dict)
             if doc_dict:
                 for k, v in doc_dict.items():
                     docs.append(v)
             data[status] = docs
+            if status == "Waiting":
+                self.waiting_orders = copy.deepcopy(doc_dict)
         return data
 
     def get_documents_by_platenumber(self, plate_number):
@@ -83,6 +88,39 @@ class DBManagerment():
         else:
             print("Document insert failed")
             return False
+
+    def orders_sorting(self, data):
+        sortList = data["SortList"]
+        isCombine = data["IsCombine"]
+        date = data['DateTimeIn'].split('T')[0]
+        plateNumber = data['PlateNumber']
+        key = date + '_' + plateNumber
+        orders = self.waiting_orders[key]["Orders"]
+        if isCombine:
+            sorted_orders = [{"order":[]}]
+            order_combine = {}
+            for order in orders:
+                order_info = list(order.values())[0]
+                for info in order_info:
+                    code = info["ProductCode"]
+                    if code not in order_combine:
+                        order_combine[code] = copy.deepcopy(info)
+                    else:
+                        order_combine[code]["ProductCount"] += info["ProductCount"]
+                        order_combine[code]["CurrentQuantity"] += info["CurrentQuantity"]
+            for info in order_combine.values():
+                sorted_orders[0]["order"].append(info)
+        else:
+            sorted_orders = [None] * len(sortList)
+            for i in range(len(sortList)):
+                order = orders[i]
+                orderName = list(order.keys())[0]
+                idx = sortList.index(orderName)
+                sorted_orders[idx] = copy.deepcopy(order)
+        result = copy.deepcopy(self.waiting_orders[key])
+        result["Orders"] = sorted_orders
+        return result
+
 
 dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09slu1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", dbname="AFC", collectionname="OrderData")
 
@@ -163,7 +201,6 @@ def get_results():
 def getAllData():
     try:
         data = dbmanager.get_all_documents()
-        print(data)
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)})
@@ -203,6 +240,13 @@ def insertData():
         data = request.json
         isPush = dbmanager.insert_data(data)
     return jsonify(isPush)
+
+# Start counting order when calling truck
+@app.route('/countingData', methods=['POST'])
+def countingData():
+    data = request.json
+    print(data)
+    return jsonify(dbmanager.orders_sorting(data))
 
 if __name__ == '__main__':
     app.run(host='192.168.100.164', port=5000)
