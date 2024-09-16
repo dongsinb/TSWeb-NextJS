@@ -5,6 +5,7 @@ import Modal from "react-bootstrap/Modal";
 import { Form } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import styles from "./createModalCall.module.css";
+import axios from "axios";
 
 function CreateModalCall(props) {
   const { showModalCall, setShowModalCall, calledOrder, setConfirmOrder } =
@@ -50,23 +51,45 @@ function CreateModalCall(props) {
     }
   }, [isChecked]);
 
+  const sendConfirmOrder = async (confirmOrderinfo) => {
+    try {
+      const response = await axios.post(
+        "http://192.168.100.134:5000/countingData",
+        confirmOrderinfo
+      );
+      console.log("Success:", response.data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
   const confirmOrder = () => {
     // Tạo danh sách các đơn hàng đã sắp xếp lại
-    const sortedOrders = ordersList.map((orderName) => {
-      return calledOrder["Orders"].find(
-        (order) => Object.keys(order)[0] === orderName
-      );
-    });
+    console.log("ordersList: ", ordersList);
+    // const sortedOrders = ordersList.map((orderName) => {
+    //   return {
+    //     [orderName]: calledOrder["Orders"][orderName],
+    //   };
+    // });
 
+    // const confirmOrderinfo = {
+    //   ...calledOrder,
+    //   isCombine: isChecked,
+    //   sortList: sortedOrders,
+    // };
     const confirmOrderinfo = {
-      ...calledOrder,
-      isCombine: isChecked,
-      sortList: sortedOrders,
+      PlateNumber: calledOrder.PlateNumber,
+      DateTimeIn: calledOrder.DateTimeIn,
+      Status: calledOrder.Status,
+      IsCombine: isChecked,
+      SortList: ordersList,
     };
+
+    sendConfirmOrder(confirmOrderinfo);
     setConfirmOrder(confirmOrderinfo);
     console.log("ordersList: ", ordersList);
-    console.log("confirmOrderinfo: ", confirmOrderinfo);
-    setShowModalCall(false);
+    console.log("confirmOrderinfo: ", JSON.stringify(confirmOrderinfo));
+    handleClose();
     localStorage.setItem("orderData", JSON.stringify(calledOrder));
     localStorage.setItem("confirmOrder", JSON.stringify(confirmOrderinfo));
   };

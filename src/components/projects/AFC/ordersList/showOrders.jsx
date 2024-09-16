@@ -10,7 +10,7 @@ import CreateModalEditAFC from "../createModalEdit/createModalEdit";
 
 function ShowOrders(props) {
   const { datas, status } = props;
-  console.log("status: ", status);
+  console.log("show Oder datas: ", datas);
   const router = useRouter();
   const [expandedRow, setExpandedRow] = useState(null);
 
@@ -37,7 +37,7 @@ function ShowOrders(props) {
 
   //Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 2; // Chỉ hiển thị 1 item mỗi trang
+  const itemsPerPage = 10; // Chỉ hiển thị 1 item mỗi trang
 
   // Lấy index của item đầu tiên và cuối cùng trong trang hiện tại
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -84,7 +84,7 @@ function ShowOrders(props) {
               <td>{indexOfFirstItem + i + 1}</td>
               <td>{data.DateTimeIn}</td>
               <td>{data.PlateNumber}</td>
-              <td>{data.status}</td>
+              <td>{data.Status}</td>
               <td>
                 <Button onClick={() => toggleRow(i)}>
                   {expandedRow === i ? "Ẩn" : "Hiển thị chi tiết"}

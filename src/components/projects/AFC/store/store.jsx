@@ -9,15 +9,33 @@ import ExcelJS from "exceljs";
 import Tab from "react-bootstrap/Tab";
 import Tabs from "react-bootstrap/Tabs";
 import { DateTime } from "luxon";
+import axios from "axios";
 
 function AFCStore(props) {
   const { datas } = props;
-  const filterOrdersByStatus = (status) => {
-    return datas.filter((data) => data.status === status);
-  };
-  const waitingOrders = filterOrdersByStatus("Waitting");
-  const finishedOrders = filterOrdersByStatus("Finished");
-  const calledOrders = filterOrdersByStatus("Called");
+
+  useEffect(() => {
+    console.log("datas AFC: ", datas);
+  }, [datas]);
+
+  const waitingOrders = datas["Waiting"].map((order) => ({
+    ...order,
+    Status: "Waiting",
+  }));
+  const finishedOrders = datas["Finished"].map((order) => ({
+    ...order,
+    Status: "Finished",
+  }));
+  const calledOrders = datas["Called"].map((order) => ({
+    ...order,
+    Status: "Called",
+  }));
+
+  useEffect(() => {
+    console.log("waitingOrders: ", waitingOrders);
+    console.log("finishedOrders: ", finishedOrders);
+    console.log("calledOrders: ", calledOrders);
+  }, [waitingOrders, finishedOrders, calledOrders]);
 
   const [file, setFile] = useState(null);
   const [excelData, setExcelData] = useState(null);
@@ -30,7 +48,7 @@ function AFCStore(props) {
   };
 
   useEffect(() => {
-    console.log("excelData: ", excelData);
+    console.log("excelData: ", JSON.stringify(excelData));
   }, [excelData]);
 
   const handleAddOrder = async (event) => {
@@ -58,9 +76,9 @@ function AFCStore(props) {
           if (cellB === null || cellG === null) break;
 
           rows.push({
-            ProductCode: cellB,
-            Quantity: cellG,
-            CurrentQuanity: 0,
+            ProductCode: cellB.toUpperCase(),
+            ProductCount: cellG,
+            CurrentQuantity: 0,
           });
 
           rowNumber++;
@@ -69,14 +87,26 @@ function AFCStore(props) {
         const date = DateTime.fromJSDate(new Date(valueJ3.result));
         const formattedDate = date.toISO();
         console.log(formattedDate); // "2024-09-09T07:00:00.000+07:00"
-
-        setExcelData({
+        const JsonDatas = {
           PlateNumber: valueI8,
           DateTimeIn: formattedDate,
           OrderName: valueJ7,
           Orders: rows,
-          status: "Waitting",
-        });
+          Status: "Waiting",
+        };
+
+        try {
+          const response = await axios.post(
+            "http://192.168.100.134:5000/insertData",
+            JsonDatas
+          );
+          console.log("tesssttttttt");
+          console.log("Response from server:", response.data);
+        } catch (error) {
+          console.error("Error sending data to server:", error);
+        }
+
+        setExcelData(JsonDatas);
       } catch (err) {
         console.error(
           "Failed to read file. Ensure it is a valid Excel file.",
@@ -91,13 +121,13 @@ function AFCStore(props) {
   return (
     <div>
       <Tabs
-        defaultActiveKey="Waitting"
+        defaultActiveKey="Waiting"
         id="justify-tab-example"
         className="mb-3"
         justify
       >
         <Tab
-          eventKey="Waitting"
+          eventKey="Waiting"
           title="Xe chưa lấy hàng"
           className={styles.tabName}
         >

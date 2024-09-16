@@ -2,8 +2,7 @@ import React from "react";
 import { Table } from "react-bootstrap";
 import styles from "./bagCounting.module.css";
 
-const BagCounting = (props) => {
-  const { data } = props;
+const BagCounting = ({ data }) => {
   return (
     <div>
       <Table striped bordered hover>
@@ -11,12 +10,13 @@ const BagCounting = (props) => {
           {/* Hiển thị status và license plate */}
           <tr className={styles.tableRow}>
             <td colSpan="4">
-              <strong>Status:</strong> {data.status}
+              <strong>Trạng thái:</strong>{" "}
+              {data.IsCombine ? "Đếm gộp" : "Đếm theo đơn"}
             </td>
           </tr>
           <tr className={styles.tableRow}>
             <td colSpan="4">
-              <strong>License Plate:</strong> {data.PlateNumber}
+              <strong>Biển số xe:</strong> {data.PlateNumber}
             </td>
           </tr>
           <tr className={styles.tableRow}>
@@ -36,7 +36,7 @@ const BagCounting = (props) => {
               >
                 {itemIndex === 0 && (
                   <td rowSpan={items.length}>
-                    <p>{orderName}</p>
+                    <p>{data.IsCombine ? "Đơn Hàng gộp" : orderName}</p>
                   </td>
                 )}
                 <td>{item.ProductCode}</td>
