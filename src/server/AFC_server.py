@@ -14,6 +14,72 @@ CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 global_image = None
 ocr_results = None
 
+class CallingDataHandler():
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.calling_data = {}
+        self.orders_status = {"currentOrderName": "",
+                              "isAllOrderFull": False,
+                              "product": {}}
+
+    def init_orders_status(self):
+        if self.calling_data["IsCombine"]:
+            self.orders_status["currentOrderName"] = "ordername"
+        else:
+            self.orders_status["currentOrderName"] = list(self.calling_data["Orders"].keys())[0]
+        for productCode, product in self.calling_data["Orders"][self.orders_status["currentOrderName"]].items():
+            if productCode != "_id":
+                if product["CurrentQuantity"] < product["ProductCount"]:
+                    self.orders_status["product"][productCode] = False
+                else:
+                    self.orders_status["product"][productCode] = True
+
+    def set_calling_data(self, calling_data):
+        self.calling_data = calling_data
+        if self.calling_data:
+            self.init_orders_status()
+
+    # check if all orders are full, if not, with orders are not combined, if all products in current order are full, go next order in a calling truck
+    def check_AllOrderFull(self):
+        if self.calling_data["IsCombine"]:
+            if False in list(self.orders_status["product"].values()):
+                self.orders_status["isAllOrderFull"] = False
+            else:
+                self.orders_status["isAllOrderFull"] = True
+        else:
+            if False in list(self.orders_status["product"].values()):
+                is_current_order_full = False
+            else:
+                is_current_order_full = True
+            if is_current_order_full:
+                idx = list(self.calling_data["Orders"].keys()).index(self.orders_status["currentOrderName"])
+                if idx < len(self.calling_data["Orders"].keys()) - 1:
+                    self.orders_status["currentOrderName"] = list(self.calling_data["Orders"].keys())[idx+1]
+                    for productCode, product in self.calling_data["Orders"][self.orders_status["currentOrderName"]].items():
+                        if productCode != "_id":
+                            if product["CurrentQuantity"] < product["ProductCount"]:
+                                self.orders_status["product"][productCode] = False
+                            else:
+                                self.orders_status["product"][productCode] = True
+                else:
+                    self.orders_status["isAllOrderFull"] = True
+
+    def test_counting(self, data):
+        productCode = data["ProductCode"]
+        if self.calling_data["IsCombine"]:
+            if self.calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"] < self.calling_data["Orders"]["ordername"][productCode]["ProductCount"]:
+                self.calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"] += 1
+            else:
+                self.orders_status["product"][productCode] = True
+        else:
+            if self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["CurrentQuantity"] < self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["ProductCount"]:
+                self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["CurrentQuantity"] += 1
+            else:
+                self.orders_status["product"][productCode] = True
+        self.check_AllOrderFull()
+
 class DBManagerment():
     def __init__(self, uri, dbname, collectionname) -> None:
         client = MongoClient(uri)
@@ -21,6 +87,8 @@ class DBManagerment():
             self.db = client[dbname]
             self.collection = self.db[collectionname]
             self.waiting_orders = {}
+            self.orderName_ID_dict = {}
+            self.current_calling_ordername = ''
         except Exception as e:
             print(e)
 
@@ -37,14 +105,14 @@ class DBManagerment():
                 key = date + '_' + plateNumber
                 if key not in doc_dict:
                     doc_dict[key] = copy.deepcopy(document)
-                    doc_dict[key]["Orders"] = []
-                    order_dict = {document["OrderName"] : copy.deepcopy(document["Orders"])}
-                    doc_dict[key]["Orders"].append(order_dict)
+                    doc_dict[key]["Orders"] = {document["OrderName"] : copy.deepcopy(document["Orders"])}
+                    doc_dict[key]["Orders"][document["OrderName"]]["_id"] = copy.deepcopy(document['_id'])
+                    doc_dict[key].pop('_id', None)
                     doc_dict[key].pop('OrderName', None)
                     doc_dict[key].pop('Status', None)
                 else:
-                    order_dict = {document["OrderName"] : copy.deepcopy(document["Orders"])}
-                    doc_dict[key]["Orders"].append(order_dict)
+                    doc_dict[key]["Orders"][document["OrderName"]] = copy.deepcopy(document["Orders"])
+                    doc_dict[key]["Orders"][document["OrderName"]]["_id"] = copy.deepcopy(document['_id'])
             if doc_dict:
                 for k, v in doc_dict.items():
                     docs.append(v)
@@ -96,26 +164,19 @@ class DBManagerment():
         key = date + '_' + plateNumber
         orders = self.waiting_orders[key]["Orders"]
         if isCombine:
-            sorted_orders = [{"order":[]}]
-            order_combine = {}
-            for order in orders:
-                order_info = list(order.values())[0]
-                for info in order_info:
-                    code = info["ProductCode"]
-                    if code not in order_combine:
-                        order_combine[code] = copy.deepcopy(info)
-                    else:
-                        order_combine[code]["ProductCount"] += info["ProductCount"]
-                        order_combine[code]["CurrentQuantity"] += info["CurrentQuantity"]
-            for info in order_combine.values():
-                sorted_orders[0]["order"].append(info)
+            sorted_orders = {"ordername":{}}
+            for orderName, order in orders.items():
+                for productCode, product in order.items():
+                    if productCode != "_id":
+                        if productCode not in sorted_orders["ordername"]:
+                            sorted_orders["ordername"][productCode] = copy.deepcopy(product)
+                        else:
+                            sorted_orders["ordername"][productCode]["ProductCount"] += product["ProductCount"]
+                            sorted_orders["ordername"][productCode]["CurrentQuantity"] += product["CurrentQuantity"]
         else:
-            sorted_orders = [None] * len(sortList)
-            for i in range(len(sortList)):
-                order = orders[i]
-                orderName = list(order.keys())[0]
-                idx = sortList.index(orderName)
-                sorted_orders[idx] = copy.deepcopy(order)
+            sorted_orders = {}
+            for orderName in sortList:
+                sorted_orders[orderName] = copy.deepcopy(orders[orderName])
         result = copy.deepcopy(self.waiting_orders[key])
         result["Orders"] = sorted_orders
         result["SortList"] = copy.copy(sortList)
@@ -124,6 +185,7 @@ class DBManagerment():
 
 
 dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09slu1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", dbname="AFC", collectionname="OrderData")
+dataHandler = CallingDataHandler()
 
 # Upload image from phone to server
 @app.route('/upload_img', methods=['POST'])
@@ -242,12 +304,27 @@ def insertData():
         isPush = dbmanager.insert_data(data)
     return jsonify(isPush)
 
-# Start counting order when calling truck
-@app.route('/countingData', methods=['POST'])
-def countingData():
+# Sorting order when calling truck
+@app.route('/sortingData', methods=['POST'])
+def sortingData():
+    data = request.json
+    dataHandler.set_calling_data(dbmanager.orders_sorting(data))
+    return jsonify(dataHandler.calling_data)
+
+# Test counting order
+@app.route('/testCounting', methods=['POST'])
+def testCounting():
     data = request.json
     print(data)
-    return jsonify(dbmanager.orders_sorting(data))
+    dataHandler.test_counting(data)
+    print(dataHandler.calling_data)
+    return jsonify(dataHandler.calling_data)
+
+# Test counting order
+@app.route('/getListProductCode', methods=['POST'])
+def getListProductCode():
+    print(dataHandler.orders_status["product"])
+    return jsonify(dataHandler.orders_status["product"])
 
 if __name__ == '__main__':
     app.run(host='192.168.100.164', port=5000)
