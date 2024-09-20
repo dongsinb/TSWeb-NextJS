@@ -5,6 +5,7 @@ import styles from "./cretateModalEdit.module.css";
 const CreateModalEditAFC = ({ show, onHide, orderData, onSave }) => {
   // State to store the currently edited order data
   const [editedOrder, setEditedOrder] = useState(orderData || {});
+  console.log("editedOrder:", JSON.stringify(editedOrder));
 
   // Update state when orderData prop changes
   useEffect(() => {
@@ -12,11 +13,9 @@ const CreateModalEditAFC = ({ show, onHide, orderData, onSave }) => {
   }, [orderData]);
 
   // Function to update the order data in state
-  const updateOrder = (orderIndex, productIndex, field, value) => {
-    const newOrders = [...editedOrder.Orders]; // Create a copy of Orders
-    newOrders[orderIndex][Object.keys(newOrders[orderIndex])[0]][productIndex][
-      field
-    ] = parseInt(value, 10) || 0;
+  const updateOrder = (orderKey, productKey, field, value) => {
+    const newOrders = { ...editedOrder.Orders }; // Create a copy of Orders
+    newOrders[orderKey][productKey][field] = parseInt(value, 10) || 0;
 
     setEditedOrder((prevOrder) => ({
       ...prevOrder,
@@ -25,48 +24,52 @@ const CreateModalEditAFC = ({ show, onHide, orderData, onSave }) => {
   };
 
   // Event handler for input changes
-  const handleInputChange = (orderIndex, productIndex, field) => (event) => {
+  const handleInputChange = (orderKey, productKey, field) => (event) => {
     const { value } = event.target; // Get the value from the input
-    updateOrder(orderIndex, productIndex, field, value);
+    updateOrder(orderKey, productKey, field, value);
   };
 
   // Function to render table body rows
   const renderTableBody = () => {
-    return editedOrder.Orders.map((order, orderIndex) => {
-      const orderKey = Object.keys(order)[0]; // Get the order name (e.g., Order1)
-      return order[orderKey].map((product, productIndex) => (
-        <tr
-          key={`${orderKey}-${product.ProductCode}`}
-          className={styles.tableRow}
-        >
-          {productIndex === 0 && (
-            <td rowSpan={order[orderKey].length}>{orderKey}</td>
-          )}
-          <td>{product.ProductCode}</td>
-          <td>
-            <Form.Control
-              type="number"
-              value={product.ProductCount}
-              onChange={handleInputChange(
-                orderIndex,
-                productIndex,
-                "ProductCount"
-              )}
-            />
-          </td>
-          <td>
-            <Form.Control
-              type="number"
-              value={product.CurrentQuantity}
-              onChange={handleInputChange(
-                orderIndex,
-                productIndex,
-                "CurrentQuantity"
-              )}
-            />
-          </td>
-        </tr>
-      ));
+    return Object.keys(editedOrder.Orders).map((orderKey) => {
+      const products = editedOrder.Orders[orderKey];
+      return Object.keys(products).map((productKey, productIndex) => {
+        if (productKey === "_id") return null; // Skip the _id field
+        const product = products[productKey];
+        return (
+          <tr
+            key={`${orderKey}-${productKey}`}
+            className={styles.tableRow}
+          >
+            {productIndex === 0 && (
+              <td rowSpan={Object.keys(products).length - 1}>{orderKey}</td>
+            )}
+            <td>{productKey}</td>
+            <td>
+              <Form.Control
+                type="number"
+                value={product.ProductCount}
+                onChange={handleInputChange(
+                  orderKey,
+                  productKey,
+                  "ProductCount"
+                )}
+              />
+            </td>
+            <td>
+              <Form.Control
+                type="number"
+                value={product.CurrentQuantity}
+                onChange={handleInputChange(
+                  orderKey,
+                  productKey,
+                  "CurrentQuantity"
+                )}
+              />
+            </td>
+          </tr>
+        );
+      });
     });
   };
 
@@ -76,7 +79,7 @@ const CreateModalEditAFC = ({ show, onHide, orderData, onSave }) => {
         <Modal.Title>Edit Order</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        {editedOrder.Orders && editedOrder.Orders.length > 0 ? (
+        {editedOrder.Orders && Object.keys(editedOrder.Orders).length > 0 ? (
           <Table bordered hover>
             <thead>
               <tr>

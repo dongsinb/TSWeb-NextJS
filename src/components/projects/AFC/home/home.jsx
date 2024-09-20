@@ -7,7 +7,7 @@ const AFCHome = () => {
   //   const [data, setData] = useState(null);
   let data = {};
 
-  const dataTestNoCombine = {
+  const dataTestNoCombine_old = {
     DateTimeIn: "2024-09-16T07:00:00.000+07:00",
     IsCombine: false,
     Orders: [
@@ -55,7 +55,66 @@ const AFCHome = () => {
     _id: "66e79c8aa7ec9f3c82288464",
   };
 
-  data = { ...dataTestCombine };
+  const dataTestNoCombine_new = {
+    DateTimeIn: "2024-06-12T00:00:00+07:00",
+    IsCombine: false,
+    Orders: {
+      "0041478858": {
+        "111G-25": { CurrentQuantity: 0, ProductCount: 25 },
+        "112S-25": { CurrentQuantity: 0, ProductCount: 25 },
+        "122G-25": { CurrentQuantity: 0, ProductCount: 25 },
+        "2220-25": { CurrentQuantity: 0, ProductCount: 25 },
+        _id: "66e940e4a56399da40148afa"
+      },
+      "0051478858": {
+        "111G-25": { CurrentQuantity: 0, ProductCount: 25 },
+        "121G-25": { CurrentQuantity: 0, ProductCount: 25 },
+        "212S-25": { CurrentQuantity: 0, ProductCount: 25 },
+        "2220-25": { CurrentQuantity: 0, ProductCount: 25 },
+        _id: "66e9411fa56399da40148afb"
+      }
+    },
+    PlateNumber: "19C19248",
+    SortList: ["0051478858", "0041478858"]
+  };
+  const dataTestCombine_new = {
+    "DateTimeIn": "2024-06-12T00:00:00+07:00",
+    "IsCombine": true,
+    "Orders": {
+        "ordername": {
+            "111G-25": {
+                "CurrentQuantity": 0,
+                "ProductCount": 50
+            },
+            "112S-25": {
+                "CurrentQuantity": 0,
+                "ProductCount": 25
+            },
+            "121G-25": {
+                "CurrentQuantity": 0,
+                "ProductCount": 25
+            },
+            "122G-25": {
+                "CurrentQuantity": 0,
+                "ProductCount": 25
+            },
+            "212S-25": {
+                "CurrentQuantity": 0,
+                "ProductCount": 25
+            },
+            "2220-25": {
+                "CurrentQuantity": 0,
+                "ProductCount": 50
+            }
+        }
+    },
+    "PlateNumber": "19C19248",
+    "SortList": [
+        "0051478858",
+        "0041478858"
+    ]
+}
+  data = { ...dataTestNoCombine_new };
 
   if (data && Object.keys(data).length === 0) {
     return (

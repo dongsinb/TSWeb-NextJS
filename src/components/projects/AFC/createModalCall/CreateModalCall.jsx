@@ -8,8 +8,7 @@ import styles from "./createModalCall.module.css";
 import axios from "axios";
 
 function CreateModalCall(props) {
-  const { showModalCall, setShowModalCall, calledOrder, setConfirmOrder } =
-    props;
+  const { showModalCall, setShowModalCall, calledOrder, setConfirmOrder } = props;
   const handleClose = () => {
     setShowModalCall(false);
     setIsChecked(false);
@@ -22,10 +21,8 @@ function CreateModalCall(props) {
   const [ordersList, setOrdersList] = useState([]);
 
   useEffect(() => {
-    if (calledOrder && calledOrder["Orders"]) {
-      const orders = calledOrder["Orders"].map(
-        (order) => Object.keys(order)[0]
-      );
+    if (calledOrder && calledOrder.Orders) {
+      const orders = Object.keys(calledOrder.Orders);
       setOrdersList(orders);
     } else {
       setOrdersList([]);
@@ -64,19 +61,7 @@ function CreateModalCall(props) {
   };
 
   const confirmOrder = () => {
-    // Tạo danh sách các đơn hàng đã sắp xếp lại
     console.log("ordersList: ", ordersList);
-    // const sortedOrders = ordersList.map((orderName) => {
-    //   return {
-    //     [orderName]: calledOrder["Orders"][orderName],
-    //   };
-    // });
-
-    // const confirmOrderinfo = {
-    //   ...calledOrder,
-    //   isCombine: isChecked,
-    //   sortList: sortedOrders,
-    // };
     const confirmOrderinfo = {
       PlateNumber: calledOrder.PlateNumber,
       DateTimeIn: calledOrder.DateTimeIn,
@@ -85,7 +70,7 @@ function CreateModalCall(props) {
       SortList: ordersList,
     };
 
-    sendConfirmOrder(confirmOrderinfo);
+    // sendConfirmOrder(confirmOrderinfo);
     setConfirmOrder(confirmOrderinfo);
     console.log("ordersList: ", ordersList);
     console.log("confirmOrderinfo: ", JSON.stringify(confirmOrderinfo));
@@ -111,7 +96,7 @@ function CreateModalCall(props) {
               <div ref={provided.innerRef} {...provided.droppableProps}>
                 {ordersList.map((orderName, index) => (
                   <Draggable
-                    key={orderName}
+                    key={orderName} 
                     draggableId={orderName}
                     index={index}
                   >

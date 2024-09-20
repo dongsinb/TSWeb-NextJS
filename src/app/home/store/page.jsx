@@ -29,6 +29,88 @@ const StorePage = () => {
 
     fetchData();
   }, []);
+
+  const newData = {
+    Called: [],
+    Finished: [
+      {
+        DateTimeIn: "2024-06-11T00:00:00+07:00",
+        Orders: {
+          "0061478858": {
+            "111G-25": { CurrentQuantity: 0, ProductCount: 25 },
+            "212S-25": { CurrentQuantity: 0, ProductCount: 25 },
+            "221G-25": { CurrentQuantity: 0, ProductCount: 25 },
+            "2220-25": { CurrentQuantity: 0, ProductCount: 25 },
+            _id: "66e94149a56399da40148afc",
+          },
+        },
+        PlateNumber: "20C19248",
+      },
+      {
+        DateTimeIn: "2024-06-11T00:00:00+07:00",
+        Orders: {
+          "0071478858": {
+            "1220-25": { CurrentQuantity: 0, ProductCount: 25 },
+            "211G-25": { CurrentQuantity: 0, ProductCount: 25 },
+            "213S-25": { CurrentQuantity: 0, ProductCount: 25 },
+            "221G-25": { CurrentQuantity: 0, ProductCount: 25 },
+            _id: "66e941b4a56399da40148afd",
+          },
+        },
+        PlateNumber: "19C19248",
+      },
+    ],
+    Waiting: [
+      {
+        DateTimeIn: "2024-06-12T00:00:00+07:00",
+        Orders: {
+          "0011478858": {
+            "211G-25": { CurrentQuantity: 0, ProductCount: 20 },
+            "212G-25": { CurrentQuantity: 0, ProductCount: 20 },
+            "302S-25": { CurrentQuantity: 0, ProductCount: 20 },
+            "G200-25": { CurrentQuantity: 0, ProductCount: 20 },
+            _id: "66e93f89a56399da40148af7",
+          },
+          "0021478858": {
+            "302S-25": { CurrentQuantity: 0, ProductCount: 30 },
+            "311G-25": { CurrentQuantity: 0, ProductCount: 30 },
+            "312G-25": { CurrentQuantity: 0, ProductCount: 30 },
+            "G200-25": { CurrentQuantity: 0, ProductCount: 30 },
+            _id: "66e9405aa56399da40148af8",
+          },
+          "0031478858": {
+            "202S-25": { CurrentQuantity: 0, ProductCount: 40 },
+            "212G-25": { CurrentQuantity: 0, ProductCount: 40 },
+            "321G-25": { CurrentQuantity: 0, ProductCount: 40 },
+            "G200-25": { CurrentQuantity: 0, ProductCount: 40 },
+            _id: "66e940a6a56399da40148af9",
+          },
+        },
+        PlateNumber: "20C19248",
+      },
+      {
+        DateTimeIn: "2024-06-12T00:00:00+07:00",
+        Orders: {
+          "0041478858": {
+            "111G-25": { CurrentQuantity: 0, ProductCount: 50 },
+            "112S-25": { CurrentQuantity: 0, ProductCount: 50 },
+            "122G-25": { CurrentQuantity: 0, ProductCount: 50 },
+            "2220-25": { CurrentQuantity: 0, ProductCount: 50 },
+            _id: "66e940e4a56399da40148afa",
+          },
+          "0051478858": {
+            "111G-25": { CurrentQuantity: 0, ProductCount: 60 },
+            "121G-25": { CurrentQuantity: 0, ProductCount: 60 },
+            "212S-25": { CurrentQuantity: 0, ProductCount: 60 },
+            "2220-25": { CurrentQuantity: 0, ProductCount: 60 },
+            _id: "66e9411fa56399da40148afb",
+          },
+        },
+        PlateNumber: "19C19248",
+      },
+    ],
+  };
+
   const datas11111 = [
     {
       _id: "6690a14e7fda34bff6b56f0c",

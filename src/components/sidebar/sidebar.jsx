@@ -4,7 +4,7 @@ import { AiOutlineHome } from "react-icons/ai";
 import { FaRegWindowRestore } from "react-icons/fa6";
 import { TiContacts } from "react-icons/ti";
 import { IoMdInformationCircleOutline } from "react-icons/io";
-import { TiEye } from "react-icons/ti";
+import { TiPlus  } from "react-icons/ti";
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import Link from "next/link";
 import { useState } from "react";
@@ -27,6 +27,11 @@ const sidebarItems = [
     name: "Xử Lý Đơn Lỗi",
     href: "/home/handlingError",
     icon: TiContacts,
+  },
+  {
+    name: "Thêm Đơn Hàng",
+    href: "/home/addOrder",
+    icon: TiPlus,
   },
   {
     name: "Thông Tin",

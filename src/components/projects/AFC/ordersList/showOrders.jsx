@@ -28,7 +28,7 @@ function ShowOrders(props) {
     setShowModalCall(true);
     setCallOrder(data);
 
-    console.log("dataSend: ", data);
+    console.log("dataSend: ", JSON.stringify(data));
     // localStorage.setItem("orderData", JSON.stringify(data));
     // localStorage.setItem("confirmOrder", JSON.stringify(confirmOrder));
     // setCallOrder(data);
@@ -80,7 +80,7 @@ function ShowOrders(props) {
         </thead>
         <tbody>
           {currentItems.map((data, i) => (
-            <tr key={data._id} className={styles.tableRow}>
+            <tr key={`${data.PlateNumber}-${i}`} className={styles.tableRow}>
               <td>{indexOfFirstItem + i + 1}</td>
               <td>{data.DateTimeIn}</td>
               <td>{data.PlateNumber}</td>
@@ -107,25 +107,27 @@ function ShowOrders(props) {
                         </tr>
                       </thead>
                       <tbody>
-                        {data.Orders.map((order, orderIndex) => {
-                          const [orderName, items] = Object.entries(order)[0];
-                          // Render
-                          return items.map((item, itemIndex) => (
+                        {Object.entries(data.Orders).map(([orderName, items]) => (
+                          Object.entries(items).map(([productCode, item], itemIndex) => (
                             <tr
-                              key={`${orderName}-${item.ProductCode}`}
+                              key={`${data._id}-${orderName}-${productCode}-${itemIndex}`}
                               className={styles.tableRow}
                             >
                               {itemIndex === 0 && (
-                                <td rowSpan={items.length}>
+                                <td rowSpan={Object.keys(items).length}>
                                   <p>{orderName}</p>
                                 </td>
                               )}
-                              <td>{item.ProductCode}</td>
-                              <td>{item.ProductCount}</td>
-                              <td>{item.CurrentQuantity}</td>
+                              {productCode !== "_id" && (
+                                <>
+                                  <td>{productCode}</td>
+                                  <td>{item.ProductCount}</td>
+                                  <td>{item.CurrentQuantity}</td>
+                                </>
+                              )}
                             </tr>
-                          ));
-                        })}
+                          ))
+                        ))}
                       </tbody>
                     </Table>
                   </div>

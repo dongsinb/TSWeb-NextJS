@@ -1,0 +1,8 @@
+.order-block {
+    border: 1px solid #ccc;
+    padding: 16px;
+    margin-top: 16px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    color: black;
+}

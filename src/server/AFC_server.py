@@ -311,6 +311,15 @@ def sortingData():
     dataHandler.set_calling_data(dbmanager.orders_sorting(data))
     return jsonify(dataHandler.calling_data)
 
+# Get data for counting page
+@app.route("/countingData", methods=['POST'])
+def countingData():
+    try:
+        countingData = dataHandler.calling_data
+        return jsonify(countingData)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
 # Test counting order
 @app.route('/testCounting', methods=['POST'])
 def testCounting():
@@ -327,4 +336,4 @@ def getListProductCode():
     return jsonify(dataHandler.orders_status["product"])
 
 if __name__ == '__main__':
-    app.run(host='192.168.100.164', port=5000)
+    app.run(host='192.168.100.134', port=5000)
