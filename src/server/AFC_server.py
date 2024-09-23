@@ -21,10 +21,11 @@ class CallingDataHandler():
     def reset(self):
         self.calling_data = {}
         self.orders_status = {"currentOrderName": "",
-                              "isAllOrderFull": False,
                               "product": {}}
 
     def init_orders_status(self):
+        self.orders_status = {"currentOrderName": "",
+                              "product": {}}
         if self.calling_data["IsCombine"]:
             self.orders_status["currentOrderName"] = "ordername"
         else:
@@ -45,9 +46,9 @@ class CallingDataHandler():
     def check_AllOrderFull(self):
         if self.calling_data["IsCombine"]:
             if False in list(self.orders_status["product"].values()):
-                self.orders_status["isAllOrderFull"] = False
+                self.calling_data["isAllOrderFull"] = False
             else:
-                self.orders_status["isAllOrderFull"] = True
+                self.calling_data["isAllOrderFull"] = True
         else:
             if False in list(self.orders_status["product"].values()):
                 is_current_order_full = False
@@ -64,18 +65,22 @@ class CallingDataHandler():
                             else:
                                 self.orders_status["product"][productCode] = True
                 else:
-                    self.orders_status["isAllOrderFull"] = True
+                    self.calling_data["isAllOrderFull"] = True
 
     def test_counting(self, data):
         productCode = data["ProductCode"]
         if self.calling_data["IsCombine"]:
             if self.calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"] < self.calling_data["Orders"]["ordername"][productCode]["ProductCount"]:
                 self.calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"] += 1
+                if self.calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"] == self.calling_data["Orders"]["ordername"][productCode]["ProductCount"]:
+                    self.orders_status["product"][productCode] = True
             else:
                 self.orders_status["product"][productCode] = True
         else:
             if self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["CurrentQuantity"] < self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["ProductCount"]:
                 self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["CurrentQuantity"] += 1
+                if self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["CurrentQuantity"] == self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["ProductCount"]:
+                    self.orders_status["product"][productCode] = True
             else:
                 self.orders_status["product"][productCode] = True
         self.check_AllOrderFull()
@@ -181,6 +186,7 @@ class DBManagerment():
         result["Orders"] = sorted_orders
         result["SortList"] = copy.copy(sortList)
         result["IsCombine"] = copy.copy(isCombine)
+        result["isAllOrderFull"] = False
         return result
 
 
@@ -241,7 +247,7 @@ def send_results():
     if not ocr_results:
         return jsonify({"error": "No JSON data received"}), 400
     else:
-        print(ocr_results)
+        # print(ocr_results)
         return jsonify({'message': 'File uploaded successfully'}), 200
 
 # Get OCR results from server to phone
@@ -272,9 +278,9 @@ def getAllData():
 @app.route('/getDatabyPlateNumber', methods=['POST'])
 def getDatabyPlateNumber():
     data = request.json
-    print(data)
+    # print(data)
     plate_number = data.get('PlateNumber')
-    print(plate_number)
+    # print(plate_number)
     if not plate_number:
         return jsonify({"error": "PlateNumber is required"}), 400
     try:
@@ -287,7 +293,6 @@ def getDatabyPlateNumber():
 def getDatabyStatus():
     data = request.json
     status = data.get('Status')
-    print(status)
     if not status:
         return jsonify({"error": "Status is required"}), 400
     try:
@@ -324,7 +329,6 @@ def countingData():
 @app.route('/testCounting', methods=['POST'])
 def testCounting():
     data = request.json
-    print(data)
     dataHandler.test_counting(data)
     print(dataHandler.calling_data)
     return jsonify(dataHandler.calling_data)
@@ -332,8 +336,8 @@ def testCounting():
 # Test counting order
 @app.route('/getListProductCode', methods=['POST'])
 def getListProductCode():
-    print(dataHandler.orders_status["product"])
-    return jsonify(dataHandler.orders_status["product"])
+    # print(dataHandler.orders_status["product"])
+    return jsonify(dataHandler.orders_status)
 
 if __name__ == '__main__':
-    app.run(host='192.168.100.134', port=5000)
+    app.run(host='192.168.100.164', port=5000)
