@@ -1,6 +1,7 @@
 # app.py
 from flask import Flask, request, Response, jsonify, send_file
 from flask_cors import CORS
+from bson.objectid import ObjectId
 from pymongo.mongo_client import MongoClient
 import numpy as np
 import cv2
@@ -15,7 +16,8 @@ global_image = None
 ocr_results = None
 
 class CallingDataHandler():
-    def __init__(self):
+    def __init__(self, dbmanager):
+        self.dbmanager = dbmanager
         self.reset()
 
     def reset(self):
@@ -58,6 +60,7 @@ class CallingDataHandler():
                 idx = list(self.calling_data["Orders"].keys()).index(self.orders_status["currentOrderName"])
                 if idx < len(self.calling_data["Orders"].keys()) - 1:
                     self.orders_status["currentOrderName"] = list(self.calling_data["Orders"].keys())[idx+1]
+                    self.orders_status["product"] = {}  # reset productCode list
                     for productCode, product in self.calling_data["Orders"][self.orders_status["currentOrderName"]].items():
                         if productCode != "_id":
                             if product["CurrentQuantity"] < product["ProductCount"]:
@@ -67,11 +70,11 @@ class CallingDataHandler():
                 else:
                     self.calling_data["isAllOrderFull"] = True
 
-    def test_counting(self, data):
-        productCode = data["ProductCode"]
+    def counting(self, productCode):
         if self.calling_data["IsCombine"]:
             if self.calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"] < self.calling_data["Orders"]["ordername"][productCode]["ProductCount"]:
                 self.calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"] += 1
+                self.dbmanager.update_OrderData_counting(productCode, dataHandler.calling_data["SortList"], dataHandler.calling_data)
                 if self.calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"] == self.calling_data["Orders"]["ordername"][productCode]["ProductCount"]:
                     self.orders_status["product"][productCode] = True
             else:
@@ -79,6 +82,7 @@ class CallingDataHandler():
         else:
             if self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["CurrentQuantity"] < self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["ProductCount"]:
                 self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["CurrentQuantity"] += 1
+                self.dbmanager.update_OrderData_counting(productCode, [self.orders_status["currentOrderName"]], dataHandler.calling_data)
                 if self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["CurrentQuantity"] == self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["ProductCount"]:
                     self.orders_status["product"][productCode] = True
             else:
@@ -86,23 +90,24 @@ class CallingDataHandler():
         self.check_AllOrderFull()
 
 class DBManagerment():
-    def __init__(self, uri, dbname, collectionname) -> None:
+    def __init__(self, uri, dbname, OrderCollection, ConfuseCollection) -> None:
         client = MongoClient(uri)
         try:
             self.db = client[dbname]
-            self.collection = self.db[collectionname]
+            self.orderCollection = self.db[OrderCollection]
+            self.confuseCollection = self.db[ConfuseCollection]
             self.waiting_orders = {}
             self.orderName_ID_dict = {}
             self.current_calling_ordername = ''
         except Exception as e:
             print(e)
 
-    def get_all_documents(self):
+    def get_order_documents(self):
         data = {}
-        for status in ["Waiting", "Called", "Finished"]:
+        for status in ["Waiting", "Finished"]:
             docs = []
             doc_dict = {}
-            cursor = self.collection.find({"Status": status})
+            cursor = self.orderCollection.find({"Status": status})
             for document in cursor:
                 document['_id'] = str(document['_id'])  # convert object_id from mongodb to string, then parse to json to send client
                 date = document['DateTimeIn'].split('T')[0]
@@ -126,10 +131,18 @@ class DBManagerment():
                 self.waiting_orders = copy.deepcopy(doc_dict)
         return data
 
+    def get_confuse_documents(self, dateTimeIn):
+        data = []
+        cursor = self.confuseCollection.find({"DateTimeIn": dateTimeIn})
+        for document in cursor:
+            document['_id'] = str(document['_id'])  # convert object_id from mongodb to string, then parse to json to send client
+            data.append(document)
+        return data
+
     def get_documents_by_platenumber(self, plate_number):
         # Query the database
         date_time_dict = {}
-        cursor = self.collection.find({"PlateNumber": plate_number})
+        cursor = self.orderCollection.find({"PlateNumber": plate_number})
         for document in cursor:
             if document['Status'] == 'Waiting':
                 date = document['DateTimeIn'].split('T')[0]
@@ -143,7 +156,7 @@ class DBManagerment():
     def get_documents_by_status(self, status):
         # Query the database
         docs = []
-        cursor = self.collection.find({"Status": status})
+        cursor = self.orderCollection.find({"Status": status})
         for document in cursor:
             print(document)
             document['_id'] = str(document['_id'])  # convert object_id from mongodb to string, then parse to json to send client
@@ -152,7 +165,7 @@ class DBManagerment():
 
     def insert_data(self, data):
         # Perform the insert operation
-        result = self.collection.insert_one(data)
+        result = self.orderCollection.insert_one(data)
         # Check if the document was inserted
         if result.inserted_id:
             print("Document insert successfully")
@@ -160,6 +173,70 @@ class DBManagerment():
         else:
             print("Document insert failed")
             return False
+
+    def insert_ConfuseData(self, data, plateNumber, ordername, productCode_list):
+        save_data = {
+              "DateTimeIn": data["DateTimeIn"],
+              "CameraID": data["CameraID"],
+              "PlateNumber": plateNumber,
+              "OrderName": ordername,
+              "Products": productCode_list,
+              "Message": "Không nhận diện được",
+              "Image": data["imageBase64"],
+              "IsConfirm": False}
+
+        # Perform the insert operation
+        result = self.confuseCollection.insert_one(save_data)
+        # Check if the document was inserted
+        if result.inserted_id:
+            print("Document insert successfully")
+            return True
+        else:
+            print("Document insert failed")
+            return False
+
+    def update_OrderData(self, data):
+        set_data = {}
+        for productCode, value in data.items():
+            if productCode != '_id':
+                for productInfo, valueInfo in value.items():
+                    k = "Orders" + "." + productCode + "." + productInfo
+                    set_data[k] = valueInfo
+        update = {
+            "$set": set_data
+        }
+
+        # Update the document
+        result = self.orderCollection.update_one({"_id": ObjectId(data['_id'])}, update)
+
+        # Check the result
+        if result.modified_count > 0:
+            print("Document updated successfully.")
+            return True
+        else:
+            print("No documents matched the query or no changes made.")
+            return False
+
+    def update_OrderData_counting(self, productCode, orderNameList, calling_data):
+        if calling_data["IsCombine"]:
+            is_updated = False
+            update_value =  calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"]
+            # update value follow priority of orderNameList
+            for orderName in orderNameList:
+                cursor = self.orderCollection.find({"OrderName": orderName})
+                for document in cursor:
+                    if productCode in document["Orders"]:
+                        if document["Orders"][productCode]["CurrentQuantity"] < document["Orders"][productCode]["ProductCount"]:
+                            data = copy.deepcopy(document["Orders"])
+                            data["_id"] = copy.copy(document["_id"])
+                            data[productCode]["CurrentQuantity"] = update_value
+                            self.update_OrderData(data)
+                            is_updated = True
+                if is_updated:
+                    break
+        else:
+            # update value directly to current orderName
+            self.update_OrderData(calling_data["Orders"][orderNameList[0]])
 
     def orders_sorting(self, data):
         sortList = data["SortList"]
@@ -187,11 +264,13 @@ class DBManagerment():
         result["SortList"] = copy.copy(sortList)
         result["IsCombine"] = copy.copy(isCombine)
         result["isAllOrderFull"] = False
+        result["DateTimeIn"] = copy.copy(data['DateTimeIn'])
+        result["PlateNumber"] = copy.copy(data['PlateNumber'])
         return result
 
 
-dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09slu1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", dbname="AFC", collectionname="OrderData")
-dataHandler = CallingDataHandler()
+dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09slu1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
+dataHandler = CallingDataHandler(dbmanager)
 
 # Upload image from phone to server
 @app.route('/upload_img', methods=['POST'])
@@ -266,10 +345,10 @@ def get_results():
         return jsonify({'message': 'Wrong api method'}), 400
 
 # Get all data from mongodb to web
-@app.route("/getAllData", methods=['POST'])
-def getAllData():
+@app.route("/getOrderData", methods=['POST'])
+def getOrderData():
     try:
-        data = dbmanager.get_all_documents()
+        data = dbmanager.get_order_documents()
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)})
@@ -316,28 +395,37 @@ def sortingData():
     dataHandler.set_calling_data(dbmanager.orders_sorting(data))
     return jsonify(dataHandler.calling_data)
 
-# Get data for counting page
-@app.route("/countingData", methods=['POST'])
+# Start counting order, if attach with image, not count but save it to confuse data
+@app.route('/countingData', methods=['POST'])
 def countingData():
+    data = request.json
+    if data['imageBase64'] == "":
+        productCode = data["ProductCode"]
+        dataHandler.counting(productCode)
+    else:
+        dbmanager.insert_ConfuseData(data, dataHandler.calling_data['PlateNumber'], dataHandler.orders_status['currentOrderName'], list(dataHandler.orders_status['product'].keys()))
+    return jsonify(dataHandler.calling_data)
+
+# Get list counting product
+@app.route('/getListProductCode', methods=['POST'])
+def getListProductCode():
+    return jsonify(dataHandler.orders_status)
+
+# Get confuse data
+@app.route("/getConfuseData", methods=['POST'])
+def getConfuseData():
     try:
-        countingData = dataHandler.calling_data
-        return jsonify(countingData)
+        data = dbmanager.get_confuse_documents(dataHandler.calling_data["DateTimeIn"])
+        return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# Test counting order
-@app.route('/testCounting', methods=['POST'])
-def testCounting():
+# Edit order data
+@app.route("/updateOrderData", methods=['POST'])
+def updateOrderData():
     data = request.json
-    dataHandler.test_counting(data)
-    print(dataHandler.calling_data)
-    return jsonify(dataHandler.calling_data)
-
-# Test counting order
-@app.route('/getListProductCode', methods=['POST'])
-def getListProductCode():
-    # print(dataHandler.orders_status["product"])
-    return jsonify(dataHandler.orders_status)
+    isUpdate = dbmanager.update_OrderData(data)
+    return jsonify(isUpdate)
 
 if __name__ == '__main__':
     app.run(host='192.168.100.164', port=5000)
