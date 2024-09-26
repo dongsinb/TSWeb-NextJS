@@ -132,8 +132,12 @@ class DBManagerment():
         return data
 
     def get_confuse_documents(self, dateTimeIn):
+        print(dateTimeIn)
         data = []
-        cursor = self.confuseCollection.find({"DateTimeIn": dateTimeIn})
+        date = "^" + dateTimeIn.split('T')[0]   # for search regex all document have value start with date
+        print(date)
+        cursor = self.confuseCollection.find({"DateTimeIn": {"$regex": date}})
+        print(cursor)
         for document in cursor:
             document['_id'] = str(document['_id'])  # convert object_id from mongodb to string, then parse to json to send client
             data.append(document)
