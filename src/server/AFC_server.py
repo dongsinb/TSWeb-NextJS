@@ -88,6 +88,22 @@ class CallingDataHandler():
             else:
                 self.orders_status["product"][productCode] = True
         self.check_AllOrderFull()
+        if self.calling_data["isAllOrderFull"]:
+            self.dbmanager.update_finish_status(self.calling_data["DateTimeIn"], self.calling_data["PlateNumber"])
+
+
+    def classify_ConfuseData(self, data):
+        cursorConfuseData = self.dbmanager.confuseCollection.find({"_id": data["_id"]})
+        for documentConfuse in cursorConfuseData:
+            documentConfuse
+
+            cursorOrderData = self.dbmanager.orderCollection.find({"OrderName": data["OrderName"]})
+            for documentOrder in cursorOrderData:
+                if data["ProductCode"] in documentOrder["Orders"]:
+                    if documentOrder["Orders"][data["ProductCode"]]["CurrentQuantity"] < \
+                            documentOrder["Orders"][data["ProductCode"]]["ProductCount"]:
+                        documentOrder["Orders"][data["ProductCode"]]["CurrentQuantity"] += 1
+
 
 class DBManagerment():
     def __init__(self, uri, dbname, OrderCollection, ConfuseCollection) -> None:
@@ -132,8 +148,12 @@ class DBManagerment():
         return data
 
     def get_confuse_documents(self, dateTimeIn):
+        print(dateTimeIn)
         data = []
-        cursor = self.confuseCollection.find({"DateTimeIn": dateTimeIn})
+        date = "^" + dateTimeIn.split('T')[0]   # for search regex all document have value start with date
+        print(date)
+        cursor = self.confuseCollection.find({"DateTimeIn": {"$regex": date}})
+        print(cursor)
         for document in cursor:
             document['_id'] = str(document['_id'])  # convert object_id from mongodb to string, then parse to json to send client
             data.append(document)
@@ -238,6 +258,25 @@ class DBManagerment():
             # update value directly to current orderName
             self.update_OrderData(calling_data["Orders"][orderNameList[0]])
 
+    def update_finish_status(self, dateTimeIn, plateNumber):
+        date = "^" + dateTimeIn.split('T')[0]  # for search regex all document have value start with date
+        result = self.orderCollection.update_many(
+            {
+                "PlateNumber": plateNumber,  # Match by PlateNumber
+                "DateTimeIn": {"$regex": date}  # Match by DateTimeIn
+            },
+            {
+                "$set": {"Status": "Finished"}  # Set Status to "Finished"
+            }
+        )
+        # Check the result
+        if result.modified_count > 0:
+            print("Document updated successfully.")
+            return True
+        else:
+            print("No documents matched the query or no changes made.")
+            return False
+
     def orders_sorting(self, data):
         sortList = data["SortList"]
         isCombine = data["IsCombine"]
@@ -267,6 +306,7 @@ class DBManagerment():
         result["DateTimeIn"] = copy.copy(data['DateTimeIn'])
         result["PlateNumber"] = copy.copy(data['PlateNumber'])
         return result
+
 
 
 dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09slu1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
@@ -426,6 +466,13 @@ def updateOrderData():
     data = request.json
     isUpdate = dbmanager.update_OrderData(data)
     return jsonify(isUpdate)
+
+@app.route("/classifyConfuseData", methods=['POST'])
+def classifyConfuseData():
+    data = request.json
+    isUpdate = dbmanager.classify_ConfuseData(data)
+    return jsonify(isUpdate)
+
 
 if __name__ == '__main__':
     app.run(host='192.168.100.164', port=5000)
