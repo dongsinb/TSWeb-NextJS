@@ -10,8 +10,25 @@ const BagCounting = ({ data }) => {
           {/* Hiển thị status và license plate */}
           <tr className={styles.tableRow}>
             <td colSpan="4">
-              <strong>Trạng thái:</strong>{" "}
+              <strong>Trạng thái đếm:</strong>{" "}
               {data.IsCombine ? "Đếm gộp" : "Đếm theo đơn"}
+            </td>
+          </tr>
+          <tr className={styles.tableRow}>
+            <td colSpan="4">
+              <strong>Trạng thái đơn:</strong>{" "}
+              {data.isAllOrderFull ? "Xe đã lấy đủ hàng" : "Xe chưa lấy đủ hàng"}
+              <span
+                style={{
+                  display: "inline-block",
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "50%",
+                  backgroundColor: data.isAllOrderFull ? "green" : "red",
+                  marginLeft: "10px",
+                  verticalAlign: "middle",
+                }}
+              ></span>
             </td>
           </tr>
           <tr className={styles.tableRow}>

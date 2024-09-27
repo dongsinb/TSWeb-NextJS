@@ -12,9 +12,16 @@ import { toast } from 'react-toastify';
 
 const AddOrder = () => {
     const [file, setFile] = useState(null);
-    const [excelData, setExcelData] = useState(null);
+    const [excelData, setExcelData] = useState({});
     useEffect(() => {
-        console.log("excelData: ", JSON.stringify(excelData));
+        const savedData = localStorage.getItem('excelData');
+        if (savedData) {
+            setExcelData(JSON.parse(savedData));
+        }
+    }, []);
+    useEffect(() => {
+      console.log("excelData: ", JSON.stringify(excelData));
+      localStorage.setItem('excelData', JSON.stringify(excelData));
     }, [excelData]);
     const handleFileUpload = (event) => {
         const uploadedFile = event.target.files[0];
@@ -58,7 +65,7 @@ const AddOrder = () => {
                     rowNumber++;
                 }
                 const date = DateTime.fromJSDate(new Date(valueJ3.result));
-                const formattedDate = date.toISO();
+                const formattedDate = date.toFormat("yyyy-MM-dd'T'HH:mm:ssZZ");
                 console.log(`Sheet ${index + 1} - Formatted Date:`, formattedDate);
 
                 allRows[sheetName] = {
@@ -78,7 +85,7 @@ const AddOrder = () => {
             );
           }
         } else {
-          console.error("No file selected.");
+          toast.error("Chưa chọn file excel.");
         }
       };
     const handleRemoveOrder = (key) => {
@@ -105,7 +112,6 @@ const AddOrder = () => {
 
     return (
         <div>
-            <h1>Add Order</h1>
             <InputGroup>
                 <Form.Control
                   type="file"
@@ -119,8 +125,22 @@ const AddOrder = () => {
                 >
                   Thêm đơn hàng
                 </Button>
-              </InputGroup>
+              </InputGroup>   
             <div>
+              {Object.keys(excelData).length != 0 && <div className="d-grid gap-2 d-md-flex justify-content-md-start" style={{ marginTop: '20px' }}>
+                <Button variant="danger" onClick={() => setExcelData({})}>
+                    Remove All
+                </Button>
+                <Button variant="success" onClick={async () => {
+                    if (excelData) {
+                        for (const [sheetName, order] of Object.entries(excelData)) {
+                            await handleConfirmOrder(sheetName, order);
+                        }
+                    }
+                }}>
+                    Accept All
+                    </Button>
+                </div>}
                 {excelData && Object.keys(excelData).map((key, index) => (
                     <div key={key} className={styles['order-block']}>
                         <h3 style={{ color: 'blue' }}>Đơn hàng: {key}</h3>

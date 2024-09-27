@@ -1,78 +1,102 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./handlingError.module.css";
 import { v4 as uuidv4 } from "uuid";
 import { Form, Button, Table, ListGroup } from "react-bootstrap";
-import Image from "next/image";
+import axios from "axios";
+import NProgress from "../../../loadingBar/nprogress-config";
 
 const HandlingError = () => {
-  const [datas, setDatas] = useState([
-    {
-      id: uuidv4(),
-      gate: "Cổng 1",
-      license_plate: "18C-123456",
-      content: "Không nhận diện được",
-      image: "/imgSP_0.png",
-      itemsList: [
-        "Order 1",
-        "Order 2",
-        "Order 10",
-        "Order 19",
-        "Order 99",
-        "Order 100",
-        "Order 101",
-        "Order 102",
-        "Order 103",
-        "Order 104",
-      ],
-      isConfirm: false,
-    },
-    {
-      id: uuidv4(),
-      gate: "Cổng 1",
-      license_plate: "18C-884568",
-      content: "Không nhận diện được",
-      image: "/imgSP_1.png",
-      itemsList: ["Order5", "Order9"],
-      isConfirm: false,
-    },
-    {
-      id: uuidv4(),
-      gate: "Cổng 1",
-      license_plate: "18C-884568",
-      content: "Không nhận diện được",
-      image: "/imgSP_1.png",
-      itemsList: ["Order2", "Order9"],
-      isConfirm: false,
-    },
-    {
-      id: uuidv4(),
-      gate: "Cổng 1",
-      license_plate: "18C-884568",
-      content: "Không nhận diện được",
-      image: "/imgSP_1.png",
-      itemsList: ["Order5", "Order89"],
-      isConfirm: false,
-    },
-    {
-      id: uuidv4(),
-      gate: "Cổng 1",
-      license_plate: "18C-884568",
-      content: "Không nhận diện được",
-      image: "/imgSP_1.png",
-      itemsList: ["Order45", "Order3"],
-      isConfirm: false,
-    },
-    {
-      id: uuidv4(),
-      gate: "Cổng 1",
-      license_plate: "18C-884568",
-      content: "Không nhận diện được",
-      image: "/imgSP_1.png",
-      itemsList: ["Order9", "Order5"],
-      isConfirm: false,
-    },
-  ]);
+  const [datas, setDatas] = useState([])
+  const fetchConfuseData = async () => {
+    try {
+      NProgress.start()
+      const response = await axios.post("http://192.168.100.134:5000/getConfuseData");
+      const data = response.data;
+      if (data.error) {
+        setDatas([])
+      } else {
+        console.log("Data fetched successfully:", data);
+        setDatas(data)
+      }
+      NProgress.done()
+      console.log("Confuse Data:", data);
+      // Handle the data as needed, e.g., set it to state
+    } catch (error) {
+      console.error("Error fetching confuse data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchConfuseData(); // Fetch confuse data on component mount
+  }, []);
+  // const [datas, setDatas] = useState([
+  //   {
+  //     id: uuidv4(),
+  //     gate: "Cổng 1",
+  //     license_plate: "18C-123456",
+  //     content: "Không nhận diện được",
+  //     image: "/imgSP_0.png",
+  //     itemsList: [
+  //       "Order 1",
+  //       "Order 2",
+  //       "Order 10",
+  //       "Order 19",
+  //       "Order 99",
+  //       "Order 100",
+  //       "Order 101",
+  //       "Order 102",
+  //       "Order 103",
+  //       "Order 104",
+  //     ],
+  //     isConfirm: false,
+  //   },
+  //   {
+  //     id: uuidv4(),
+  //     gate: "Cổng 1",
+  //     license_plate: "18C-884568",
+  //     content: "Không nhận diện được",
+  //     image: "/imgSP_1.png",
+  //     itemsList: ["Order5", "Order9"],
+  //     isConfirm: false,
+  //   },
+  //   {
+  //     id: uuidv4(),
+  //     gate: "Cổng 1",
+  //     license_plate: "18C-884568",
+  //     content: "Không nhận diện được",
+  //     image: "/imgSP_1.png",
+  //     itemsList: ["Order2", "Order9"],
+  //     isConfirm: false,
+  //   },
+  //   {
+  //     id: uuidv4(),
+  //     gate: "Cổng 1",
+  //     license_plate: "18C-884568",
+  //     content: "Không nhận diện được",
+  //     image: "/imgSP_1.png",
+  //     itemsList: ["Order5", "Order89"],
+  //     isConfirm: false,
+  //   },
+  //   {
+  //     id: uuidv4(),
+  //     gate: "Cổng 1",
+  //     license_plate: "18C-884568",
+  //     content: "Không nhận diện được",
+  //     image: "/imgSP_1.png",
+  //     itemsList: ["Order45", "Order3"],
+  //     isConfirm: false,
+  //   },
+  //   {
+  //     id: uuidv4(),
+  //     gate: "Cổng 1",
+  //     license_plate: "18C-884568",
+  //     content: "Không nhận diện được",
+  //     image: "/imgSP_1.png",
+  //     itemsList: ["Order9", "Order5"],
+  //     isConfirm: false,
+  //   },
+  // ]);
 
   const [selectedItems, setSelectedItems] = useState({});
 
@@ -89,38 +113,55 @@ const HandlingError = () => {
     console.log("Selected Item: ", selectedItem);
     console.log("Data for this row: ", selectedData);
 
-    // Xóa hàng khỏi dữ liệu
-    setDatas((prevDatas) => prevDatas.filter((_, index) => index !== rowIndex));
-
     // Xóa đơn hàng đã chọn
     setSelectedItems((prevState) => {
       const newState = { ...prevState };
       delete newState[rowIndex];
       return newState;
     });
-
+    const data_send_API = {
+      CameraID: selectedData.CameraID,
+      DateTimeIn: selectedData.DateTimeIn,
+      OrderName: selectedData.OrderName,
+      PlateNumber: selectedData.PlateNumber,
+      ProductCode: selectedItem,
+      _id: selectedData._id
+    }
+    console.log("OK: ", JSON.stringify(data_send_API))
     alert(
-      `Selected Item: ${selectedItem}, Data: ${JSON.stringify(selectedData)}`
+      `Selected Item: ${selectedItem}, Data: ${JSON.stringify(data_send_API)}`
     );
+    // Xóa hàng khỏi dữ liệu
+    setDatas((prevDatas) => prevDatas.filter((_, index) => index !== rowIndex));
   };
 
   const handleNg = (rowIndex) => {
     const selectedData = datas[rowIndex];
     console.log("NG Button clicked for row: ", selectedData);
-    // Xóa hàng khỏi dữ liệu
-    setDatas((prevDatas) => prevDatas.filter((_, index) => index !== rowIndex));
-
+    
     // Xóa đơn hàng đã chọn
     setSelectedItems((prevState) => {
       const newState = { ...prevState };
       delete newState[rowIndex];
       return newState;
     });
+    const data_send_API = {
+      CameraID: selectedData.CameraID,
+      DateTimeIn: selectedData.DateTimeIn,
+      OrderName: selectedData.OrderName,
+      PlateNumber: selectedData.PlateNumber,
+      ProductCode: '',
+      _id: selectedData._id
+    }
+    console.log("NG: ", JSON.stringify(data_send_API))
+    alert(`NG clicked for Data: ${JSON.stringify(data_send_API)}`);
 
-    alert(`NG clicked for Data: ${JSON.stringify(selectedData)}`);
+    // Xóa hàng khỏi dữ liệu
+    setDatas((prevDatas) => prevDatas.filter((_, index) => index !== rowIndex));
   };
 
   return (
+    
     <div className={styles.orderProcessingBody}>
       <div className={styles.table_layout}>
         <Table striped bordered hover>
@@ -136,11 +177,11 @@ const HandlingError = () => {
           </thead>
           <tbody>
             {datas.map((data, i) => (
-              <tr key={data.id} className={styles.tableRow}>
+              <tr key={data._id} className={styles.tableRow}>
                 <td>{i}</td>
-                <td>{data.gate}</td>
-                <td>{data.license_plate}</td>
-                <td>{data.content}</td>
+                <td>{data.CameraID}</td>
+                <td>{data.PlateNumber}</td>
+                <td>{data.Message}</td>
                 <td
                   style={{
                     width: "500px",
@@ -156,7 +197,7 @@ const HandlingError = () => {
                     }}
                   >
                     <img
-                      src={data.image}
+                      src={`data:image/jpeg;base64,${data.Image}`}
                       alt="logo"
                       style={{
                         width: "100%",
@@ -186,7 +227,7 @@ const HandlingError = () => {
                           borderRadius: "4px",
                         }}
                       >
-                        {data.itemsList.map((item) => (
+                        {data.Products.map((item) => (
                           <Button
                             key={item}
                             variant={

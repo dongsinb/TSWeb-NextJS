@@ -7,6 +7,7 @@ import AdvancedPagination from "../../../pagination/pagination";
 import CreateModeCall from "../createModalCall/createModalCall";
 import { FaEdit } from "react-icons/fa";
 import CreateModalEditAFC from "../createModalEdit/createModalEdit";
+import axios from "axios";
 
 function ShowOrders(props) {
   const { datas, status } = props;
@@ -57,10 +58,16 @@ function ShowOrders(props) {
     setShowModalEdit(true);
   };
 
-  const handleSaveOrder = (updatedOrder) => {
+  const handleSaveOrder = async(updatedOrder) => {
     // Handle saving the updated order here
     console.log("Updated Order:", updatedOrder);
-    // Optionally, update the orders list in your state or make an API call to save the changes
+    try {
+      const response = await axios.post('http://192.168.100.134:5000/updateOrderData', updatedOrder);
+      console.log("Updated Order Response:", response.data);
+      // Optionally, update the orders list in your state or handle the response accordingly
+    } catch (error) {
+      console.error("Error updating order:", error);
+    }
   };
 
   return (
@@ -96,10 +103,10 @@ function ShowOrders(props) {
                         <tr>
                           <th>
                             <p className="mb-0">Đơn hàng</p>
-                            <FaEdit
+                            {/* <FaEdit
                               className={styles.editIcon}
                               onClick={() => handleEditOrder(data)}
-                            />
+                            /> */}
                           </th>
                           <th>Mã SP</th>
                           <th>Số Lượng</th>
@@ -116,6 +123,10 @@ function ShowOrders(props) {
                               {itemIndex === 0 && (
                                 <td rowSpan={Object.keys(items).length}>
                                   <p>{orderName}</p>
+                                  <FaEdit
+                                    className={styles.editIcon}
+                                    onClick={() => handleEditOrder({...data.Orders[orderName]})}
+                                  />
                                 </td>
                               )}
                               {productCode !== "_id" && (

@@ -5,6 +5,8 @@ import { Button } from 'react-bootstrap';
 
 const DisplayAddedOrders = ({sheetName, order, handleRemoveOrder, handleConfirmOrder }) => {
     const [orders, setOrders] = useState(order?.Orders || {});
+    const [plateNumber, setPlateNumber] = useState(order.PlateNumber);
+    const [orderName, setOrderName] = useState(order.OrderName);
 
     const handleInputChange = (index, field, value) => {
         const updatedOrders = Object.entries(orders).map(([productCode, product], i) => {
@@ -21,6 +23,8 @@ const DisplayAddedOrders = ({sheetName, order, handleRemoveOrder, handleConfirmO
         console.log("orders: ", orders);
         const confirmOrder = {
             ...order,
+            PlateNumber: plateNumber, 
+            OrderName: orderName,
             Orders: orders      
         };
         handleConfirmOrder(sheetName, confirmOrder);
@@ -28,7 +32,6 @@ const DisplayAddedOrders = ({sheetName, order, handleRemoveOrder, handleConfirmO
     };
 
     return (
-
         <div>
             <h4>Thông tin xe và đơn hàng</h4>
             <Table striped bordered hover>
@@ -42,9 +45,13 @@ const DisplayAddedOrders = ({sheetName, order, handleRemoveOrder, handleConfirmO
                 </thead>
                 <tbody>
                     <tr>
-                        <td>{order.PlateNumber}</td>
+                        <td>
+                            <Form.Control type="text" value={plateNumber} onChange={(e) => {setPlateNumber(e.target.value)}} />
+                        </td>
                         <td>{order.DateTimeIn}</td>
-                        <td>{order.OrderName}</td>
+                        <td>
+                            <Form.Control type="text" value={orderName} onChange={(e) => {setOrderName(e.target.value)}} />
+                        </td>
                         <td>{order.Status}</td>
                     </tr>
                 </tbody>
