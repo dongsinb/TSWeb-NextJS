@@ -71,9 +71,11 @@ class CallingDataHandler():
                     self.calling_data["isAllOrderFull"] = True
 
     def counting(self, productCode):
+        isUpdate = False
         if self.calling_data["IsCombine"]:
             if self.calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"] < self.calling_data["Orders"]["ordername"][productCode]["ProductCount"]:
                 self.calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"] += 1
+                isUpdate = True
                 self.dbmanager.update_OrderData_counting(productCode, dataHandler.calling_data["SortList"], dataHandler.calling_data)
                 if self.calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"] == self.calling_data["Orders"]["ordername"][productCode]["ProductCount"]:
                     self.orders_status["product"][productCode] = True
@@ -82,6 +84,7 @@ class CallingDataHandler():
         else:
             if self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["CurrentQuantity"] < self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["ProductCount"]:
                 self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["CurrentQuantity"] += 1
+                isUpdate = True
                 self.dbmanager.update_OrderData_counting(productCode, [self.orders_status["currentOrderName"]], dataHandler.calling_data)
                 if self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["CurrentQuantity"] == self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["ProductCount"]:
                     self.orders_status["product"][productCode] = True
@@ -90,20 +93,15 @@ class CallingDataHandler():
         self.check_AllOrderFull()
         if self.calling_data["isAllOrderFull"]:
             self.dbmanager.update_finish_status(self.calling_data["DateTimeIn"], self.calling_data["PlateNumber"])
-
+        return isUpdate
 
     def classify_ConfuseData(self, data):
-        cursorConfuseData = self.dbmanager.confuseCollection.find({"_id": data["_id"]})
-        for documentConfuse in cursorConfuseData:
-            documentConfuse
-
-            cursorOrderData = self.dbmanager.orderCollection.find({"OrderName": data["OrderName"]})
-            for documentOrder in cursorOrderData:
-                if data["ProductCode"] in documentOrder["Orders"]:
-                    if documentOrder["Orders"][data["ProductCode"]]["CurrentQuantity"] < \
-                            documentOrder["Orders"][data["ProductCode"]]["ProductCount"]:
-                        documentOrder["Orders"][data["ProductCode"]]["CurrentQuantity"] += 1
-
+        productCode = data["ProductCode"]
+        result = self.dbmanager.confuseCollection.update_one({"_id": ObjectId(data['_id'])}, {"$set": {"IsConfirm": True}})   # update IsConfirm of current confuse data to True
+        isUpdate = True
+        if productCode != "":   # only update product that have classification infor
+            isUpdate = self.counting(productCode)
+        return isUpdate
 
 class DBManagerment():
     def __init__(self, uri, dbname, OrderCollection, ConfuseCollection) -> None:
@@ -148,30 +146,40 @@ class DBManagerment():
         return data
 
     def get_confuse_documents(self, dateTimeIn):
-        print(dateTimeIn)
         data = []
         date = "^" + dateTimeIn.split('T')[0]   # for search regex all document have value start with date
-        print(date)
-        cursor = self.confuseCollection.find({"DateTimeIn": {"$regex": date}})
-        print(cursor)
+        cursor = self.confuseCollection.find({"DateTimeIn": {"$regex": date},
+                                              "IsConfirm": False})
         for document in cursor:
             document['_id'] = str(document['_id'])  # convert object_id from mongodb to string, then parse to json to send client
             data.append(document)
         return data
 
     def get_documents_by_platenumber(self, plate_number):
-        # Query the database
-        date_time_dict = {}
-        cursor = self.orderCollection.find({"PlateNumber": plate_number})
-        for document in cursor:
-            if document['Status'] == 'Waiting':
-                date = document['DateTimeIn'].split('T')[0]
-                if date not in date_time_dict:
-                    document['_id'] = str(document['_id'])  # convert object_id from mongodb to string, then parse to json to send client
-                    date_time_dict[date] = document
-                else:
-                    date_time_dict[date]['Orders'].extend(document['Orders'])
-        return date_time_dict
+        data = {}
+        for status in ["Waiting", "Finished"]:
+            docs = []
+            doc_dict = {}
+            cursor = self.orderCollection.find({"Status": status})
+            for document in cursor:
+                if document['PlateNumber'] == plate_number:
+                    document['_id'] = str(document['_id'])
+                    date = document['DateTimeIn'].split('T')[0]
+                    if date not in doc_dict:
+                        doc_dict[date] = copy.deepcopy(document)
+                        doc_dict[date]["Orders"] = {document["OrderName"]: copy.deepcopy(document["Orders"])}
+                        doc_dict[date]["Orders"][document["OrderName"]]["_id"] = copy.deepcopy(document['_id'])
+                        doc_dict[date].pop('_id', None)
+                        doc_dict[date].pop('OrderName', None)
+                        doc_dict[date].pop('Status', None)
+                    else:
+                        doc_dict[date]["Orders"][document["OrderName"]] = copy.deepcopy(document["Orders"])
+                        doc_dict[date]["Orders"][document["OrderName"]]["_id"] = copy.deepcopy(document['_id'])
+            if doc_dict:
+                for k, v in doc_dict.items():
+                    docs.append(v)
+            data[status] = docs
+        return data
 
     def get_documents_by_status(self, status):
         # Query the database
@@ -308,7 +316,6 @@ class DBManagerment():
         return result
 
 
-
 dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09slu1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 dataHandler = CallingDataHandler(dbmanager)
 
@@ -407,17 +414,6 @@ def getDatabyPlateNumber():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# Get all data by status from mongodb to web
-@app.route('/getDatabyStatus', methods=['POST'])
-def getDatabyStatus():
-    data = request.json
-    status = data.get('Status')
-    if not status:
-        return jsonify({"error": "Status is required"}), 400
-    try:
-        return jsonify(dbmanager.get_documents_by_status(status))
-    except Exception as e:
-        return jsonify({"error": str(e)})
 
 # Insert data to mongodb from web
 @app.route('/insertData', methods=['POST'])
@@ -446,6 +442,17 @@ def countingData():
         dbmanager.insert_ConfuseData(data, dataHandler.calling_data['PlateNumber'], dataHandler.orders_status['currentOrderName'], list(dataHandler.orders_status['product'].keys()))
     return jsonify(dataHandler.calling_data)
 
+# Refresh data, update lastest data after edit
+@app.route('/refreshData', methods=['POST'])
+def refreshData():
+    _ = dbmanager.get_order_documents()
+    data = {"DateTimeIn": dataHandler.calling_data["DateTimeIn"],
+    "IsCombine": dataHandler.calling_data["IsCombine"],
+    "PlateNumber": dataHandler.calling_data["PlateNumber"],
+    "SortList": dataHandler.calling_data["SortList"]}
+    dataHandler.set_calling_data(dbmanager.orders_sorting(data))
+    return jsonify(dataHandler.calling_data)
+
 # Get list counting product
 @app.route('/getListProductCode', methods=['POST'])
 def getListProductCode():
@@ -470,9 +477,11 @@ def updateOrderData():
 @app.route("/classifyConfuseData", methods=['POST'])
 def classifyConfuseData():
     data = request.json
-    isUpdate = dbmanager.classify_ConfuseData(data)
-    return jsonify(isUpdate)
-
+    isUpdate = dataHandler.classify_ConfuseData(data)
+    if isUpdate:
+        return jsonify({"Message": "Thành công ! Mã sản phẩm đã được cập nhật vào đơn hàng hiện tại"})
+    else:
+        return jsonify({"Message": "Lỗi ! Đơn hàng hiện tại đã đầy, không thể cập nhật thêm"})
 
 if __name__ == '__main__':
     app.run(host='192.168.100.164', port=5000)
