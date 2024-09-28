@@ -13,7 +13,7 @@ const StorePage = () => {
       console.log("Checkkkk resfesk: ");
       NProgress.start();
       try {
-        let response = await axios("http://192.168.100.134:5000/getAllData", {
+        let response = await axios("http://192.168.100.134:5000/getOrderData", {
           method: "POST",
         });
 

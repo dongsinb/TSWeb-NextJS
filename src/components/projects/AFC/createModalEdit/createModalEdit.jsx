@@ -13,91 +13,73 @@ const CreateModalEditAFC = ({ show, onHide, orderData, onSave }) => {
   }, [orderData]);
 
   // Function to update the order data in state
-  const updateOrder = (orderKey, productKey, field, value) => {
-    const newOrders = { ...editedOrder.Orders }; // Create a copy of Orders
-    newOrders[orderKey][productKey][field] = parseInt(value, 10) || 0;
+  const updateOrder = (orderKey, field, value) => {
+    const newOrders = { ...editedOrder }; // Create a copy of editedOrder
+    newOrders[orderKey][field] = parseInt(value, 10) || 0;
 
     setEditedOrder((prevOrder) => ({
       ...prevOrder,
-      Orders: newOrders,
+      ...newOrders,
     }));
   };
 
   // Event handler for input changes
-  const handleInputChange = (orderKey, productKey, field) => (event) => {
+  const handleInputChange = (orderKey, field) => (event) => {
     const { value } = event.target; // Get the value from the input
-    updateOrder(orderKey, productKey, field, value);
+    updateOrder(orderKey, field, value);
   };
 
   // Function to render table body rows
   const renderTableBody = () => {
-    return Object.keys(editedOrder.Orders).map((orderKey) => {
-      const products = editedOrder.Orders[orderKey];
-      return Object.keys(products).map((productKey, productIndex) => {
-        if (productKey === "_id") return null; // Skip the _id field
-        const product = products[productKey];
-        return (
-          <tr
-            key={`${orderKey}-${productKey}`}
-            className={styles.tableRow}
-          >
-            {productIndex === 0 && (
-              <td rowSpan={Object.keys(products).length - 1}>{orderKey}</td>
-            )}
-            <td>{productKey}</td>
-            <td>
-              <Form.Control
-                type="number"
-                value={product.ProductCount}
-                onChange={handleInputChange(
-                  orderKey,
-                  productKey,
-                  "ProductCount"
-                )}
-              />
-            </td>
-            <td>
-              <Form.Control
-                type="number"
-                value={product.CurrentQuantity}
-                onChange={handleInputChange(
-                  orderKey,
-                  productKey,
-                  "CurrentQuantity"
-                )}
-              />
-            </td>
-          </tr>
-        );
-      });
+    return Object.keys(editedOrder).map((orderKey) => {
+      if (orderKey === "_id" || orderKey === "orderName") return null; // Skip the _id field
+      const product = editedOrder[orderKey];
+      return (
+        <tr key={orderKey} className={styles.tableRow}>
+          <td>{orderKey}</td>
+          <td>
+            <Form.Control
+              type="number"
+              value={product.ProductCount}
+              onChange={handleInputChange(orderKey, "ProductCount")}
+            />
+          </td>
+          <td>
+            <Form.Control
+              type="number"
+              value={product.CurrentQuantity}
+              onChange={handleInputChange(orderKey, "CurrentQuantity")}
+            />
+          </td>
+        </tr>
+      );
     });
   };
 
   return (
     <Modal show={show} onHide={onHide} size="lg">
       <Modal.Header closeButton>
-        <Modal.Title>Edit Order</Modal.Title>
+        <Modal.Title>Chỉnh sửa đơn hàng: {editedOrder.orderName}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        {editedOrder.Orders && Object.keys(editedOrder.Orders).length > 0 ? (
+        {Object.keys(editedOrder).length > 0 ? (
           <Table bordered hover>
             <thead>
               <tr>
-                <th>Order</th>
-                <th>Product Code</th>
-                <th>Product Count</th>
-                <th>Current Quantity</th>
+                <th>Mã SP</th>
+                <th>Số Lượng</th>
+                <th>Số Lượng HT</th>
               </tr>
             </thead>
             <tbody>{renderTableBody()}</tbody>
           </Table>
         ) : (
-          <p>No orders to edit.</p>
+          <p>Không có đơn hàng để chỉnh sửa.</p>
         )}
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={onHide}>
-          Close
+          Đóng
         </Button>
         <Button
           variant="primary"
@@ -106,7 +88,7 @@ const CreateModalEditAFC = ({ show, onHide, orderData, onSave }) => {
             onHide();
           }}
         >
-          Save Changes
+          Lưu thay đổi
         </Button>
       </Modal.Footer>
     </Modal>

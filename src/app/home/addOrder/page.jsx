@@ -3,8 +3,7 @@ import AddOrder from '../../../components/projects/AFC/addOrder/addOrder';
 
 const AddOrderPage = () => {
     return (
-        <div style={{color: 'white'}}>
-            Add Order Page
+        <div>
             <AddOrder></AddOrder>
         </div>
     );

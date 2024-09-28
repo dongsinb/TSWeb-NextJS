@@ -51,7 +51,7 @@ function CreateModalCall(props) {
   const sendConfirmOrder = async (confirmOrderinfo) => {
     try {
       const response = await axios.post(
-        "http://192.168.100.134:5000/countingData",
+        "http://192.168.100.134:5000/sortingData",
         confirmOrderinfo
       );
       console.log("Success:", response.data);
@@ -70,7 +70,7 @@ function CreateModalCall(props) {
       SortList: ordersList,
     };
 
-    // sendConfirmOrder(confirmOrderinfo);
+    sendConfirmOrder(confirmOrderinfo);
     setConfirmOrder(confirmOrderinfo);
     console.log("ordersList: ", ordersList);
     console.log("confirmOrderinfo: ", JSON.stringify(confirmOrderinfo));

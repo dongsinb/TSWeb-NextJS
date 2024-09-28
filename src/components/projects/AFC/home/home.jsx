@@ -1,11 +1,12 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Card, Alert } from "react-bootstrap";
+import { Card, Alert, Button } from "react-bootstrap";
 import BagCounting from "../bagCounting/bagCounting";
+import axios from "axios";
 
 const AFCHome = () => {
-  //   const [data, setData] = useState(null);
-  let data = {};
+  const [data, setData] = useState({});
+  // let data = {};
 
   const dataTestNoCombine_old = {
     DateTimeIn: "2024-09-16T07:00:00.000+07:00",
@@ -75,7 +76,8 @@ const AFCHome = () => {
       }
     },
     PlateNumber: "19C19248",
-    SortList: ["0051478858", "0041478858"]
+    SortList: ["0051478858", "0041478858"],
+    isAllOrderFull: true
   };
   const dataTestCombine_new = {
     "DateTimeIn": "2024-06-12T00:00:00+07:00",
@@ -114,8 +116,30 @@ const AFCHome = () => {
         "0041478858"
     ]
 }
-  data = { ...dataTestNoCombine_new };
+  // data = { ...dataTestNoCombine_new };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.post(
+          "http://192.168.100.134:5000/getCountingData"
+        );
+        console.log("response.data", response.data);
+        setData(response.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setData({})
+      }
+    };
 
+    fetchData(); // Initial fetch
+    const intervalId = setInterval(fetchData, 1000); // Fetch every 1 seconds
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, []);
+
+  const handleRefreshCountingData = () => {
+    const request = {Message: "Refresh Counting"}
+  }
   if (data && Object.keys(data).length === 0) {
     return (
       <Card className="text-center" style={{ marginTop: "20px" }}>
@@ -130,6 +154,9 @@ const AFCHome = () => {
   return (
     <div>
       <h4 style={{ color: "white" }}>Counting AFC</h4>
+      <Button variant="outline-info" onClick={handleRefreshCountingData} style={{ marginBottom: '10px' }}>
+        Làm mới đơn hàng
+      </Button>
       <BagCounting data={data} />
     </div>
   );
