@@ -145,10 +145,11 @@ class DBManagerment():
                 self.waiting_orders = copy.deepcopy(doc_dict)
         return data
 
-    def get_confuse_documents(self, dateTimeIn):
+    def get_confuse_documents(self, dateTimeIn, plateNumber):
         data = []
         date = "^" + dateTimeIn.split('T')[0]   # for search regex all document have value start with date
         cursor = self.confuseCollection.find({"DateTimeIn": {"$regex": date},
+                                              "PlateNumber": plateNumber,
                                               "IsConfirm": False})
         for document in cursor:
             document['_id'] = str(document['_id'])  # convert object_id from mongodb to string, then parse to json to send client
@@ -320,7 +321,7 @@ dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09
 # dbmanager = DBManagerment(uri="mongodb://localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 dataHandler = CallingDataHandler(dbmanager)
 
-# Upload image from phone to server
+# [TSWeb] Upload image from phone to server
 @app.route('/upload_img', methods=['POST'])
 def upload_img():
     global global_image
@@ -343,7 +344,7 @@ def upload_img():
 
     return 'File successfully uploaded and displayed', 200
 
-# Get image from server to TSTech app
+# [TSVision] Get image from server to TSTech app
 @app.route('/get_img', methods=['GET'])
 def get_img():
     try:
@@ -363,7 +364,7 @@ def get_img():
         print(e)
         return jsonify({'message': str(e)}), 500
 
-# Send results from TSTech app to server
+# [TSVision] Send results from TSTech app to server
 @app.route("/send_results", methods=["POST"])
 def send_results():
     global ocr_results
@@ -377,7 +378,7 @@ def send_results():
         # print(ocr_results)
         return jsonify({'message': 'File uploaded successfully'}), 200
 
-# Get OCR results from server to phone
+# [TSWeb] Get OCR results from server to phone
 @app.route("/get_results", methods=["GET"])
 def get_results():
     global ocr_results
@@ -392,7 +393,7 @@ def get_results():
     else:
         return jsonify({'message': 'Wrong api method'}), 400
 
-# Get all data from mongodb to web
+# [TSWeb] Get all data from mongodb to web
 @app.route("/getOrderData", methods=['POST'])
 def getOrderData():
     try:
@@ -401,7 +402,7 @@ def getOrderData():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# Get all data by plate number from mongodb to web
+# [TSWeb] Get all data by plate number from mongodb to web
 @app.route('/getDatabyPlateNumber', methods=['POST'])
 def getDatabyPlateNumber():
     data = request.json
@@ -416,7 +417,7 @@ def getDatabyPlateNumber():
         return jsonify({"error": str(e)})
 
 
-# Insert data to mongodb from web
+# [TSWeb] Insert data to mongodb from web
 @app.route('/insertData', methods=['POST'])
 def insertData():
     isPush = False
@@ -425,14 +426,14 @@ def insertData():
         isPush = dbmanager.insert_data(data)
     return jsonify(isPush)
 
-# Sorting order when calling truck
+# [TSWeb] Sorting order when calling truck
 @app.route('/sortingData', methods=['POST'])
 def sortingData():
     data = request.json
     dataHandler.set_calling_data(dbmanager.orders_sorting(data))
     return jsonify(dataHandler.calling_data)
 
-# Start counting order, if attach with image, not count but save it to confuse data
+# [TSVision] Start counting order, if attach with image, not count but save it to confuse data
 @app.route('/countingData', methods=['POST'])
 def countingData():
     data = request.json
@@ -443,7 +444,7 @@ def countingData():
         dbmanager.insert_ConfuseData(data, dataHandler.calling_data['PlateNumber'], dataHandler.orders_status['currentOrderName'], list(dataHandler.orders_status['product'].keys()))
     return jsonify(dataHandler.calling_data)
 
-# Refresh data, update lastest data after edit
+# [TSWeb] Refresh data, update lastest data after edit
 @app.route('/refreshData', methods=['POST'])
 def refreshData():
     _ = dbmanager.get_order_documents()
@@ -454,27 +455,28 @@ def refreshData():
     dataHandler.set_calling_data(dbmanager.orders_sorting(data))
     return jsonify(dataHandler.calling_data)
 
-# Get list counting product
+# [TSVision] Get list counting product
 @app.route('/getListProductCode', methods=['POST'])
 def getListProductCode():
     return jsonify(dataHandler.orders_status)
 
-# Get confuse data
+# [TSWeb] Get confuse data
 @app.route("/getConfuseData", methods=['POST'])
 def getConfuseData():
     try:
-        data = dbmanager.get_confuse_documents(dataHandler.calling_data["DateTimeIn"])
+        data = dbmanager.get_confuse_documents(dataHandler.calling_data["DateTimeIn"], dataHandler.calling_data["PlateNumber"])
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)})
 
-# Edit order data
+# [TSWeb] Edit order data
 @app.route("/updateOrderData", methods=['POST'])
 def updateOrderData():
     data = request.json
     isUpdate = dbmanager.update_OrderData(data)
     return jsonify(isUpdate)
 
+# [TSWeb] Classify confuse data
 @app.route("/classifyConfuseData", methods=['POST'])
 def classifyConfuseData():
     data = request.json
@@ -483,7 +485,8 @@ def classifyConfuseData():
         return jsonify({"Message": "Thành công ! Mã sản phẩm đã được cập nhật vào đơn hàng hiện tại"})
     else:
         return jsonify({"Message": "Lỗi ! Đơn hàng hiện tại đã đầy, không thể cập nhật thêm"})
-    
+
+# [TSWeb] get current calling data
 @app.route('/getCountingData', methods=['POST'])
 def getCountingData():
     try:
@@ -493,3 +496,4 @@ def getCountingData():
 
 if __name__ == '__main__':
     app.run(host='192.168.88.132', port=5000)
+    # app.run(host='192.168.100.164', port=5000)
