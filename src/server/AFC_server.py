@@ -317,6 +317,7 @@ class DBManagerment():
 
 
 dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09slu1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
+# dbmanager = DBManagerment(uri="mongodb://localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 dataHandler = CallingDataHandler(dbmanager)
 
 # Upload image from phone to server
@@ -482,6 +483,13 @@ def classifyConfuseData():
         return jsonify({"Message": "Thành công ! Mã sản phẩm đã được cập nhật vào đơn hàng hiện tại"})
     else:
         return jsonify({"Message": "Lỗi ! Đơn hàng hiện tại đã đầy, không thể cập nhật thêm"})
+    
+@app.route('/getCountingData', methods=['POST'])
+def getCountingData():
+    try:
+        return jsonify(dataHandler.calling_data)
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 if __name__ == '__main__':
-    app.run(host='192.168.100.164', port=5000)
+    app.run(host='192.168.88.132', port=5000)
