@@ -15,13 +15,17 @@ const StorePage = () => {
       try {
         let response = await axios("http://192.168.100.134:5000/getOrderData", {
           method: "POST",
+          timeout: 10000 
         });
 
         let result = await response.data;
         setDatas(result);
-        console.log("datas: ", result);
+        console.log("dữ liệu: ", result);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Lỗi khi lấy dữ liệu:", error);
+        if (error.code === 'ECONNABORTED') {
+          console.error("Yêu cầu đã hết thời gian chờ");
+        }
       } finally {
         NProgress.done();
       }

@@ -2,7 +2,22 @@ import React from "react";
 import { Table } from "react-bootstrap";
 import styles from "./bagCounting.module.css";
 
-const BagCounting = ({ data }) => {
+const BagCounting = ({ counting_data }) => {
+  console.log("counting_data: ", JSON.stringify(counting_data))
+  if (!counting_data.IsCombine) {
+    const sortedData = {};
+  
+    // Loop through SortList to arrange the orders in that sequence
+    counting_data.SortList.forEach(orderId => {
+      if (counting_data.Orders[orderId]) {
+        sortedData[orderId] = counting_data.Orders[orderId];
+      }
+    });
+  
+    // Replace the original Orders object with the sorted one
+    counting_data.Orders = sortedData;
+  }
+  const data = counting_data
   return (
     <div>
       <Table striped bordered hover>
@@ -34,6 +49,11 @@ const BagCounting = ({ data }) => {
           <tr className={styles.tableRow}>
             <td colSpan="4">
               <strong>Biển số xe:</strong> {data.PlateNumber}
+            </td>
+          </tr>
+          <tr className={styles.tableRow}>
+            <td colSpan="4">
+              <strong>Ngày Lấy Hàng:</strong> {data.DateTimeIn}
             </td>
           </tr>
           <tr className={styles.tableRow}>

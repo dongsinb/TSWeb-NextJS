@@ -40,7 +40,7 @@ const BetrimexInfo = () => {
           </p>
           <div className={styles.mapContainer}>
             <iframe
-              title="Betrimex Location"
+              title="TStech Location"
               width="600"
               height="450"
               style={{ border: 0, width: "100%", height: "400px" }}

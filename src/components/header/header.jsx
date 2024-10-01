@@ -16,7 +16,7 @@ const HeaderTS = ({ user }) => {
   return (
     <div className={styles.container}>
       <div className={styles.title}>
-        {pagename === "" ? "Betrimex" : pagename}
+        {pagename === "" ? "AFC" : pagename}
       </div>
 
       {user === "admin" ? (

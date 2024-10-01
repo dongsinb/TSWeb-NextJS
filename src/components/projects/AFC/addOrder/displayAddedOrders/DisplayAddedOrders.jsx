@@ -7,6 +7,7 @@ const DisplayAddedOrders = ({sheetName, order, handleRemoveOrder, handleConfirmO
     const [orders, setOrders] = useState(order?.Orders || {});
     const [plateNumber, setPlateNumber] = useState(order.PlateNumber);
     const [orderName, setOrderName] = useState(order.OrderName);
+    const [dateTimeIn, setDateTimeIn] = useState(order.DateTimeIn); // Thêm state cho DateTimeIn
 
     const handleInputChange = (index, field, value) => {
         const updatedOrders = Object.entries(orders).map(([productCode, product], i) => {
@@ -25,6 +26,7 @@ const DisplayAddedOrders = ({sheetName, order, handleRemoveOrder, handleConfirmO
             ...order,
             PlateNumber: plateNumber, 
             OrderName: orderName,
+            DateTimeIn: dateTimeIn,
             Orders: orders      
         };
         handleConfirmOrder(sheetName, confirmOrder);
@@ -48,7 +50,9 @@ const DisplayAddedOrders = ({sheetName, order, handleRemoveOrder, handleConfirmO
                         <td>
                             <Form.Control type="text" value={plateNumber} onChange={(e) => {setPlateNumber(e.target.value)}} />
                         </td>
-                        <td>{order.DateTimeIn}</td>
+                        <td>
+                            <Form.Control type="text" value={dateTimeIn} onChange={(e) => {setDateTimeIn(e.target.value)}} /> {/* Thay đổi */}
+                        </td>
                         <td>
                             <Form.Control type="text" value={orderName} onChange={(e) => {setOrderName(e.target.value)}} />
                         </td>

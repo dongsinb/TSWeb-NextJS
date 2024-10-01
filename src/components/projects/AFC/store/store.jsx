@@ -10,31 +10,65 @@ import Tab from "react-bootstrap/Tab";
 import Tabs from "react-bootstrap/Tabs";
 import { DateTime } from "luxon";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 function AFCStore(props) {
   const { datas } = props;
+  const [plateNumber, setPlateNumber] = useState("");
+  const [waitingOrders, setWaitingOrders] = useState([]); 
+  const [finishedOrders, setFinishedOrders] = useState([]); 
 
   useEffect(() => {
     console.log("datas AFC: ", datas);
+    // Cập nhật waitingOrders và finishedOrders khi datas thay đổi
+    setWaitingOrders(datas["Waiting"].map((order) => ({
+      ...order,
+      Status: "Waiting",
+    })));
+    setFinishedOrders(datas["Finished"].map((order) => ({
+      ...order,
+      Status: "Finished",
+    })));
   }, [datas]);
 
-  const waitingOrders = datas["Waiting"].map((order) => ({
-    ...order,
-    Status: "Waiting",
-  }));
-  const finishedOrders = datas["Finished"].map((order) => ({
-    ...order,
-    Status: "Finished",
-  }));
-
-  useEffect(() => {
-    console.log("waitingOrders: ", waitingOrders);
-    console.log("finishedOrders: ", finishedOrders);
-  }, [waitingOrders, finishedOrders]);
-
+  const handleSearchByPlate = async () => {
+    console.log("test sear")
+    if (plateNumber === "") {
+      toast.warn("Biển số xe không được để trống.");
+      return;
+    } else {
+      try {
+        const response = await axios.post("http://192.168.100.134:5000/getDatabyPlateNumber", {
+          PlateNumber: plateNumber,
+        });
+        const datasSearch = response.data; 
+        setWaitingOrders(datasSearch["Waiting"].map((order) => ({
+          ...order,
+          Status: "Waiting",
+        })));
+        setFinishedOrders(datasSearch["Finished"].map((order) => ({
+          ...order,
+          Status: "Finished",
+        })));
+        // Xử lý dữ liệu nhận được nếu cần
+      } catch (error) {
+        console.error("Có lỗi xảy ra khi tìm kiếm:", error);
+      }
+    }
+  };
 
   return (
     <div>
+      <InputGroup className="mb-3">
+        <Form.Control 
+          placeholder="Nhập biển số xe" 
+          value={plateNumber} // Liên kết giá trị với state
+          onChange={(e) => setPlateNumber(e.target.value)} // Cập nhật state khi thay đổi
+        />
+        <Button variant="outline-secondary" id="button-addon2" onClick={handleSearchByPlate}>
+          Tìm kiếm
+        </Button>
+      </InputGroup>
       <Tabs
         defaultActiveKey="Waiting"
         id="justify-tab-example"
@@ -48,25 +82,12 @@ function AFCStore(props) {
         >
           <div className={styles.showLayout}>
             <h5 className={styles.label}>Danh sách xe</h5>
-            {/* File Upload */}
-            <InputGroup className="mb-3">
-              <Form.Control placeholder="Nhập biển số xe" />
-              <Button variant="outline-secondary" id="button-addon2">
-                Tìm Kiếm
-              </Button>
-            </InputGroup>
             <ShowOrders datas={waitingOrders} status={"Waiting"}></ShowOrders>
           </div>
         </Tab>
         <Tab eventKey="Finished" title="Xe đã lấy hàng">
           <div className={styles.showLayout}>
             <h5 className={styles.label}>Danh sách xe</h5>
-            <InputGroup className="mb-3">
-              <Form.Control placeholder="Nhập biển số xe" />
-              <Button variant="outline-secondary" id="button-addon2">
-                Search
-              </Button>
-            </InputGroup>
             <ShowOrders datas={finishedOrders} status={"Finished"}></ShowOrders>
           </div>
         </Tab>

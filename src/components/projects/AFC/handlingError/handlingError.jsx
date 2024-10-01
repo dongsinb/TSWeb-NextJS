@@ -11,7 +11,7 @@ const HandlingError = () => {
   const fetchConfuseData = async () => {
     try {
       NProgress.start()
-      const response = await axios.post("http://192.168.100.134:5000/getConfuseData");
+      const response = await axios.post("http://192.168.100.134:5000/getConfuseData", {}, { timeout: 5000 });
       const data = response.data;
       if (data.error) {
         setDatas([])
@@ -25,6 +25,9 @@ const HandlingError = () => {
     } catch (error) {
       console.error("Error fetching confuse data:", error);
     }
+    finally {
+      NProgress.done()
+    } 
   };
 
   useEffect(() => {
@@ -127,10 +130,15 @@ const HandlingError = () => {
       ProductCode: selectedItem,
       _id: selectedData._id
     }
+
+    axios.post('http://192.168.100.134:5000/classifyConfuseData', data_send_API)
+      .then(response => {
+        console.log("Response from API: ", response.data);
+      })
+      .catch(error => {
+        console.error("Error sending data to API: ", error);
+      });
     console.log("OK: ", JSON.stringify(data_send_API))
-    alert(
-      `Selected Item: ${selectedItem}, Data: ${JSON.stringify(data_send_API)}`
-    );
     // Xóa hàng khỏi dữ liệu
     setDatas((prevDatas) => prevDatas.filter((_, index) => index !== rowIndex));
   };
@@ -153,8 +161,14 @@ const HandlingError = () => {
       ProductCode: '',
       _id: selectedData._id
     }
+    axios.post('http://192.168.100.134:5000/classifyConfuseData', data_send_API)
+      .then(response => {
+        console.log("Response from API: ", response.data);
+      })
+      .catch(error => {
+        console.error("Error sending data to API: ", error);
+      });
     console.log("NG: ", JSON.stringify(data_send_API))
-    alert(`NG clicked for Data: ${JSON.stringify(data_send_API)}`);
 
     // Xóa hàng khỏi dữ liệu
     setDatas((prevDatas) => prevDatas.filter((_, index) => index !== rowIndex));
@@ -176,88 +190,101 @@ const HandlingError = () => {
             </tr>
           </thead>
           <tbody>
-            {datas.map((data, i) => (
-              <tr key={data._id} className={styles.tableRow}>
-                <td>{i}</td>
-                <td>{data.CameraID}</td>
-                <td>{data.PlateNumber}</td>
-                <td>{data.Message}</td>
-                <td
-                  style={{
-                    width: "500px",
-                    height: "200px",
-                    textAlign: "center",
-                  }}
-                >
-                  <div
+            {datas.length === 0 ? (
+              <tr>
+                <td colSpan="6" style={{ textAlign: "center", fontWeight: "bold" }}>
+                  Không có dữ liệu
+                </td>
+              </tr>
+            ) : (
+              datas.map((data, i) => (
+                <tr key={data._id} className={styles.tableRow}>
+                  <td>{i}</td>
+                  <td>{data.CameraID}</td>
+                  <td>{data.PlateNumber}</td>
+                  <td>{data.Message}</td>
+                  <td
                     style={{
-                      width: "100%",
-                      height: "100%",
-                      overflow: "hidden",
+                      width: "500px",
+                      height: "200px",
+                      textAlign: "center",
                     }}
                   >
-                    <img
-                      src={`data:image/jpeg;base64,${data.Image}`}
-                      alt="logo"
+                    <div
                       style={{
                         width: "100%",
                         height: "100%",
-                        objectFit: "cover",
+                        overflow: "hidden",
                       }}
-                    />
-                  </div>
-                </td>
-                <td>
-                  <div className={styles.processingCell}>
-                    <div>
-                      <Form.Control
-                        type="text"
-                        placeholder={
-                          selectedItems[i] || "Chọn mã bao tương ứng ..."
-                        }
-                        readOnly
-                        className="mb-3"
-                      />
-                      <ListGroup
+                    >
+                      <img
+                        src={`data:image/jpeg;base64,${data.Image}`}
+                        alt="logo"
                         style={{
-                          width: "350px",
-                          height: "200px",
-                          overflowY: "scroll",
-                          border: "1px solid lightgrey",
-                          borderRadius: "4px",
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
                         }}
-                      >
-                        {data.Products.map((item) => (
-                          <Button
-                            key={item}
-                            variant={
-                              selectedItems[i] === item
-                                ? "primary"
-                                : "outline-secondary"
-                            }
-                            onClick={() => handleSelectItem(item, i)}
-                            style={{ marginBottom: "5px", width: "100%" }}
-                          >
-                            {item}
-                          </Button>
-                        ))}
-                      </ListGroup>
+                      />
                     </div>
-                    <div className="mt-3">
-                      <Button
-                        onClick={() => handleSubmit(i)}
-                        disabled={!selectedItems[i]}
-                      >
-                        OK
-                      </Button>
-                      <Button variant="danger" onClick={() => handleNg(i)}>
-                        NG
-                      </Button>
+                  </td>
+                  <td>
+                    <div className={styles.processingCell}>
+                      <div>
+                        <Form.Control
+                          type="text"
+                          placeholder={
+                            selectedItems[i] || "Chọn mã bao tương ứng ..."
+                          }
+                          readOnly
+                          className="mb-3"
+                        />
+                        <ListGroup
+                          style={{
+                            width: "350px",
+                            height: "200px",
+                            overflowY: "scroll",
+                            border: "1px solid lightgrey",
+                            borderRadius: "4px",
+                          }}
+                        >
+                          {data.Products.map((item) => (
+                            <Button
+                              key={item}
+                              variant={
+                                selectedItems[i] === item
+                                  ? "primary"
+                                  : "outline-secondary"
+                              }
+                              onClick={() => handleSelectItem(item, i)}
+                              style={{ marginBottom: "5px", width: "100%" }}
+                            >
+                              {item}
+                            </Button>
+                          ))}
+                        </ListGroup>
+                      </div>
+                      <div className="mt-3">
+                        <Button
+                          onClick={() => handleSubmit(i)}
+                          disabled={!selectedItems[i]}
+                          style={{ margin: "0 10px" }}
+                        >
+                          OK
+                        </Button>
+                        <Button
+                          variant="danger"
+                          onClick={() => handleNg(i)}
+                          style={{ margin: "0 10px" }}
+                        >
+                          NG
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </Table>
       </div>

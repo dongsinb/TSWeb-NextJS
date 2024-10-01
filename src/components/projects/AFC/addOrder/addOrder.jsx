@@ -96,7 +96,7 @@ const AddOrder = () => {
         });
     };
     const handleConfirmOrder = async(sheetName, confirmOrder) => {
-        console.log("confirmOrder: ", confirmOrder);
+        console.log("confirmOrder: ", JSON.stringify(confirmOrder));
         try {
           const response = await axios.post(
             "http://192.168.100.134:5000/insertData",

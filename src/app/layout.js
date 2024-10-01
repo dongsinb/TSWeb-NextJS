@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "TS Tech Webapp",
-  description: "Betrimex",
+  description: "AFC",
 };
 
 export default function RootLayout({ children }) {

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Card, Alert, Button } from "react-bootstrap";
 import BagCounting from "../bagCounting/bagCounting";
 import axios from "axios";
+import NProgress from "../../../loadingBar/nprogress-config";
 
 const AFCHome = () => {
   const [data, setData] = useState({});
@@ -125,9 +126,11 @@ const AFCHome = () => {
         );
         console.log("response.data", response.data);
         setData(response.data);
+        
       } catch (error) {
         console.error("Error fetching data:", error);
         setData({})
+        NProgress.done();
       }
     };
 
@@ -138,8 +141,49 @@ const AFCHome = () => {
   }, []);
 
   const handleRefreshCountingData = () => {
-    const request = {Message: "Refresh Counting"}
+    const refreshCountingData = async () => {
+      try {
+        NProgress.start();
+        const response = await axios.post(
+          "http://192.168.100.134:5000/refreshData"
+        );
+        console.log("response.data", response.data);
+        setData(response.data);
+        NProgress.done();
+      } catch (error) {
+        console.error("Error refreshing data:", error);
+        NProgress.done();
+      }
+      finally {
+        NProgress.done();
+      }
+    };
+
+    refreshCountingData();
   }
+  
+  const handleResetCountingData = () => {
+    const resetCountingData = async () => {
+      try {
+        NProgress.start();
+        const response = await axios.post(
+          "http://192.168.100.134:5000/resetCountingData"
+        );
+        console.log("response.data", response.data);
+        setData(response.data);
+        NProgress.done();
+      } catch (error) {
+        console.error("Error refreshing data:", error);
+        NProgress.done();
+      }
+      finally {
+        NProgress.done();
+      }
+    };
+
+    resetCountingData();
+  }
+
   if (data && Object.keys(data).length === 0) {
     return (
       <Card className="text-center" style={{ marginTop: "20px" }}>
@@ -157,7 +201,10 @@ const AFCHome = () => {
       <Button variant="outline-info" onClick={handleRefreshCountingData} style={{ marginBottom: '10px' }}>
         Làm mới đơn hàng
       </Button>
-      <BagCounting data={data} />
+      {/* <Button variant="outline-danger" onClick={handleResetCountingData} style={{ marginBottom: '10px', marginLeft: '10px' }}>
+        Xoá đơn hàng
+      </Button> */}
+      <BagCounting counting_data={data} />
     </div>
   );
 };
