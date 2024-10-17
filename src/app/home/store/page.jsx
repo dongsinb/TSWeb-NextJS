@@ -4,6 +4,7 @@ import AFCStore from "../../../components/projects/AFC/store/store";
 import axios from "axios";
 import NProgress from "../../../components/loadingBar/nprogress-config";
 import { useEffect, useState } from "react";
+import config from "../../config";
 
 const StorePage = () => {
   const [datas, setDatas] = useState({ Called: [], Finished: [], Waiting: [] });
@@ -13,7 +14,7 @@ const StorePage = () => {
       console.log("Checkkkk resfesk: ");
       NProgress.start();
       try {
-        let response = await axios("http://192.168.100.134:5000/getOrderData", {
+        let response = await axios(`${config.API_BASE_URL}/getOrderData`, {
           method: "POST",
           timeout: 10000 
         });

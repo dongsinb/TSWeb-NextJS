@@ -11,12 +11,19 @@ import Tabs from "react-bootstrap/Tabs";
 import { DateTime } from "luxon";
 import axios from "axios";
 import { toast } from "react-toastify";
+import config from "../../../../app/config";
 
 function AFCStore(props) {
   const { datas } = props;
   const [plateNumber, setPlateNumber] = useState("");
   const [waitingOrders, setWaitingOrders] = useState([]); 
   const [finishedOrders, setFinishedOrders] = useState([]); 
+  const [selectedDateTime, setSelectedDateTime] = useState("");
+  
+
+  const handleDateChange = (event) => {
+    setSelectedDateTime(event.target.value);
+  };
 
   useEffect(() => {
     console.log("datas AFC: ", datas);
@@ -38,7 +45,7 @@ function AFCStore(props) {
       return;
     } else {
       try {
-        const response = await axios.post("http://192.168.100.134:5000/getDatabyPlateNumber", {
+        const response = await axios.post(`${config.API_BASE_URL}/getDatabyPlateNumber`, {
           PlateNumber: plateNumber,
         });
         const datasSearch = response.data; 
@@ -58,16 +65,27 @@ function AFCStore(props) {
   };
 
   return (
-    <div>
+    <div> 
       <InputGroup className="mb-3">
         <Form.Control 
           placeholder="Nhập biển số xe" 
           value={plateNumber} // Liên kết giá trị với state
           onChange={(e) => setPlateNumber(e.target.value)} // Cập nhật state khi thay đổi
         />
+        {/* <DatePicker
+          selected={startDate}
+          onChange={(date) => setStartDate(date)}
+          customInput={<ExampleCustomInput className="example-custom-input" />}
+        /> */}
+        <input
+        type="date"
+        id="date"
+        value={selectedDateTime}
+        onChange={handleDateChange}
+        />
         <Button variant="outline-secondary" id="button-addon2" onClick={handleSearchByPlate}>
           Tìm kiếm
-        </Button>
+        </Button> 
       </InputGroup>
       <Tabs
         defaultActiveKey="Waiting"

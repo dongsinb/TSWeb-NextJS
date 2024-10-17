@@ -6,6 +6,7 @@ import { Form } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import styles from "./createModalCall.module.css";
 import axios from "axios";
+import config from "../../../../app/config";
 
 function CreateModalCall(props) {
   const { showModalCall, setShowModalCall, calledOrder, setConfirmOrder } = props;
@@ -51,7 +52,7 @@ function CreateModalCall(props) {
   const sendConfirmOrder = async (confirmOrderinfo) => {
     try {
       const response = await axios.post(
-        "http://192.168.100.134:5000/sortingData",
+        `${config.API_BASE_URL}/sortingData`,
         confirmOrderinfo
       );
       console.log("Success:", response.data);

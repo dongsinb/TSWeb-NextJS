@@ -5,13 +5,14 @@ import { v4 as uuidv4 } from "uuid";
 import { Form, Button, Table, ListGroup } from "react-bootstrap";
 import axios from "axios";
 import NProgress from "../../../loadingBar/nprogress-config";
+import config from "../../../../app/config";
 
 const HandlingError = () => {
   const [datas, setDatas] = useState([])
   const fetchConfuseData = async () => {
     try {
       NProgress.start()
-      const response = await axios.post("http://192.168.100.134:5000/getConfuseData", {}, { timeout: 5000 });
+      const response = await axios.post(`${config.API_BASE_URL}/getConfuseData`, {}, { timeout: 5000 });
       const data = response.data;
       if (data.error) {
         setDatas([])

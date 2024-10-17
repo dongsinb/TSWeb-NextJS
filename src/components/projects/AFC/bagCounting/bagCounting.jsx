@@ -20,7 +20,7 @@ const BagCounting = ({ counting_data }) => {
   const data = counting_data
   return (
     <div>
-      <Table striped bordered hover>
+      <Table striped bordered hover style={{ border: '1px solid black' }}>
         <tbody>
           {/* Hiển thị status và license plate */}
           <tr className={styles.tableRow}>

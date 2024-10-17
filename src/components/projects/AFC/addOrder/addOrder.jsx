@@ -9,6 +9,7 @@ import { DateTime } from "luxon";
 import DisplayAddedOrders from './displayAddedOrders/DisplayAddedOrders';
 import styles from './displayAddedOrders/addorder.module.css';
 import { toast } from 'react-toastify';
+import config from '../../../../app/config';
 
 const AddOrder = () => {
     const [file, setFile] = useState(null);
@@ -99,7 +100,7 @@ const AddOrder = () => {
         console.log("confirmOrder: ", JSON.stringify(confirmOrder));
         try {
           const response = await axios.post(
-            "http://192.168.100.134:5000/insertData",
+            `${config.API_BASE_URL}/insertData`,
             confirmOrder
           );
           console.log("Response from server:", response.data);
