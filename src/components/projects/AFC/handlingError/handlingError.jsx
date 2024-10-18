@@ -8,99 +8,100 @@ import NProgress from "../../../loadingBar/nprogress-config";
 import config from "../../../../app/config";
 
 const HandlingError = () => {
-  const [datas, setDatas] = useState([])
-  const fetchConfuseData = async () => {
-    try {
-      NProgress.start()
-      const response = await axios.post(`${config.API_BASE_URL}/getConfuseData`, {}, { timeout: 5000 });
-      const data = response.data;
-      if (data.error) {
-        setDatas([])
-      } else {
-        console.log("Data fetched successfully:", data);
-        setDatas(data)
-      }
-      NProgress.done()
-      console.log("Confuse Data:", data);
-      // Handle the data as needed, e.g., set it to state
-    } catch (error) {
-      console.error("Error fetching confuse data:", error);
-    }
-    finally {
-      NProgress.done()
-    } 
-  };
+  //   const [datas, setDatas] = useState([])
+  //   const fetchConfuseData = async () => {
+  //     try {
+  //       NProgress.start()
+  //       const response = await axios.post(`${config.API_BASE_URL}/getConfuseData`, {}, { timeout: 5000 });
+  //       const data = response.data;
+  //       if (data.error) {
+  //         setDatas([])
+  //       } else {
+  //         console.log("Data fetched successfully:", data);
+  //         setDatas(data)
+  //       }
+  //       NProgress.done()
+  //       console.log("Confuse Data:", data);
+  //       // Handle the data as needed, e.g., set it to state
+  //     } catch (error) {
+  //       console.error("Error fetching confuse data:", error);
+  //     }
+  //     finally {
+  //       NProgress.done()
+  //     }
+  //   };
 
-  useEffect(() => {
-    fetchConfuseData(); // Fetch confuse data on component mount
-  }, []);
-  // const [datas, setDatas] = useState([
-  //   {
-  //     id: uuidv4(),
-  //     gate: "Cổng 1",
-  //     license_plate: "18C-123456",
-  //     content: "Không nhận diện được",
-  //     image: "/imgSP_0.png",
-  //     itemsList: [
-  //       "Order 1",
-  //       "Order 2",
-  //       "Order 10",
-  //       "Order 19",
-  //       "Order 99",
-  //       "Order 100",
-  //       "Order 101",
-  //       "Order 102",
-  //       "Order 103",
-  //       "Order 104",
-  //     ],
-  //     isConfirm: false,
-  //   },
-  //   {
-  //     id: uuidv4(),
-  //     gate: "Cổng 1",
-  //     license_plate: "18C-884568",
-  //     content: "Không nhận diện được",
-  //     image: "/imgSP_1.png",
-  //     itemsList: ["Order5", "Order9"],
-  //     isConfirm: false,
-  //   },
-  //   {
-  //     id: uuidv4(),
-  //     gate: "Cổng 1",
-  //     license_plate: "18C-884568",
-  //     content: "Không nhận diện được",
-  //     image: "/imgSP_1.png",
-  //     itemsList: ["Order2", "Order9"],
-  //     isConfirm: false,
-  //   },
-  //   {
-  //     id: uuidv4(),
-  //     gate: "Cổng 1",
-  //     license_plate: "18C-884568",
-  //     content: "Không nhận diện được",
-  //     image: "/imgSP_1.png",
-  //     itemsList: ["Order5", "Order89"],
-  //     isConfirm: false,
-  //   },
-  //   {
-  //     id: uuidv4(),
-  //     gate: "Cổng 1",
-  //     license_plate: "18C-884568",
-  //     content: "Không nhận diện được",
-  //     image: "/imgSP_1.png",
-  //     itemsList: ["Order45", "Order3"],
-  //     isConfirm: false,
-  //   },
-  //   {
-  //     id: uuidv4(),
-  //     gate: "Cổng 1",
-  //     license_plate: "18C-884568",
-  //     content: "Không nhận diện được",
-  //     image: "/imgSP_1.png",
-  //     itemsList: ["Order9", "Order5"],
-  //     isConfirm: false,
-  //   },
-  // ]);
+  //   useEffect(() => {
+  //     fetchConfuseData(); // Fetch confuse data on component mount
+  //   }, []);
+
+  const [datas, setDatas] = useState([
+    {
+      id: uuidv4(),
+      CameraID: "Cổng 1",
+      PlateNumber: "18C-123456",
+      Message: "Không nhận diện được",
+      image: "/imgSP_0.png",
+      Products: [
+        "Order 1",
+        "Order 2",
+        "Order 10",
+        "Order 19",
+        "Order 99",
+        "Order 100",
+        "Order 101",
+        "Order 102",
+        "Order 103",
+        "Order 104",
+      ],
+      isConfirm: false,
+    },
+    {
+      id: uuidv4(),
+      CameraID: "Cổng 1",
+      PlateNumber: "18C-884568",
+      Message: "Không nhận diện được",
+      image: "/imgSP_1.png",
+      Products: ["Order5", "Order9"],
+      isConfirm: false,
+    },
+    {
+      id: uuidv4(),
+      CameraID: "Cổng 1",
+      PlateNumber: "18C-884568",
+      Message: "Không nhận diện được",
+      image: "/imgSP_1.png",
+      Products: ["Order2", "Order9"],
+      isConfirm: false,
+    },
+    {
+      id: uuidv4(),
+      CameraID: "Cổng 1",
+      PlateNumber: "18C-884568",
+      Message: "Không nhận diện được",
+      image: "/imgSP_1.png",
+      Products: ["Order5", "Order89"],
+      isConfirm: false,
+    },
+    {
+      id: uuidv4(),
+      CameraID: "Cổng 1",
+      PlateNumber: "18C-884568",
+      Message: "Không nhận diện được",
+      image: "/imgSP_1.png",
+      Products: ["Order45", "Order3"],
+      isConfirm: false,
+    },
+    {
+      id: uuidv4(),
+      CameraID: "Cổng 1",
+      PlateNumber: "18C-884568",
+      Message: "Không nhận diện được",
+      image: "/imgSP_1.png",
+      Products: ["Order9", "Order5"],
+      isConfirm: false,
+    },
+  ]);
 
   const [selectedItems, setSelectedItems] = useState({});
 
@@ -129,17 +130,18 @@ const HandlingError = () => {
       OrderName: selectedData.OrderName,
       PlateNumber: selectedData.PlateNumber,
       ProductCode: selectedItem,
-      _id: selectedData._id
-    }
+      _id: selectedData._id,
+    };
 
-    axios.post('http://192.168.100.134:5000/classifyConfuseData', data_send_API)
-      .then(response => {
+    axios
+      .post("http://192.168.100.134:5000/classifyConfuseData", data_send_API)
+      .then((response) => {
         console.log("Response from API: ", response.data);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error sending data to API: ", error);
       });
-    console.log("OK: ", JSON.stringify(data_send_API))
+    console.log("OK: ", JSON.stringify(data_send_API));
     // Xóa hàng khỏi dữ liệu
     setDatas((prevDatas) => prevDatas.filter((_, index) => index !== rowIndex));
   };
@@ -147,7 +149,7 @@ const HandlingError = () => {
   const handleNg = (rowIndex) => {
     const selectedData = datas[rowIndex];
     console.log("NG Button clicked for row: ", selectedData);
-    
+
     // Xóa đơn hàng đã chọn
     setSelectedItems((prevState) => {
       const newState = { ...prevState };
@@ -159,24 +161,24 @@ const HandlingError = () => {
       DateTimeIn: selectedData.DateTimeIn,
       OrderName: selectedData.OrderName,
       PlateNumber: selectedData.PlateNumber,
-      ProductCode: '',
-      _id: selectedData._id
-    }
-    axios.post('http://192.168.100.134:5000/classifyConfuseData', data_send_API)
-      .then(response => {
+      ProductCode: "",
+      _id: selectedData._id,
+    };
+    axios
+      .post("http://192.168.100.134:5000/classifyConfuseData", data_send_API)
+      .then((response) => {
         console.log("Response from API: ", response.data);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error sending data to API: ", error);
       });
-    console.log("NG: ", JSON.stringify(data_send_API))
+    console.log("NG: ", JSON.stringify(data_send_API));
 
     // Xóa hàng khỏi dữ liệu
     setDatas((prevDatas) => prevDatas.filter((_, index) => index !== rowIndex));
   };
 
   return (
-    
     <div className={styles.orderProcessingBody}>
       <div className={styles.table_layout}>
         <Table striped bordered hover>
@@ -193,7 +195,10 @@ const HandlingError = () => {
           <tbody>
             {datas.length === 0 ? (
               <tr>
-                <td colSpan="6" style={{ textAlign: "center", fontWeight: "bold" }}>
+                <td
+                  colSpan="6"
+                  style={{ textAlign: "center", fontWeight: "bold" }}
+                >
                   Không có dữ liệu
                 </td>
               </tr>
@@ -219,7 +224,8 @@ const HandlingError = () => {
                       }}
                     >
                       <img
-                        src={`data:image/jpeg;base64,${data.Image}`}
+                        src={data.image}
+                        // src={`data:image/jpeg;base64,${data.Image}`}
                         alt="logo"
                         style={{
                           width: "100%",

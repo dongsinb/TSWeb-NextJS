@@ -3,7 +3,7 @@ import { Table } from "react-bootstrap";
 import styles from "./bagCounting.module.css";
 
 const BagCounting = ({ counting_data }) => {
-  console.log("counting_data: ", JSON.stringify(counting_data))
+  // console.log("counting_data: ", JSON.stringify(counting_data))
   if (!counting_data.IsCombine) {
     const sortedData = {};
   

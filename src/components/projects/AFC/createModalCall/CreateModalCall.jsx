@@ -6,13 +6,35 @@ import { Form } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import styles from "./createModalCall.module.css";
 import axios from "axios";
+import { toast } from "react-toastify";
 import config from "../../../../app/config";
 
 function CreateModalCall(props) {
-  const { showModalCall, setShowModalCall, calledOrder, setConfirmOrder } = props;
+  const {
+    showModalCall,
+    setShowModalCall,
+    calledOrder,
+    setConfirmOrder,
+    linesInfo,
+  } = props;
+  console.log("linesInfo: ", JSON.stringify(linesInfo));
+
+  const [linesReady, setLinesReady] = useState([]);
+
+  useEffect(() => {
+    console.log("linesInfo has changed:", linesInfo);
+    const nullKeys = getNullKeys(linesInfo);
+    setLinesReady(nullKeys);
+  }, [linesInfo]);
+
+  function getNullKeys(obj) {
+    return Object.keys(obj).filter((key) => obj[key] === null);
+  }
+
   const handleClose = () => {
     setShowModalCall(false);
     setIsChecked(false);
+    setSelectedLine("");
   };
   const [isChecked, setIsChecked] = useState(false);
   const handleCheckboxChange = (e) => {
@@ -20,6 +42,14 @@ function CreateModalCall(props) {
   };
 
   const [ordersList, setOrdersList] = useState([]);
+  const listLines = ["Line1", "Line2", "Line3", "Line4", "Line5"];
+  const [selectedLine, setSelectedLine] = useState("");
+
+  const handleComboxChange = (event) => {
+    const selectedValue = event.target.value;
+    setSelectedLine(selectedValue);
+    console.log("Selected line:", selectedValue);
+  };
 
   useEffect(() => {
     if (calledOrder && calledOrder.Orders) {
@@ -62,6 +92,10 @@ function CreateModalCall(props) {
   };
 
   const confirmOrder = () => {
+    if (selectedLine === "") {
+      toast.error("Chưa chọn cửa xuất hàng");
+      return;
+    }
     console.log("ordersList: ", ordersList);
     const confirmOrderinfo = {
       PlateNumber: calledOrder.PlateNumber,
@@ -69,6 +103,7 @@ function CreateModalCall(props) {
       Status: calledOrder.Status,
       IsCombine: isChecked,
       SortList: ordersList,
+      Line: selectedLine,
     };
 
     sendConfirmOrder(confirmOrderinfo);
@@ -97,7 +132,7 @@ function CreateModalCall(props) {
               <div ref={provided.innerRef} {...provided.droppableProps}>
                 {ordersList.map((orderName, index) => (
                   <Draggable
-                    key={orderName} 
+                    key={orderName}
                     draggableId={orderName}
                     index={index}
                   >
@@ -128,12 +163,25 @@ function CreateModalCall(props) {
           </Droppable>
         </DragDropContext>
         <div className="mb-3">
+          <Form.Select
+            id="example-combobox"
+            aria-label="Select an option"
+            onChange={handleComboxChange} // Function to handle the dropdown change
+          >
+            <option value="">Chọn cửa xuất hàng</option>
+            {linesReady.map((line, index) => (
+              <option key={index} value={line}>
+                {line}
+              </option>
+            ))}
+          </Form.Select>
           <Form.Check
             type="checkbox"
             id="default-checkbox"
             label="Gộp đơn hàng"
             checked={isChecked}
             onChange={handleCheckboxChange}
+            style={{ marginTop: "10px" }}
           />
         </div>
       </Modal.Body>

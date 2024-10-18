@@ -8,12 +8,21 @@ import CreateModeCall from "../createModalCall/createModalCall";
 import { FaEdit } from "react-icons/fa";
 import CreateModalEditAFC from "../createModalEdit/createModalEdit";
 import axios from "axios";
+import { toast } from "react-toastify";
+import config from "../../../../app/config";
 
 function ShowOrders(props) {
   const { datas, status } = props;
   console.log("show Oder datas: ", datas);
   const router = useRouter();
   const [expandedRow, setExpandedRow] = useState(null);
+  const linesInfo = {
+    Line1: { PlateNumber: "34C09690", DateTimeIn: "2024-10-02T07:00:00+07:00" },
+    Line2: null,
+    Line3: null,
+    Line4: null,
+    Line5: null,
+  };
 
   const toggleRow = (index) => {
     setExpandedRow(expandedRow === index ? null : index);
@@ -25,15 +34,31 @@ function ShowOrders(props) {
   const [confirmOrder, setConfirmOrder] = useState(null);
 
   const handleCallOrder = (data) => {
-    // alert(`Called for item with _id: ${data._id}`);
-    setShowModalCall(true);
-    setCallOrder(data);
+    const { PlateNumber, DateTimeIn } = data;
+    const isCalled = Object.values(linesInfo).find(
+      (line) =>
+        line &&
+        line.PlateNumber === PlateNumber &&
+        line.DateTimeIn === DateTimeIn
+    );
 
-    console.log("dataSend: ", JSON.stringify(data));
-    // localStorage.setItem("orderData", JSON.stringify(data));
-    // localStorage.setItem("confirmOrder", JSON.stringify(confirmOrder));
-    // setCallOrder(data);
-    // router.push("/home/countingAFC");
+    if (isCalled) {
+      toast.warning(
+        <>
+          Xe <strong>{PlateNumber}</strong> đã được gọi vào lấy hàng
+        </>
+      );
+    } else {
+      // alert(`Called for item with _id: ${data._id}`);
+      setShowModalCall(true);
+      setCallOrder(data);
+
+      console.log("dataSend: ", JSON.stringify(data));
+      // localStorage.setItem("orderData", JSON.stringify(data));
+      // localStorage.setItem("confirmOrder", JSON.stringify(confirmOrder));
+      // setCallOrder(data);
+      // router.push("/home/countingAFC");
+    }
   };
 
   //Pagination
@@ -58,11 +83,14 @@ function ShowOrders(props) {
     setShowModalEdit(true);
   };
 
-  const handleSaveOrder = async(updatedOrder) => {
+  const handleSaveOrder = async (updatedOrder) => {
     // Handle saving the updated order here
     console.log("Updated Order:", updatedOrder);
     try {
-      const response = await axios.post('http://192.168.100.134:5000/updateOrderData', updatedOrder);
+      const response = await axios.post(
+        `${config.API_BASE_URL}/updateOrderData`,
+        updatedOrder
+      );
       console.log("Updated Order Response:", response.data);
       // Optionally, update the orders list in your state or handle the response accordingly
     } catch (error) {
@@ -114,31 +142,37 @@ function ShowOrders(props) {
                         </tr>
                       </thead>
                       <tbody>
-                        {Object.entries(data.Orders).map(([orderName, items]) => (
-                          Object.entries(items).map(([productCode, item], itemIndex) => (
-                            <tr
-                              key={`${data._id}-${orderName}-${productCode}-${itemIndex}`}
-                              className={styles.tableRow}
-                            >
-                              {itemIndex === 0 && (
-                                <td rowSpan={Object.keys(items).length}>
-                                  <p>{orderName}</p>
-                                  <FaEdit
-                                    className={styles.editIcon}
-                                    onClick={() => handleEditOrder({...data.Orders[orderName]})}
-                                  />
-                                </td>
-                              )}
-                              {productCode !== "_id" && (
-                                <>
-                                  <td>{productCode}</td>
-                                  <td>{item.ProductCount}</td>
-                                  <td>{item.CurrentQuantity}</td>
-                                </>
-                              )}
-                            </tr>
-                          ))
-                        ))}
+                        {Object.entries(data.Orders).map(([orderName, items]) =>
+                          Object.entries(items).map(
+                            ([productCode, item], itemIndex) => (
+                              <tr
+                                key={`${data._id}-${orderName}-${productCode}-${itemIndex}`}
+                                className={styles.tableRow}
+                              >
+                                {itemIndex === 0 && (
+                                  <td rowSpan={Object.keys(items).length}>
+                                    <p>{orderName}</p>
+                                    <FaEdit
+                                      className={styles.editIcon}
+                                      onClick={() =>
+                                        handleEditOrder({
+                                          ...data.Orders[orderName],
+                                        })
+                                      }
+                                    />
+                                  </td>
+                                )}
+                                {productCode !== "_id" && (
+                                  <>
+                                    <td>{productCode}</td>
+                                    <td>{item.ProductCount}</td>
+                                    <td>{item.CurrentQuantity}</td>
+                                  </>
+                                )}
+                              </tr>
+                            )
+                          )
+                        )}
                       </tbody>
                     </Table>
                   </div>
@@ -168,6 +202,7 @@ function ShowOrders(props) {
         setShowModalCall={setShowModalCall}
         calledOrder={calledOrder}
         setConfirmOrder={setConfirmOrder}
+        linesInfo={linesInfo}
       />
       <CreateModalEditAFC
         show={showModalEdit}

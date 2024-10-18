@@ -4,50 +4,71 @@ import { Card, Alert, Button, InputGroup, Form } from "react-bootstrap";
 import BagCounting from "../bagCounting/bagCounting";
 import axios, { all } from "axios";
 import NProgress from "../../../loadingBar/nprogress-config";
-import config from "../../../../app/config"
-import { AiFillBell } from 'react-icons/ai';
-import styles from "./homeAfc.module.css"
+import config from "../../../../app/config";
+import { AiFillBell } from "react-icons/ai";
+import styles from "./homeAfc.module.css";
+import HandleNGModal from "./handleNGModal/handleNGModal";
 
 const AFCHome = () => {
   const [data, setData] = useState({});
-  const [showAllOrder, setShowAllOrder] = useState(false); 
-  // const [allOrder, setAllOrder] = useState([{}, {}, {}, {}, {}]);  
+  const [showAllOrder, setShowAllOrder] = useState(true);
+  // const [allOrder, setAllOrder] = useState([{}, {}, {}, {}, {}]);
   const [selectedOrder, setSelectedOrder] = useState(0);
-  const [isShaking, setIsShaking] = useState(false);
+  const [isShaking, setIsShaking] = useState(Array(5).fill(false)); // Trạng thái rung cho các chuông
+  const [currentBell, setCurrentBell] = useState(null); // Chuông hiện tại được nhấn
   // const [alertSound] = useState(new Audio('/audios/alert.mp3'));
-  const handleShak = () => {
-    const hasErrors = false; 
-    if (hasErrors) {
-      alert("Có lỗi xảy ra!");
+
+  const [showHandleNGModal, setShowHandleNGModal] = useState(false);
+
+  const handleShak = (index) => {
+    if (isShaking[index]) {
+      setShowHandleNGModal(true);
+    } else {
+      const newShakingState = Array(5).fill(false); // Reset tất cả chuông trước khi rung
+      newShakingState[index] = true; // Chỉ cho chuông được nhấn rung
+      setIsShaking(newShakingState);
+      setCurrentBell(index); // Gán chuông hiện tại
+
+      //   setTimeout(() => {
+      //   const updatedShakingState = [...newShakingState]; // Tạo bản sao của mảng
+      //   updatedShakingState[index] = false; // Tắt rung sau 1 giây
+      //   setIsShaking(updatedShakingState); // Cập nhật lại state với bản sao mới
+      //   setCurrentBell(null)
+      // }, 2000);
     }
-    setIsShaking(true);
-    setTimeout(() => setIsShaking(false), 1000);
-  }
+
+    // setTimeout(() => {
+    //   const updatedShakingState = [...newShakingState]; // Tạo bản sao của mảng
+    //   updatedShakingState[index] = false; // Tắt rung sau 1 giây
+    //   setIsShaking(updatedShakingState); // Cập nhật lại state với bản sao mới
+    //   setCurrentBell(null)
+    // }, 2000);
+  };
 
   const handleSelectChange = (event) => {
     setSelectedOrder(event.target.selectedIndex);
     console.log("Chỉ số đơn hàng đã chọn:", event.target.selectedIndex);
   };
 
+  const handleConfirm = () => {
+    const updatedShakingState = [...isShaking];
+    updatedShakingState[currentBell] = false;
+    setIsShaking(updatedShakingState);
+    setCurrentBell(null);
+    setShowHandleNGModal(false);
+  };
+
   useEffect(() => {
-    const alertSound = new Audio('/audios/Line1.mp3')
-    if (isShaking) {
-      console.log('play');
-      alertSound.loop = true;
+    if (currentBell !== null) {
+      const alertSound = new Audio(`/audios/Line${currentBell + 1}.mp3`);
       alertSound.play();
-    } else {
-      console.log('pause');
-      alertSound.pause();
-      alertSound.currentTime = 0; // Reset the sound
+      alertSound.loop = true;
+      return () => {
+        alertSound.pause();
+        alertSound.currentTime = 0;
+      };
     }
-
-    // Cleanup function để dừng âm thanh khi component unmount hoặc trạng thái thay đổi
-    return () => {
-      alertSound.pause();
-      alertSound.currentTime = 0;
-    };
-  }, [isShaking]);
-
+  }, [currentBell]);
 
   let allOrder = {};
 
@@ -116,71 +137,74 @@ const AFCHome = () => {
         "112S-25": { CurrentQuantity: 0, ProductCount: 25 },
         "122G-25": { CurrentQuantity: 0, ProductCount: 25 },
         "2220-25": { CurrentQuantity: 0, ProductCount: 25 },
-        _id: "66e940e4a56399da40148afa"
+        _id: "66e940e4a56399da40148afa",
       },
       "0051478858": {
         "111G-25": { CurrentQuantity: 0, ProductCount: 25 },
         "121G-25": { CurrentQuantity: 0, ProductCount: 25 },
         "212S-25": { CurrentQuantity: 0, ProductCount: 25 },
         "2220-25": { CurrentQuantity: 0, ProductCount: 25 },
-        _id: "66e9411fa56399da40148afb"
+        _id: "66e9411fa56399da40148afb",
       },
-      "Test1": {
+      Test1: {
         "111G-25": { CurrentQuantity: 0, ProductCount: 25 },
         "121G-25": { CurrentQuantity: 0, ProductCount: 25 },
         "2220-25": { CurrentQuantity: 0, ProductCount: 25 },
-        _id: "66e9411fa56399da40148afb"
+        _id: "66e9411fa56399da40148afb",
       },
-      "Test2": {
+      Test2: {
         "111G-25": { CurrentQuantity: 0, ProductCount: 25 },
         "121G-25": { CurrentQuantity: 0, ProductCount: 25 },
         "212S-25": { CurrentQuantity: 0, ProductCount: 25 },
         "2220-25": { CurrentQuantity: 0, ProductCount: 25 },
-        _id: "66e9411fa56399da40148afb"
-      }
+        _id: "66e9411fa56399da40148afb",
+      },
     },
     PlateNumber: "19C19248",
-    SortList: ["0051478858", "0041478858","Test1","Test2"],
-    isAllOrderFull: true
+    SortList: ["0051478858", "0041478858", "Test1", "Test2"],
+    isAllOrderFull: true,
   };
-  allOrder = [dataTestNoCombine_new, {}, {}, dataTestNoCombine_new, dataTestNoCombine_new]
+  allOrder = [
+    dataTestNoCombine_new,
+    {},
+    {},
+    dataTestNoCombine_new,
+    dataTestNoCombine_new,
+  ];
   const dataTestCombine_new = {
-    "DateTimeIn": "2024-06-12T00:00:00+07:00",
-    "IsCombine": true,
-    "Orders": {
-        "ordername": {
-            "111G-25": {
-                "CurrentQuantity": 0,
-                "ProductCount": 50
-            },
-            "112S-25": {
-                "CurrentQuantity": 0,
-                "ProductCount": 25
-            },
-            "121G-25": {
-                "CurrentQuantity": 0,
-                "ProductCount": 25
-            },
-            "122G-25": {
-                "CurrentQuantity": 0,
-                "ProductCount": 25
-            },
-            "212S-25": {
-                "CurrentQuantity": 0,
-                "ProductCount": 25
-            },
-            "2220-25": {
-                "CurrentQuantity": 0,
-                "ProductCount": 50
-            }
-        }
+    DateTimeIn: "2024-06-12T00:00:00+07:00",
+    IsCombine: true,
+    Orders: {
+      ordername: {
+        "111G-25": {
+          CurrentQuantity: 0,
+          ProductCount: 50,
+        },
+        "112S-25": {
+          CurrentQuantity: 0,
+          ProductCount: 25,
+        },
+        "121G-25": {
+          CurrentQuantity: 0,
+          ProductCount: 25,
+        },
+        "122G-25": {
+          CurrentQuantity: 0,
+          ProductCount: 25,
+        },
+        "212S-25": {
+          CurrentQuantity: 0,
+          ProductCount: 25,
+        },
+        "2220-25": {
+          CurrentQuantity: 0,
+          ProductCount: 50,
+        },
+      },
     },
-    "PlateNumber": "19C19248",
-    "SortList": [
-        "0051478858",
-        "0041478858"
-    ]
-}
+    PlateNumber: "19C19248",
+    SortList: ["0051478858", "0041478858"],
+  };
   // data = { ...dataTestNoCombine_new };
   // useEffect(() => {
   //   const fetchData = async () => {
@@ -190,7 +214,7 @@ const AFCHome = () => {
   //       );
   //       console.log("response.data", response.data);
   //       setData(response.data);
-        
+
   //     } catch (error) {
   //       console.error("Error fetching data:", error);
   //       setData({});
@@ -209,24 +233,21 @@ const AFCHome = () => {
     const refreshCountingData = async () => {
       try {
         NProgress.start();
-        const response = await axios.post(
-          `${config.API_BASE_URL}/refreshData`
-        );
+        const response = await axios.post(`${config.API_BASE_URL}/refreshData`);
         console.log("response.data", response.data);
         setData(response.data);
         NProgress.done();
       } catch (error) {
         console.error("Error refreshing data:", error);
         NProgress.done();
-      }
-      finally {
+      } finally {
         NProgress.done();
       }
     };
 
     refreshCountingData();
-  }
-  
+  };
+
   // const handleResetCountingData = () => {
   //   const resetCountingData = async () => {
   //     try {
@@ -251,50 +272,75 @@ const AFCHome = () => {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'stretch', justifyContent: 'space-between' }}>
-        <div style={{height: '100%'}}>
-          <Button 
-            variant="outline-primary" 
-            onClick={() => setShowAllOrder(false)} 
-            style={{ 
-              marginBottom: '10px', 
-              marginRight: '10px', 
-              backgroundColor: showAllOrder === false ? '#007bff' : 'transparent', 
-              color: showAllOrder === false ? 'white' : '#007bff' 
+      <div
+        style={{
+          display: "flex",
+          alignItems: "stretch",
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ height: "100%" }}>
+          <Button
+            variant="outline-primary"
+            onClick={() => setShowAllOrder(false)}
+            style={{
+              marginBottom: "10px",
+              marginRight: "10px",
+              backgroundColor:
+                showAllOrder === false ? "#007bff" : "transparent",
+              color: showAllOrder === false ? "white" : "#007bff",
             }}
           >
             Hiển thị 1 đơn hàng
           </Button>
-          <Button 
-            variant="outline-primary" 
-            onClick={() => setShowAllOrder(true)} 
-            style={{ 
-              marginBottom: '10px', 
-              marginRight: '10px', 
-              backgroundColor: showAllOrder === true ? '#007bff' : 'transparent', 
-              color: showAllOrder === true ? 'white' : '#007bff' 
+          <Button
+            variant="outline-primary"
+            onClick={() => setShowAllOrder(true)}
+            style={{
+              marginBottom: "10px",
+              marginRight: "10px",
+              backgroundColor:
+                showAllOrder === true ? "#007bff" : "transparent",
+              color: showAllOrder === true ? "white" : "#007bff",
             }}
           >
             Hiển thị 5 đơn hàng
           </Button>
         </div>
-        <InputGroup className="mb-3" style={{ maxWidth: '300px', height: '100%' }}>
-          <Form.Select aria-label="Chọn đơn hàng số" style={{ height: '100%' }} onChange={handleSelectChange}>
-            <option value="1">Đơn hàng 1</option>
-            <option value="2">Đơn hàng 2</option>
-            <option value="3">Đơn hàng 3</option>
-            <option value="4">Đơn hàng 4</option>
-            <option value="5">Đơn hàng 5</option>
-          </Form.Select>
-        </InputGroup>
+        {showAllOrder === true ? (
+          <div>
+            <AiFillBell
+              style={{ marginRight: "8px", color: "white", fontSize: "40px" }}
+              onClick={() => handleShak(0)}
+            />
+          </div>
+        ) : (
+          <InputGroup
+            className="mb-3"
+            style={{ maxWidth: "300px", height: "100%" }}
+          >
+            <Form.Select
+              aria-label="Chọn đơn hàng số"
+              style={{ height: "100%" }}
+              onChange={handleSelectChange}
+            >
+              <option value="1">Đơn hàng 1</option>
+              <option value="2">Đơn hàng 2</option>
+              <option value="3">Đơn hàng 3</option>
+              <option value="4">Đơn hàng 4</option>
+              <option value="5">Đơn hàng 5</option>
+            </Form.Select>
+          </InputGroup>
+        )}
       </div>
       <div>
         {showAllOrder === false ? (
-          allOrder[selectedOrder] && Object.keys(allOrder[selectedOrder]).length === 0 ? (
+          allOrder[selectedOrder] &&
+          Object.keys(allOrder[selectedOrder]).length === 0 ? (
             <div>
               <Card className="text-center" style={{ marginTop: "20px" }}>
                 <Card.Body>
-                <Card.Title>OrderName: {selectedOrder + 1}</Card.Title>
+                  <Card.Title>OrderName: {selectedOrder + 1}</Card.Title>
                   <Card.Title>Không có dữ liệu</Card.Title>
                   <Card.Text>Chưa có đơn hàng được gọi</Card.Text>
                 </Card.Body>
@@ -303,47 +349,103 @@ const AFCHome = () => {
           ) : (
             <div>
               <h1>Test2</h1>
-              <BagCounting counting_data={allOrder[0]}/>
+              <BagCounting counting_data={allOrder[0]} />
             </div>
-          ) 
+          )
         ) : (
-          <div style={{ display: 'flex', flexWrap: 'nowrap', height: 'calc(100vh - 180px)', justifyContent: 'space-between' }}>
-            {allOrder.map((order, index) => (
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "nowrap",
+              height: "calc(100vh - 180px)",
+              justifyContent: "space-between",
+            }}
+          >
+            {allOrder.map((order, index) =>
               order && Object.keys(order).length === 0 ? (
-                <div key={index}> {/* Thêm key prop cho phần tử cha */}
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px', alignItems: 'center' }}>
-                    <AiFillBell style={{ marginRight: '8px', color: 'white', fontSize: '40px' }} className={isShaking ? styles.bellShake : ''}
-                      onClick={handleShak}
-                    />
-                    <Button variant="outline-info" onClick={handleRefreshCountingData}>
-                      Làm mới đơn hàng
-                    </Button>
-                  </div>
-                  <Card key={index} className="text-center" style={{ marginTop: "0px", flex: '1 1 20%', overflowY: "auto" }}>
-                    <Card.Body>
-                      <Card.Title>OrderName: {index + 1}</Card.Title>
-                      <Card.Title>Không có dữ liệu</Card.Title>
-                      <Card.Text>Chưa có đơn hàng được gọi</Card.Text>
-                    </Card.Body>
-                  </Card>
-                </div>
+                <div style={{ display: "none" }}>Không có dữ liệu</div>
               ) : (
-                <div key={index}> {/* Thêm key prop cho phần tử cha */}
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px', alignItems: 'center', cursor: 'pointer' }}>
-                    <AiFillBell style={{ marginRight: '8px', color: 'white', fontSize: '40px' }} className={isShaking ? styles.bellShake : ''}
-                      onClick={handleShak}
+                // <div key={index}>
+                //   <div
+                //     style={{
+                //       display: "flex",
+                //       justifyContent: "center",
+                //       marginBottom: "10px",
+                //       alignItems: "center",
+                //     }}
+                //   >
+                //     <AiFillBell
+                //       style={{
+                //         marginRight: "8px",
+                //         color: "white",
+                //         fontSize: "40px",
+                //       }}
+                //       className={isShaking[index] ? styles.bellShake : ""}
+                //       onClick={() => handleShak(index)}
+                //     />
+                //     <Button
+                //       variant="outline-info"
+                //       onClick={handleRefreshCountingData}
+                //     >
+                //       Làm mới đơn hàng
+                //     </Button>
+                //   </div>
+                //   <Card
+                //     key={index}
+                //     className="text-center"
+                //     style={{
+                //       marginTop: "0px",
+                //       flex: "1 1 20%",
+                //       overflowY: "auto",
+                //     }}
+                //   >
+                //     <Card.Body>
+                //       <Card.Title>OrderName: {index + 1}</Card.Title>
+                //       <Card.Title>Không có dữ liệu</Card.Title>
+                //       <Card.Text>Chưa có đơn hàng được gọi</Card.Text>
+                //     </Card.Body>
+                //   </Card>
+                // </div>
+                <div key={index}>
+                  {" "}
+                  {/* Thêm key prop cho phần tử cha */}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      marginBottom: "10px",
+                      alignItems: "center",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <AiFillBell
+                      style={{
+                        marginRight: "8px",
+                        color: "white",
+                        fontSize: "40px",
+                      }}
+                      className={isShaking[index] ? styles.bellShake : ""}
+                      onClick={() => handleShak(index)}
                     />
-                    <Button variant="outline-info" onClick={handleRefreshCountingData}>
+                    <Button
+                      variant="outline-info"
+                      onClick={handleRefreshCountingData}
+                    >
                       Làm mới đơn hàng
                     </Button>
                   </div>
                   <BagCounting counting_data={order} />
                 </div>
               )
-            ))}
+            )}
           </div>
         )}
       </div>
+      <HandleNGModal
+        show={showHandleNGModal}
+        setShow={setShowHandleNGModal}
+        handleConfirm={handleConfirm}
+      />
       {/* {data && Object.keys(data).length === 0 ? (
         <Card className="text-center" style={{ marginTop: "20px" }}>
           <Card.Body>
