@@ -76,9 +76,9 @@ class CallingDataHandler():
     def check_AllOrderFull(self, line):
         if self.calling_data[line]["IsCombine"]:
             if False in list(self.orders_status[line]["product"].values()):
-                self.calling_data[line]["isAllOrderFull"] = False
+                self.calling_data[line]["IsAllOrderFull"] = False
             else:
-                self.calling_data[line]["isAllOrderFull"] = True
+                self.calling_data[line]["IsAllOrderFull"] = True
         else:
             if False in list(self.orders_status[line]["product"].values()):
                 is_current_order_full = False
@@ -96,7 +96,7 @@ class CallingDataHandler():
                             else:
                                 self.orders_status[line]["product"][productCode] = True
                 else:
-                    self.calling_data[line]["isAllOrderFull"] = True
+                    self.calling_data[line]["IsAllOrderFull"] = True
 
     def counting(self, line, productCode):
         isUpdate = False
@@ -119,9 +119,19 @@ class CallingDataHandler():
             else:
                 self.orders_status[line]["product"][productCode] = True
         self.check_AllOrderFull(line)
-        if self.calling_data[line]["isAllOrderFull"]:
+        if self.calling_data[line]["IsAllOrderFull"]:
             self.dbmanager.update_finish_status(self.calling_data[line]["DateTimeIn"], self.calling_data[line]["PlateNumber"])
         return isUpdate
+
+    def check_line(self, line, dateTimeIn):
+        is_error = True
+        date = "^" + dateTimeIn.split('T')[0]  # for search regex all document have value start with date
+        cursor = self.confuseCollection.find({"DateTimeIn": {"$regex": date},
+                                              "Line": line})
+        for document in cursor:
+            if document["IsConfirm"]:
+                is_error = False
+        return is_error
 
     def classify_ConfuseData(self, data):
         line = data["Line"]
@@ -130,6 +140,11 @@ class CallingDataHandler():
         isUpdate = True
         if productCode != "":   # only update product that have classification infor
             isUpdate = self.counting(line, productCode)
+
+        # check line still have error order or have classified
+        is_error = self.check_line(line, self.calling_data[line]["DateTimeIn"])
+        self.calling_data[line]["IsError"] = is_error
+
         return isUpdate
 
 class DBManagerment():
@@ -341,7 +356,8 @@ class DBManagerment():
         result["Orders"] = sorted_orders
         result["SortList"] = copy.copy(sortList)
         result["IsCombine"] = copy.copy(isCombine)
-        result["isAllOrderFull"] = False
+        result["IsAllOrderFull"] = False
+        result["IsError"] = False
         result["DateTimeIn"] = copy.copy(data['DateTimeIn'])
         result["PlateNumber"] = copy.copy(data['PlateNumber'])
         return result
@@ -476,6 +492,7 @@ def countingData():
         dataHandler.counting(line, productCode)
     else:
         dbmanager.insert_ConfuseData(data, dataHandler.calling_data[line]['PlateNumber'], dataHandler.orders_status[line]['currentOrderName'], list(dataHandler.orders_status[line]['product'].keys()))
+        dataHandler.calling_data[line]["IsError"] = True
     return jsonify(dataHandler.calling_data)
 
 # [TSWeb] Refresh data, update lastest data after edit
