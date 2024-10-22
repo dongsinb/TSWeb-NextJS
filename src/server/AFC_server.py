@@ -21,86 +21,115 @@ class CallingDataHandler():
         self.reset()
 
     def reset(self):
-        self.calling_data = {}
-        self.orders_status = {"currentOrderName": "",
-                              "product": {}}
+        self.line_platenumber_data = {"Line1" : "",
+                                      "Line2" : "",
+                                      "Line3" : "",
+                                      "Line4" : "",
+                                      "Line5" : ""}
+        self.calling_data = {"Line1" : {},
+                             "Line2" : {},
+                             "Line3" : {},
+                             "Line4" : {},
+                             "Line5" : {}}
+        self.orders_status = {"Line1" : {"currentOrderName": "",
+                                        "product": {}},
+                              "Line2": {"currentOrderName": "",
+                                        "product": {}},
+                              "Line3": {"currentOrderName": "",
+                                        "product": {}},
+                              "Line4": {"currentOrderName": "",
+                                        "product": {}},
+                              "Line5": {"currentOrderName": "",
+                                        "product": {}}}
 
-    def init_orders_status(self):
-        self.orders_status = {"currentOrderName": "",
-                              "product": {}}
-        if self.calling_data["IsCombine"]:
-            self.orders_status["currentOrderName"] = "ordername"
+    def init_orders_status(self, line):
+        self.orders_status = {"Line1": {"currentOrderName": "",
+                                        "product": {}},
+                              "Line2": {"currentOrderName": "",
+                                        "product": {}},
+                              "Line3": {"currentOrderName": "",
+                                        "product": {}},
+                              "Line4": {"currentOrderName": "",
+                                        "product": {}},
+                              "Line5": {"currentOrderName": "",
+                                        "product": {}}}
+        if self.calling_data[line]["IsCombine"]:
+            self.orders_status[line]["currentOrderName"] = "ordername"
         else:
-            self.orders_status["currentOrderName"] = list(self.calling_data["Orders"].keys())[0]
-        for productCode, product in self.calling_data["Orders"][self.orders_status["currentOrderName"]].items():
+            self.orders_status[line]["currentOrderName"] = list(self.calling_data[line]["Orders"].keys())[0]
+        for productCode, product in self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]].items():
             if productCode != "_id":
                 if product["CurrentQuantity"] < product["ProductCount"]:
-                    self.orders_status["product"][productCode] = False
+                    self.orders_status[line]["product"][productCode] = False
                 else:
-                    self.orders_status["product"][productCode] = True
+                    self.orders_status[line]["product"][productCode] = True
 
-    def set_calling_data(self, calling_data):
-        self.calling_data = calling_data
-        if self.calling_data:
-            self.init_orders_status()
+    def set_calling_data(self, calling_data, data):
+        line = data['Line']
+        plateNumber = data['PlateNumber']
+        self.line_platenumber_data[line] = plateNumber
+        self.calling_data[line] = calling_data
+        if self.calling_data[line]:
+            self.init_orders_status(line)
 
     # check if all orders are full, if not, with orders are not combined, if all products in current order are full, go next order in a calling truck
-    def check_AllOrderFull(self):
-        if self.calling_data["IsCombine"]:
-            if False in list(self.orders_status["product"].values()):
-                self.calling_data["isAllOrderFull"] = False
+    def check_AllOrderFull(self, line):
+        if self.calling_data[line]["IsCombine"]:
+            if False in list(self.orders_status[line]["product"].values()):
+                self.calling_data[line]["isAllOrderFull"] = False
             else:
-                self.calling_data["isAllOrderFull"] = True
+                self.calling_data[line]["isAllOrderFull"] = True
         else:
-            if False in list(self.orders_status["product"].values()):
+            if False in list(self.orders_status[line]["product"].values()):
                 is_current_order_full = False
             else:
                 is_current_order_full = True
             if is_current_order_full:
-                idx = list(self.calling_data["Orders"].keys()).index(self.orders_status["currentOrderName"])
-                if idx < len(self.calling_data["Orders"].keys()) - 1:
-                    self.orders_status["currentOrderName"] = list(self.calling_data["Orders"].keys())[idx+1]
-                    self.orders_status["product"] = {}  # reset productCode list
-                    for productCode, product in self.calling_data["Orders"][self.orders_status["currentOrderName"]].items():
+                idx = list(self.calling_data[line]["Orders"].keys()).index(self.orders_status[line]["currentOrderName"])
+                if idx < len(self.calling_data[line]["Orders"].keys()) - 1:
+                    self.orders_status[line]["currentOrderName"] = list(self.calling_data[line]["Orders"].keys())[idx+1]
+                    self.orders_status[line]["product"] = {}  # reset productCode list
+                    for productCode, product in self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]].items():
                         if productCode != "_id":
                             if product["CurrentQuantity"] < product["ProductCount"]:
-                                self.orders_status["product"][productCode] = False
+                                self.orders_status[line]["product"][productCode] = False
                             else:
-                                self.orders_status["product"][productCode] = True
+                                self.orders_status[line]["product"][productCode] = True
                 else:
-                    self.calling_data["isAllOrderFull"] = True
+                    self.calling_data[line]["isAllOrderFull"] = True
 
-    def counting(self, productCode):
+    def counting(self, line, productCode):
         isUpdate = False
-        if self.calling_data["IsCombine"]:
-            if self.calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"] < self.calling_data["Orders"]["ordername"][productCode]["ProductCount"]:
-                self.calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"] += 1
+        if self.calling_data[line]["IsCombine"]:
+            if self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] < self.calling_data[line]["Orders"]["ordername"][productCode]["ProductCount"]:
+                self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] += 1
                 isUpdate = True
-                self.dbmanager.update_OrderData_counting(productCode, dataHandler.calling_data["SortList"], dataHandler.calling_data)
-                if self.calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"] == self.calling_data["Orders"]["ordername"][productCode]["ProductCount"]:
-                    self.orders_status["product"][productCode] = True
+                self.dbmanager.update_OrderData_counting(productCode, dataHandler.calling_data[line]["SortList"], dataHandler.calling_data[line])
+                if self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] == self.calling_data[line]["Orders"]["ordername"][productCode]["ProductCount"]:
+                    self.orders_status[line]["product"][productCode] = True
             else:
-                self.orders_status["product"][productCode] = True
+                self.orders_status[line]["product"][productCode] = True
         else:
-            if self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["CurrentQuantity"] < self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["ProductCount"]:
-                self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["CurrentQuantity"] += 1
+            if self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["CurrentQuantity"] < self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["ProductCount"]:
+                self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["CurrentQuantity"] += 1
                 isUpdate = True
-                self.dbmanager.update_OrderData_counting(productCode, [self.orders_status["currentOrderName"]], dataHandler.calling_data)
-                if self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["CurrentQuantity"] == self.calling_data["Orders"][self.orders_status["currentOrderName"]][productCode]["ProductCount"]:
-                    self.orders_status["product"][productCode] = True
+                self.dbmanager.update_OrderData_counting(productCode, [self.orders_status[line]["currentOrderName"]], dataHandler.calling_data[line])
+                if self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["CurrentQuantity"] == self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["ProductCount"]:
+                    self.orders_status[line]["product"][productCode] = True
             else:
-                self.orders_status["product"][productCode] = True
-        self.check_AllOrderFull()
-        if self.calling_data["isAllOrderFull"]:
-            self.dbmanager.update_finish_status(self.calling_data["DateTimeIn"], self.calling_data["PlateNumber"])
+                self.orders_status[line]["product"][productCode] = True
+        self.check_AllOrderFull(line)
+        if self.calling_data[line]["isAllOrderFull"]:
+            self.dbmanager.update_finish_status(self.calling_data[line]["DateTimeIn"], self.calling_data[line]["PlateNumber"])
         return isUpdate
 
     def classify_ConfuseData(self, data):
+        line = data["Line"]
         productCode = data["ProductCode"]
         result = self.dbmanager.confuseCollection.update_one({"_id": ObjectId(data['_id'])}, {"$set": {"IsConfirm": True}})   # update IsConfirm of current confuse data to True
         isUpdate = True
         if productCode != "":   # only update product that have classification infor
-            isUpdate = self.counting(productCode)
+            isUpdate = self.counting(line, productCode)
         return isUpdate
 
 class DBManagerment():
@@ -116,17 +145,18 @@ class DBManagerment():
         except Exception as e:
             print(e)
 
-    def get_order_documents(self):
+    def get_order_documents(self, ref_dateTimeIn):
         data = {}
         for status in ["Waiting", "Finished"]:
             docs = []
             doc_dict = {}
-            cursor = self.orderCollection.find({"Status": status})
+            ref_date = "^" + ref_dateTimeIn.split('T')[0]  # for search regex all document have value start with date
+            cursor = self.orderCollection.find({"DateTimeIn": {"$regex": ref_date},
+                                                "Status": status})
             for document in cursor:
                 document['_id'] = str(document['_id'])  # convert object_id from mongodb to string, then parse to json to send client
-                date = document['DateTimeIn'].split('T')[0]
                 plateNumber = document['PlateNumber']
-                key = date + '_' + plateNumber
+                key = plateNumber
                 if key not in doc_dict:
                     doc_dict[key] = copy.deepcopy(document)
                     doc_dict[key]["Orders"] = {document["OrderName"] : copy.deepcopy(document["Orders"])}
@@ -145,10 +175,11 @@ class DBManagerment():
                 self.waiting_orders = copy.deepcopy(doc_dict)
         return data
 
-    def get_confuse_documents(self, dateTimeIn, plateNumber):
+    def get_confuse_documents(self, line, dateTimeIn, plateNumber):
         data = []
         date = "^" + dateTimeIn.split('T')[0]   # for search regex all document have value start with date
         cursor = self.confuseCollection.find({"DateTimeIn": {"$regex": date},
+                                              "Line": line,
                                               "PlateNumber": plateNumber,
                                               "IsConfirm": False})
         for document in cursor:
@@ -205,8 +236,8 @@ class DBManagerment():
 
     def insert_ConfuseData(self, data, plateNumber, ordername, productCode_list):
         save_data = {
+              "Line": data["Line"],
               "DateTimeIn": data["DateTimeIn"],
-              "CameraID": data["CameraID"],
               "PlateNumber": plateNumber,
               "OrderName": ordername,
               "Products": productCode_list,
@@ -246,10 +277,10 @@ class DBManagerment():
             print("No documents matched the query or no changes made.")
             return False
 
-    def update_OrderData_counting(self, productCode, orderNameList, calling_data):
-        if calling_data["IsCombine"]:
+    def update_OrderData_counting(self, productCode, orderNameList, line_calling_data):
+        if line_calling_data["IsCombine"]:
             is_updated = False
-            update_value =  calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"]
+            update_value =  line_calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"]
             # update value follow priority of orderNameList
             for orderName in orderNameList:
                 cursor = self.orderCollection.find({"OrderName": orderName})
@@ -265,7 +296,7 @@ class DBManagerment():
                     break
         else:
             # update value directly to current orderName
-            self.update_OrderData(calling_data["Orders"][orderNameList[0]])
+            self.update_OrderData(line_calling_data["Orders"][orderNameList[0]])
 
     def update_finish_status(self, dateTimeIn, plateNumber):
         date = "^" + dateTimeIn.split('T')[0]  # for search regex all document have value start with date
@@ -289,9 +320,8 @@ class DBManagerment():
     def orders_sorting(self, data):
         sortList = data["SortList"]
         isCombine = data["IsCombine"]
-        date = data['DateTimeIn'].split('T')[0]
         plateNumber = data['PlateNumber']
-        key = date + '_' + plateNumber
+        key = plateNumber
         orders = self.waiting_orders[key]["Orders"]
         if isCombine:
             sorted_orders = {"ordername":{}}
@@ -317,10 +347,9 @@ class DBManagerment():
         return result
 
 
-# dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09slu1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
+dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09slu1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 # dbmanager = DBManagerment(uri="mongodb://localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
-dbmanager = DBManagerment(uri="mongodb://test:123@localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
-# dbmanager = DBManagerment(uri="mongodb://localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
+# dbmanager = DBManagerment(uri="mongodb://test:123@localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 dataHandler = CallingDataHandler(dbmanager)
 
 # [TSWeb] Upload image from phone to server
@@ -399,8 +428,10 @@ def get_results():
 @app.route("/getOrderData", methods=['POST'])
 def getOrderData():
     try:
-        data = dbmanager.get_order_documents()
-        return jsonify(data)
+        data = request.json
+        dateTimeIn = data.get('DateTimeIn')
+        return_data = dbmanager.get_order_documents(dateTimeIn)
+        return jsonify(return_data)
     except Exception as e:
         return jsonify({"error": str(e)})
 
@@ -432,42 +463,50 @@ def insertData():
 @app.route('/sortingData', methods=['POST'])
 def sortingData():
     data = request.json
-    dataHandler.set_calling_data(dbmanager.orders_sorting(data))
+    dataHandler.set_calling_data(dbmanager.orders_sorting(data), data)
     return jsonify(dataHandler.calling_data)
 
 # [TSVision] Start counting order, if attach with image, not count but save it to confuse data
 @app.route('/countingData', methods=['POST'])
 def countingData():
     data = request.json
+    line = data["Line"]
     if data['imageBase64'] == "":
         productCode = data["ProductCode"]
-        dataHandler.counting(productCode)
+        dataHandler.counting(line, productCode)
     else:
-        dbmanager.insert_ConfuseData(data, dataHandler.calling_data['PlateNumber'], dataHandler.orders_status['currentOrderName'], list(dataHandler.orders_status['product'].keys()))
+        dbmanager.insert_ConfuseData(data, dataHandler.calling_data[line]['PlateNumber'], dataHandler.orders_status[line]['currentOrderName'], list(dataHandler.orders_status[line]['product'].keys()))
     return jsonify(dataHandler.calling_data)
 
 # [TSWeb] Refresh data, update lastest data after edit
 @app.route('/refreshData', methods=['POST'])
 def refreshData():
     _ = dbmanager.get_order_documents()
-    data = {"DateTimeIn": dataHandler.calling_data["DateTimeIn"],
-    "IsCombine": dataHandler.calling_data["IsCombine"],
-    "PlateNumber": dataHandler.calling_data["PlateNumber"],
-    "SortList": dataHandler.calling_data["SortList"]}
-    dataHandler.set_calling_data(dbmanager.orders_sorting(data))
+    for line in dataHandler.calling_data.keys():
+        if dataHandler.calling_data[line]:
+            data = {"Line" : line,
+                    "DateTimeIn": dataHandler.calling_data[line]["DateTimeIn"],
+                    "IsCombine": dataHandler.calling_data[line]["IsCombine"],
+                    "PlateNumber": dataHandler.calling_data[line]["PlateNumber"],
+                    "SortList": dataHandler.calling_data[line]["SortList"]}
+            dataHandler.set_calling_data(dbmanager.orders_sorting(data), data)
     return jsonify(dataHandler.calling_data)
 
 # [TSVision] Get list counting product
 @app.route('/getListProductCode', methods=['POST'])
 def getListProductCode():
-    return jsonify(dataHandler.orders_status)
+    data = request.json
+    line = data["Line"]
+    return jsonify(dataHandler.orders_status[line])
 
 # [TSWeb] Get confuse data
 @app.route("/getConfuseData", methods=['POST'])
 def getConfuseData():
     try:
-        data = dbmanager.get_confuse_documents(dataHandler.calling_data["DateTimeIn"], dataHandler.calling_data["PlateNumber"])
-        return jsonify(data)
+        data = request.json
+        line = data["Line"]
+        return_data = dbmanager.get_confuse_documents(line, dataHandler.calling_data[line]["DateTimeIn"], dataHandler.calling_data[line]["PlateNumber"])
+        return jsonify(return_data)
     except Exception as e:
         return jsonify({"error": str(e)})
 
@@ -504,6 +543,15 @@ def resetCountingData():
     except Exception as e:
         return jsonify({"error": str(e)})
 
+# [TSWeb] get current car in each line
+@app.route('/getLineInfor', methods=['POST'])
+def getLineInfor():
+    try:
+        return jsonify(dataHandler.line_platenumber_data)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
 if __name__ == '__main__':
     # app.run(host='192.168.88.132', port=5000)
-    app.run(host='192.168.100.134', port=5000)
+    # app.run(host='192.168.100.134', port=5000)
+    app.run(host='192.168.100.164', port=5000)
