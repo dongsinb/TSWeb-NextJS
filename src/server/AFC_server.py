@@ -556,6 +556,10 @@ def resetCountingData():
 @app.route('/getLineInfor', methods=['POST'])
 def getLineInfor():
     try:
+        for line in dataHandler.calling_data.keys():
+            if dataHandler.calling_data[line]:
+                if dataHandler.calling_data[line]["IsAllOrderFull"]:    # if all order full in this line, reset platenumber of this line
+                    dataHandler.line_platenumber_data[line] = ""
         return jsonify(dataHandler.line_platenumber_data)
     except Exception as e:
         return jsonify({"error": str(e)})
