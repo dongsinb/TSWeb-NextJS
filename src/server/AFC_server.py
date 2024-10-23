@@ -43,16 +43,8 @@ class CallingDataHandler():
                                         "product": {}}}
 
     def init_orders_status(self, line):
-        self.orders_status = {"Line1": {"currentOrderName": "",
-                                        "product": {}},
-                              "Line2": {"currentOrderName": "",
-                                        "product": {}},
-                              "Line3": {"currentOrderName": "",
-                                        "product": {}},
-                              "Line4": {"currentOrderName": "",
-                                        "product": {}},
-                              "Line5": {"currentOrderName": "",
-                                        "product": {}}}
+        self.orders_status[line] = {"currentOrderName": "",
+                                        "product": {}}
         if self.calling_data[line]["IsCombine"]:
             self.orders_status[line]["currentOrderName"] = "ordername"
         else:
