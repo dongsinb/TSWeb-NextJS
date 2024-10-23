@@ -490,7 +490,11 @@ def countingData():
 # [TSWeb] Refresh data, update lastest data after edit
 @app.route('/refreshData', methods=['POST'])
 def refreshData():
-    _ = dbmanager.get_order_documents()
+    for line in dataHandler.calling_data.keys():
+        if dataHandler.calling_data[line]:
+            dateTimeIn = dataHandler.calling_data[line]["DateTimeIn"]
+            break
+    _ = dbmanager.get_order_documents(dateTimeIn)
     for line in dataHandler.calling_data.keys():
         if dataHandler.calling_data[line]:
             data = {"Line" : line,
