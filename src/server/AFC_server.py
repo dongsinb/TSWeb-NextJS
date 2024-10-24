@@ -118,7 +118,7 @@ class CallingDataHandler():
     def check_line(self, line, dateTimeIn):
         is_error = True
         date = "^" + dateTimeIn.split('T')[0]  # for search regex all document have value start with date
-        cursor = self.confuseCollection.find({"DateTimeIn": {"$regex": date},
+        cursor = self.dbmanager.confuseCollection.find({"DateTimeIn": {"$regex": date},
                                               "Line": line})
         for document in cursor:
             if document["IsConfirm"]:
