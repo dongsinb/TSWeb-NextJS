@@ -182,12 +182,10 @@ class DBManagerment():
                 self.waiting_orders = copy.deepcopy(doc_dict)
         return data
 
-    def get_confuse_documents(self, line, dateTimeIn, plateNumber):
+    def get_confuse_documents(self, dateTimeIn):
         data = []
         date = "^" + dateTimeIn.split('T')[0]   # for search regex all document have value start with date
         cursor = self.confuseCollection.find({"DateTimeIn": {"$regex": date},
-                                              "Line": line,
-                                              "PlateNumber": plateNumber,
                                               "IsConfirm": False})
         for document in cursor:
             document['_id'] = str(document['_id'])  # convert object_id from mongodb to string, then parse to json to send client
@@ -516,9 +514,11 @@ def getListProductCode():
 @app.route("/getConfuseData", methods=['POST'])
 def getConfuseData():
     try:
-        data = request.json
-        line = data["Line"]
-        return_data = dbmanager.get_confuse_documents(line, dataHandler.calling_data[line]["DateTimeIn"], dataHandler.calling_data[line]["PlateNumber"])
+        for line in dataHandler.calling_data.keys():
+            if dataHandler.calling_data[line]:
+                dateTimeIn = dataHandler.calling_data[line]["DateTimeIn"]
+                break
+        return_data = dbmanager.get_confuse_documents(dateTimeIn)
         return jsonify(return_data)
     except Exception as e:
         return jsonify({"error": str(e)})
