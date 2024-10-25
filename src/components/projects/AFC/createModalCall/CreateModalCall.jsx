@@ -23,12 +23,15 @@ function CreateModalCall(props) {
 
   useEffect(() => {
     console.log("linesInfo has changed:", linesInfo);
-    const nullKeys = getNullKeys(linesInfo);
-    setLinesReady(nullKeys);
+    const emptyKeys = getEmptyKeys(linesInfo);
+    console.log("emptyKeys: ", emptyKeys);
+    setLinesReady(emptyKeys);
   }, [linesInfo]);
 
-  function getNullKeys(obj) {
-    return Object.keys(obj).filter((key) => obj[key] === null);
+  function getEmptyKeys(obj) {
+    return Object.entries(obj)
+      .filter(([key, value]) => value === "")
+      .map(([key]) => key);
   }
 
   const handleClose = () => {

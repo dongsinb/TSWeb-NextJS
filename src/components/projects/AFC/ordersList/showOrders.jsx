@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./showOrders.module.css";
 import { Table, Button } from "react-bootstrap";
 import { useRouter } from "next/navigation";
@@ -16,13 +16,14 @@ function ShowOrders(props) {
   console.log("show Oder datas: ", datas);
   const router = useRouter();
   const [expandedRow, setExpandedRow] = useState(null);
-  const linesInfo = {
-    Line1: { PlateNumber: "34C09690", DateTimeIn: "2024-10-02T07:00:00+07:00" },
-    Line2: null,
-    Line3: null,
-    Line4: null,
-    Line5: null,
-  };
+  const [linesInfo, setLinesinfo] = useState({});
+  //   const linesInfo = {
+  //     Line1: "",
+  //     Line2: "30C68688",
+  //     Line3: "",
+  //     Line4: "",
+  //     Line5: "",
+  //   };
 
   const toggleRow = (index) => {
     setExpandedRow(expandedRow === index ? null : index);
@@ -33,31 +34,52 @@ function ShowOrders(props) {
 
   const [confirmOrder, setConfirmOrder] = useState(null);
 
-  const handleCallOrder = (data) => {
-    const { PlateNumber, DateTimeIn } = data;
-    const isCalled = Object.values(linesInfo).find(
-      (line) =>
-        line &&
-        line.PlateNumber === PlateNumber &&
-        line.DateTimeIn === DateTimeIn
-    );
+  //   const handleGetLinesInfo = async () => {
+  //     try {
+  //       const response = await axios.post(`${config.API_BASE_URL}/getLineInfor`);
+  //       console.log("LinesInfo: ", response.data);
+  //       setLinesinfo(response.data);
+  //     } catch (error) {
+  //       console.error("Error get lines info:", error);
+  //     }
+  //   };
 
-    if (isCalled) {
-      toast.warning(
-        <>
-          Xe <strong>{PlateNumber}</strong> đã được gọi vào lấy hàng
-        </>
+  // useEffect(() => {
+  //   handleGetLinesInfo();
+  // }, []);
+
+  const handleCallOrder = async (data) => {
+    try {
+      const response = await axios.post(`${config.API_BASE_URL}/getLineInfor`);
+      console.log("LinesInfo: ", response.data);
+      setLinesinfo(response.data);
+      console.log("linesInfo: ", linesInfo);
+      const { PlateNumber, DateTimeIn } = data;
+      const isCalled = Object.entries(response.data).find(
+        ([key, line]) => line && line === PlateNumber
       );
-    } else {
-      // alert(`Called for item with _id: ${data._id}`);
-      setShowModalCall(true);
-      setCallOrder(data);
+      console.log("isCalled: ", isCalled);
+      if (isCalled) {
+        const [key, line] = isCalled;
+        toast.warning(
+          <>
+            Xe <strong>{line}</strong> đã được gọi vào lấy hàng tại line{" "}
+            <strong>{key}</strong>
+          </>
+        );
+      } else {
+        // alert(`Called for item with _id: ${data._id}`);
+        setShowModalCall(true);
+        setCallOrder(data);
 
-      console.log("dataSend: ", JSON.stringify(data));
-      // localStorage.setItem("orderData", JSON.stringify(data));
-      // localStorage.setItem("confirmOrder", JSON.stringify(confirmOrder));
-      // setCallOrder(data);
-      // router.push("/home/countingAFC");
+        console.log("dataSend: ", JSON.stringify(data));
+        // localStorage.setItem("orderData", JSON.stringify(data));
+        // localStorage.setItem("confirmOrder", JSON.stringify(confirmOrder));
+        // setCallOrder(data);
+        // router.push("/home/countingAFC");
+      }
+    } catch (error) {
+      console.error("Error get lines info:", error);
     }
   };
 

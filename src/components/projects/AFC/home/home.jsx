@@ -1,8 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Card, Alert, Button, InputGroup, Form } from "react-bootstrap";
+import { Card, Button, Form } from "react-bootstrap";
 import BagCounting from "../bagCounting/bagCounting";
-import axios, { all } from "axios";
+import axios from "axios";
 import NProgress from "../../../loadingBar/nprogress-config";
 import config from "../../../../app/config";
 import { AiFillBell } from "react-icons/ai";
@@ -12,37 +12,18 @@ import HandleNGModal from "./handleNGModal/handleNGModal";
 const AFCHome = () => {
   const [data, setData] = useState({});
   const [showAllOrder, setShowAllOrder] = useState(true);
-  // const [allOrder, setAllOrder] = useState([{}, {}, {}, {}, {}]);
+  const [allOrder, setAllOrder] = useState([{}, {}, {}, {}, {}]);
   const [selectedOrder, setSelectedOrder] = useState(0);
-  const [isShaking, setIsShaking] = useState(Array(5).fill(false)); // Trạng thái rung cho các chuông
-  const [currentBell, setCurrentBell] = useState(null); // Chuông hiện tại được nhấn
-  // const [alertSound] = useState(new Audio('/audios/alert.mp3'));
-
+  const [isShaking, setIsShaking] = useState(false);
+  const [currentBell, setCurrentBell] = useState(null);
   const [showHandleNGModal, setShowHandleNGModal] = useState(false);
+  //   let allOrder = {};
 
-  const handleShak = (index) => {
-    if (isShaking[index]) {
+  // Sửa lại handleShak chỉ để mở modal
+  const handleShak = () => {
+    if (isShaking) {
       setShowHandleNGModal(true);
-    } else {
-      const newShakingState = Array(5).fill(false); // Reset tất cả chuông trước khi rung
-      newShakingState[index] = true; // Chỉ cho chuông được nhấn rung
-      setIsShaking(newShakingState);
-      setCurrentBell(index); // Gán chuông hiện tại
-
-      //   setTimeout(() => {
-      //   const updatedShakingState = [...newShakingState]; // Tạo bản sao của mảng
-      //   updatedShakingState[index] = false; // Tắt rung sau 1 giây
-      //   setIsShaking(updatedShakingState); // Cập nhật lại state với bản sao mới
-      //   setCurrentBell(null)
-      // }, 2000);
     }
-
-    // setTimeout(() => {
-    //   const updatedShakingState = [...newShakingState]; // Tạo bản sao của mảng
-    //   updatedShakingState[index] = false; // Tắt rung sau 1 giây
-    //   setIsShaking(updatedShakingState); // Cập nhật lại state với bản sao mới
-    //   setCurrentBell(null)
-    // }, 2000);
   };
 
   const handleSelectChange = (event) => {
@@ -50,35 +31,81 @@ const AFCHome = () => {
     console.log("Chỉ số đơn hàng đã chọn:", event.target.selectedIndex);
   };
 
+  // Hàm xác nhận (đóng modal và dừng rung)
   const handleConfirm = () => {
-    const updatedShakingState = [...isShaking];
-    updatedShakingState[currentBell] = false;
-    setIsShaking(updatedShakingState);
-    setCurrentBell(null);
+    setIsShaking(false);
     setShowHandleNGModal(false);
   };
 
+  // Hàm kiểm tra trạng thái lỗi
+  function checkErrorStatus(data) {
+    for (const line in data) {
+      if (data[line].IsError === true) {
+        setIsShaking(true); // Bắt đầu rung chuông
+
+        // Tự động gọi handleConfirm sau 100 giây nếu không có phản hồi
+        const timeoutId = setTimeout(() => {
+          if (isShaking) {
+            handleConfirm();
+          }
+        }, 10000); // 100 giây
+
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Phát âm thanh khi có rung chuông
   useEffect(() => {
-    if (currentBell !== null) {
-      const alertSound = new Audio(`/audios/Line${currentBell + 1}.mp3`);
+    const alertSound = new Audio(`/audios/alert.mp3`);
+    if (isShaking) {
       alertSound.play();
       alertSound.loop = true;
-      return () => {
-        alertSound.pause();
-        alertSound.currentTime = 0;
-      };
-    }
-  }, [currentBell]);
-
-  let allOrder = {};
-
-  useEffect(() => {
-    if (showAllOrder) {
-      console.log("Đang hiển thị tất cả đơn hàng");
     } else {
-      console.log("Đang hiển thị một đơn hàng");
+      alertSound.pause();
+      alertSound.currentTime = 0;
     }
-  }, [showAllOrder]);
+    return () => {
+      alertSound.pause();
+      alertSound.currentTime = 0;
+    };
+  }, [isShaking]);
+
+  // Lấy dữ liệu từ API và kiểm tra lỗi
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.post(
+          `${config.API_BASE_URL}/getCountingData`
+        );
+        const data = response.data;
+        const result = [];
+        const lines = Object.keys(data);
+
+        for (const line of lines) {
+          if (data[line] && Object.keys(data[line]).length > 0) {
+            result.push({ ...data[line], Line: line });
+          } else {
+            result.push(data[line]);
+          }
+        }
+
+        setAllOrder(result);
+        checkErrorStatus(data); // Kiểm tra trạng thái lỗi
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setData({});
+        setAllOrder([{}, {}, {}, {}, {}]);
+        NProgress.done();
+      }
+    };
+
+    fetchData(); // Fetch lần đầu
+    const intervalId = setInterval(fetchData, 1000); // Fetch lại mỗi giây
+
+    return () => clearInterval(intervalId); // Cleanup khi component unmount
+  }, []);
 
   const dataTestNoCombine_old = {
     DateTimeIn: "2024-09-16T07:00:00.000+07:00",
@@ -164,13 +191,13 @@ const AFCHome = () => {
     SortList: ["0051478858", "0041478858", "Test1", "Test2"],
     isAllOrderFull: true,
   };
-  allOrder = [
-    dataTestNoCombine_new,
-    {},
-    {},
-    dataTestNoCombine_new,
-    dataTestNoCombine_new,
-  ];
+  //   allOrder = [
+  //     dataTestNoCombine_new,
+  //     {},
+  //     {},
+  //     dataTestNoCombine_new,
+  //     dataTestNoCombine_new,
+  //   ];
   const dataTestCombine_new = {
     DateTimeIn: "2024-06-12T00:00:00+07:00",
     IsCombine: true,
@@ -206,33 +233,12 @@ const AFCHome = () => {
     SortList: ["0051478858", "0041478858"],
   };
   // data = { ...dataTestNoCombine_new };
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const response = await axios.post(
-  //         `${config.API_BASE_URL}/getCountingData`
-  //       );
-  //       console.log("response.data", response.data);
-  //       setData(response.data);
 
-  //     } catch (error) {
-  //       console.error("Error fetching data:", error);
-  //       setData({});
-  //       setAllOrder([{}, {}, {}, {}, {}]);
-  //       NProgress.done();
-  //     }
-  //   };
-
-  //   fetchData(); // Initial fetch
-  //   const intervalId = setInterval(fetchData, 1000); // Fetch every 1 seconds
-
-  //   return () => clearInterval(intervalId); // Cleanup on unmount
-  // }, []);
-
-  const handleRefreshCountingData = () => {
-    const refreshCountingData = async () => {
+  const handleRefreshCountingData = (index) => {
+    const refreshCountingData = async (index) => {
       try {
         NProgress.start();
+        alert(index);
         const response = await axios.post(`${config.API_BASE_URL}/refreshData`);
         console.log("response.data", response.data);
         setData(response.data);
@@ -245,30 +251,29 @@ const AFCHome = () => {
       }
     };
 
-    refreshCountingData();
+    refreshCountingData(index);
   };
 
-  // const handleResetCountingData = () => {
-  //   const resetCountingData = async () => {
-  //     try {
-  //       NProgress.start();
-  //       const response = await axios.post(
-  //         `${config.API_BASE_URL}/resetCountingData`
-  //       );
-  //       console.log("response.data", response.data);
-  //       setData(response.data);
-  //       NProgress.done();
-  //     } catch (error) {
-  //       console.error("Error refreshing data:", error);
-  //       NProgress.done();
-  //     }
-  //     finally {
-  //       NProgress.done();
-  //     }
-  //   };
+  //   const handleResetCountingData = () => {
+  //     const resetCountingData = async () => {
+  //       try {
+  //         NProgress.start();
+  //         const response = await axios.post(
+  //           `${config.API_BASE_URL}/resetCountingData`
+  //         );
+  //         console.log("response.data", response.data);
+  //         setData(response.data);
+  //         NProgress.done();
+  //       } catch (error) {
+  //         console.error("Error refreshing data:", error);
+  //         NProgress.done();
+  //       } finally {
+  //         NProgress.done();
+  //       }
+  //     };
 
-  //   resetCountingData();
-  // }
+  //     resetCountingData();
+  //   };
 
   return (
     <div>
@@ -277,6 +282,7 @@ const AFCHome = () => {
           display: "flex",
           alignItems: "stretch",
           justifyContent: "space-between",
+          height: "100%",
         }}
       >
         <div style={{ height: "100%" }}>
@@ -286,9 +292,8 @@ const AFCHome = () => {
             style={{
               marginBottom: "10px",
               marginRight: "10px",
-              backgroundColor:
-                showAllOrder === false ? "#007bff" : "transparent",
-              color: showAllOrder === false ? "white" : "#007bff",
+              backgroundColor: showAllOrder ? "transparent" : "#007bff",
+              color: showAllOrder ? "#007bff" : "white",
             }}
           >
             Hiển thị 1 đơn hàng
@@ -299,39 +304,75 @@ const AFCHome = () => {
             style={{
               marginBottom: "10px",
               marginRight: "10px",
-              backgroundColor:
-                showAllOrder === true ? "#007bff" : "transparent",
-              color: showAllOrder === true ? "white" : "#007bff",
+              backgroundColor: showAllOrder ? "#007bff" : "transparent",
+              color: showAllOrder ? "white" : "#007bff",
             }}
           >
             Hiển thị 5 đơn hàng
           </Button>
         </div>
-        {showAllOrder === true ? (
-          <div>
-            <AiFillBell
-              style={{ marginRight: "8px", color: "white", fontSize: "40px" }}
-              onClick={() => handleShak(0)}
-            />
-          </div>
-        ) : (
-          <InputGroup
-            className="mb-3"
-            style={{ maxWidth: "300px", height: "100%" }}
-          >
-            <Form.Select
-              aria-label="Chọn đơn hàng số"
-              style={{ height: "100%" }}
-              onChange={handleSelectChange}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            height: "50px", // Chiều cao cố định cho cha
+            gap: "10px", // Khoảng cách giữa các phần tử
+          }}
+        >
+          {showAllOrder ? (
+            <div style={{ visibility: "hidden" }}></div>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                alignItems: "center",
+                height: "100%",
+              }}
             >
-              <option value="1">Đơn hàng 1</option>
-              <option value="2">Đơn hàng 2</option>
-              <option value="3">Đơn hàng 3</option>
-              <option value="4">Đơn hàng 4</option>
-              <option value="5">Đơn hàng 5</option>
-            </Form.Select>
-          </InputGroup>
-        )}
+              <Button
+                variant="outline-info"
+                onClick={() => handleRefreshCountingData(selectedOrder)}
+                style={{
+                  height: "40px",
+                  width: "200px",
+                }}
+              >
+                Làm mới đơn hàng
+              </Button>
+
+              <Form.Select
+                aria-label="Chọn đơn hàng số"
+                style={{
+                  height: "40px",
+                  display: "flex",
+                  alignItems: "center",
+                  width: "200px",
+                }}
+                onChange={handleSelectChange}
+              >
+                <option value="1">Đơn hàng 1</option>
+                <option value="2">Đơn hàng 2</option>
+                <option value="3">Đơn hàng 3</option>
+                <option value="4">Đơn hàng 4</option>
+                <option value="5">Đơn hàng 5</option>
+              </Form.Select>
+            </div>
+          )}
+
+          <AiFillBell
+            style={{
+              color: "white",
+              fontSize: "40px",
+              cursor: "pointer",
+              height: "40px", // Chiều cao đồng nhất với các phần tử khác
+              display: "flex",
+              alignItems: "center", // Căn giữa biểu tượng chuông
+            }}
+            className={isShaking ? styles.bellShake : ""}
+            onClick={() => handleShak()}
+          />
+        </div>
       </div>
       <div>
         {showAllOrder === false ? (
@@ -348,8 +389,7 @@ const AFCHome = () => {
             </div>
           ) : (
             <div>
-              <h1>Test2</h1>
-              <BagCounting counting_data={allOrder[0]} />
+              <BagCounting counting_data={allOrder[selectedOrder]} />
             </div>
           )
         ) : (
@@ -358,12 +398,13 @@ const AFCHome = () => {
               display: "flex",
               flexWrap: "nowrap",
               height: "calc(100vh - 180px)",
-              justifyContent: "space-between",
             }}
           >
             {allOrder.map((order, index) =>
               order && Object.keys(order).length === 0 ? (
-                <div style={{ display: "none" }}>Không có dữ liệu</div>
+                <div key={index} style={{ display: "none" }}>
+                  Không có dữ liệu
+                </div>
               ) : (
                 // <div key={index}>
                 //   <div
@@ -407,29 +448,19 @@ const AFCHome = () => {
                 //   </Card>
                 // </div>
                 <div key={index}>
-                  {" "}
-                  {/* Thêm key prop cho phần tử cha */}
                   <div
                     style={{
                       display: "flex",
                       justifyContent: "center",
                       marginBottom: "10px",
                       alignItems: "center",
-                      cursor: "pointer",
                     }}
                   >
-                    <AiFillBell
-                      style={{
-                        marginRight: "8px",
-                        color: "white",
-                        fontSize: "40px",
-                      }}
-                      className={isShaking[index] ? styles.bellShake : ""}
-                      onClick={() => handleShak(index)}
-                    />
                     <Button
                       variant="outline-info"
-                      onClick={handleRefreshCountingData}
+                      onClick={() => {
+                        handleRefreshCountingData(index);
+                      }}
                     >
                       Làm mới đơn hàng
                     </Button>
@@ -446,16 +477,6 @@ const AFCHome = () => {
         setShow={setShowHandleNGModal}
         handleConfirm={handleConfirm}
       />
-      {/* {data && Object.keys(data).length === 0 ? (
-        <Card className="text-center" style={{ marginTop: "20px" }}>
-          <Card.Body>
-            <Card.Title>Không có dữ liệu</Card.Title>
-            <Card.Text>Chưa có đơn hàng được gọi</Card.Text>
-          </Card.Body>
-        </Card>
-      ) : (
-        <BagCounting counting_data={data} orderCount={orderCount} />
-      )} */}
     </div>
   );
 };

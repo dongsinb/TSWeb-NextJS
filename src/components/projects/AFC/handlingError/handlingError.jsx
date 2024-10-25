@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styles from "./handlingError.module.css";
 import { v4 as uuidv4 } from "uuid";
 import { Form, Button, Table, ListGroup } from "react-bootstrap";
@@ -7,101 +7,113 @@ import axios from "axios";
 import NProgress from "../../../loadingBar/nprogress-config";
 import config from "../../../../app/config";
 
-const HandlingError = () => {
-  //   const [datas, setDatas] = useState([])
-  //   const fetchConfuseData = async () => {
-  //     try {
-  //       NProgress.start()
-  //       const response = await axios.post(`${config.API_BASE_URL}/getConfuseData`, {}, { timeout: 5000 });
-  //       const data = response.data;
-  //       if (data.error) {
-  //         setDatas([])
-  //       } else {
-  //         console.log("Data fetched successfully:", data);
-  //         setDatas(data)
-  //       }
-  //       NProgress.done()
-  //       console.log("Confuse Data:", data);
-  //       // Handle the data as needed, e.g., set it to state
-  //     } catch (error) {
-  //       console.error("Error fetching confuse data:", error);
-  //     }
-  //     finally {
-  //       NProgress.done()
-  //     }
-  //   };
+const HandlingError = ({ handleConfirm }) => {
+  const [datas, setDatas] = useState([]);
+  const isFirstRender = useRef(true);
+  const fetchConfuseData = async () => {
+    try {
+      NProgress.start();
+      const response = await axios.post(
+        `${config.API_BASE_URL}/getConfuseData`,
+        { timeout: 5000 }
+      );
+      const data = response.data;
+      if (data.error) {
+        setDatas([]);
+      } else {
+        console.log("Data fetched successfully:", data);
+        setDatas(data);
+      }
+      NProgress.done();
+      console.log("Confuse Data:", data);
+      // Handle the data as needed, e.g., set it to state
+    } catch (error) {
+      console.error("Error fetching confuse data:", error);
+    } finally {
+      NProgress.done();
+    }
+  };
 
-  //   useEffect(() => {
-  //     fetchConfuseData(); // Fetch confuse data on component mount
-  //   }, []);
+  useEffect(() => {
+    fetchConfuseData(); // Fetch confuse data on component mount
+  }, []);
 
-  const [datas, setDatas] = useState([
-    {
-      id: uuidv4(),
-      CameraID: "Cổng 1",
-      PlateNumber: "18C-123456",
-      Message: "Không nhận diện được",
-      image: "/imgSP_0.png",
-      Products: [
-        "Order 1",
-        "Order 2",
-        "Order 10",
-        "Order 19",
-        "Order 99",
-        "Order 100",
-        "Order 101",
-        "Order 102",
-        "Order 103",
-        "Order 104",
-      ],
-      isConfirm: false,
-    },
-    {
-      id: uuidv4(),
-      CameraID: "Cổng 1",
-      PlateNumber: "18C-884568",
-      Message: "Không nhận diện được",
-      image: "/imgSP_1.png",
-      Products: ["Order5", "Order9"],
-      isConfirm: false,
-    },
-    {
-      id: uuidv4(),
-      CameraID: "Cổng 1",
-      PlateNumber: "18C-884568",
-      Message: "Không nhận diện được",
-      image: "/imgSP_1.png",
-      Products: ["Order2", "Order9"],
-      isConfirm: false,
-    },
-    {
-      id: uuidv4(),
-      CameraID: "Cổng 1",
-      PlateNumber: "18C-884568",
-      Message: "Không nhận diện được",
-      image: "/imgSP_1.png",
-      Products: ["Order5", "Order89"],
-      isConfirm: false,
-    },
-    {
-      id: uuidv4(),
-      CameraID: "Cổng 1",
-      PlateNumber: "18C-884568",
-      Message: "Không nhận diện được",
-      image: "/imgSP_1.png",
-      Products: ["Order45", "Order3"],
-      isConfirm: false,
-    },
-    {
-      id: uuidv4(),
-      CameraID: "Cổng 1",
-      PlateNumber: "18C-884568",
-      Message: "Không nhận diện được",
-      image: "/imgSP_1.png",
-      Products: ["Order9", "Order5"],
-      isConfirm: false,
-    },
-  ]);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      // Skip the logic on the first render
+      isFirstRender.current = false;
+    } else if (datas.length === 0) {
+      console.log("tesstttttttttt");
+      handleConfirm();
+    }
+  }, [datas]);
+  //   const [datas, setDatas] = useState([
+  //     {
+  //       id: uuidv4(),
+  //       Line: "Line1",
+  //       PlateNumber: "18C-123456",
+  //       Message: "Không nhận diện được",
+  //       image: "/imgSP_0.png",
+  //       Products: [
+  //         "Order 1",
+  //         "Order 2",
+  //         "Order 10",
+  //         "Order 19",
+  //         "Order 99",
+  //         "Order 100",
+  //         "Order 101",
+  //         "Order 102",
+  //         "Order 103",
+  //         "Order 104",
+  //       ],
+  //       isConfirm: false,
+  //     },
+  //     {
+  //       id: uuidv4(),
+  //       Line: "Line1",
+  //       PlateNumber: "18C-884568",
+  //       Message: "Không nhận diện được",
+  //       image: "/imgSP_1.png",
+  //       Products: ["Order5", "Order9"],
+  //       isConfirm: false,
+  //     },
+  //     {
+  //       id: uuidv4(),
+  //       Line: "Line1",
+  //       PlateNumber: "18C-884568",
+  //       Message: "Không nhận diện được",
+  //       image: "/imgSP_1.png",
+  //       Products: ["Order2", "Order9"],
+  //       isConfirm: false,
+  //     },
+  //     {
+  //       id: uuidv4(),
+  //       Line: "Line1",
+  //       PlateNumber: "18C-884568",
+  //       Message: "Không nhận diện được",
+  //       image: "/imgSP_1.png",
+  //       Products: ["Order5", "Order89"],
+  //       isConfirm: false,
+  //     },
+  //     {
+  //       id: uuidv4(),
+  //       Line: "Line1",
+  //       PlateNumber: "18C-884568",
+  //       Message: "Không nhận diện được",
+  //       image: "/imgSP_1.png",
+  //       Products: ["Order45", "Order3"],
+  //       isConfirm: false,
+  //     },
+  //     {
+  //       id: uuidv4(),
+  //       Line: "Line1",
+  //       PlateNumber: "18C-884568",
+  //       Message: "Không nhận diện được",
+  //       image: "/imgSP_1.png",
+  //       Products: ["Order9", "Order5"],
+  //       isConfirm: false,
+  //     },
+  //   ]);
 
   const [selectedItems, setSelectedItems] = useState({});
 
@@ -125,7 +137,7 @@ const HandlingError = () => {
       return newState;
     });
     const data_send_API = {
-      CameraID: selectedData.CameraID,
+      Line: selectedData.Line,
       DateTimeIn: selectedData.DateTimeIn,
       OrderName: selectedData.OrderName,
       PlateNumber: selectedData.PlateNumber,
@@ -157,7 +169,7 @@ const HandlingError = () => {
       return newState;
     });
     const data_send_API = {
-      CameraID: selectedData.CameraID,
+      Line: selectedData.Line,
       DateTimeIn: selectedData.DateTimeIn,
       OrderName: selectedData.OrderName,
       PlateNumber: selectedData.PlateNumber,
@@ -206,7 +218,7 @@ const HandlingError = () => {
               datas.map((data, i) => (
                 <tr key={data._id} className={styles.tableRow}>
                   <td>{i}</td>
-                  <td>{data.CameraID}</td>
+                  <td>{data.Line}</td>
                   <td>{data.PlateNumber}</td>
                   <td>{data.Message}</td>
                   <td
@@ -224,8 +236,8 @@ const HandlingError = () => {
                       }}
                     >
                       <img
-                        src={data.image}
-                        // src={`data:image/jpeg;base64,${data.Image}`}
+                        // src={data.image}
+                        src={`data:image/jpeg;base64,${data.Image}`}
                         alt="logo"
                         style={{
                           width: "100%",

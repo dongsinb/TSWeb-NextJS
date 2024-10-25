@@ -22,7 +22,7 @@ function HandleNGModal({ show, setShow, handleConfirm }) {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <HandlingError></HandlingError>
+          <HandlingError handleConfirm={handleConfirm}></HandlingError>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>

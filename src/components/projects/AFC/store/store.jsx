@@ -14,12 +14,12 @@ import { toast } from "react-toastify";
 import config from "../../../../app/config";
 
 function AFCStore(props) {
-  const { datas } = props;
+  const { datas, dateTime } = props;
+  console.log("dateTime: ", dateTime);
   const [plateNumber, setPlateNumber] = useState("");
-  const [waitingOrders, setWaitingOrders] = useState([]); 
-  const [finishedOrders, setFinishedOrders] = useState([]); 
-  const [selectedDateTime, setSelectedDateTime] = useState("");
-  
+  const [waitingOrders, setWaitingOrders] = useState([]);
+  const [finishedOrders, setFinishedOrders] = useState([]);
+  const [selectedDateTime, setSelectedDateTime] = useState(dateTime);
 
   const handleDateChange = (event) => {
     setSelectedDateTime(event.target.value);
@@ -28,35 +28,46 @@ function AFCStore(props) {
   useEffect(() => {
     console.log("datas AFC: ", datas);
     // Cập nhật waitingOrders và finishedOrders khi datas thay đổi
-    setWaitingOrders(datas["Waiting"].map((order) => ({
-      ...order,
-      Status: "Waiting",
-    })));
-    setFinishedOrders(datas["Finished"].map((order) => ({
-      ...order,
-      Status: "Finished",
-    })));
+    setWaitingOrders(
+      datas["Waiting"].map((order) => ({
+        ...order,
+        Status: "Waiting",
+      }))
+    );
+    setFinishedOrders(
+      datas["Finished"].map((order) => ({
+        ...order,
+        Status: "Finished",
+      }))
+    );
   }, [datas]);
 
   const handleSearchByPlate = async () => {
-    console.log("test sear")
+    console.log("test sear");
     if (plateNumber === "") {
       toast.warn("Biển số xe không được để trống.");
       return;
     } else {
       try {
-        const response = await axios.post(`${config.API_BASE_URL}/getDatabyPlateNumber`, {
-          PlateNumber: plateNumber,
-        });
-        const datasSearch = response.data; 
-        setWaitingOrders(datasSearch["Waiting"].map((order) => ({
-          ...order,
-          Status: "Waiting",
-        })));
-        setFinishedOrders(datasSearch["Finished"].map((order) => ({
-          ...order,
-          Status: "Finished",
-        })));
+        const response = await axios.post(
+          `${config.API_BASE_URL}/getDatabyPlateNumber`,
+          {
+            PlateNumber: plateNumber,
+          }
+        );
+        const datasSearch = response.data;
+        setWaitingOrders(
+          datasSearch["Waiting"].map((order) => ({
+            ...order,
+            Status: "Waiting",
+          }))
+        );
+        setFinishedOrders(
+          datasSearch["Finished"].map((order) => ({
+            ...order,
+            Status: "Finished",
+          }))
+        );
         // Xử lý dữ liệu nhận được nếu cần
       } catch (error) {
         console.error("Có lỗi xảy ra khi tìm kiếm:", error);
@@ -65,10 +76,10 @@ function AFCStore(props) {
   };
 
   return (
-    <div> 
+    <div>
       <InputGroup className="mb-3">
-        <Form.Control 
-          placeholder="Nhập biển số xe" 
+        <Form.Control
+          placeholder="Nhập biển số xe"
           value={plateNumber} // Liên kết giá trị với state
           onChange={(e) => setPlateNumber(e.target.value)} // Cập nhật state khi thay đổi
         />
@@ -78,14 +89,18 @@ function AFCStore(props) {
           customInput={<ExampleCustomInput className="example-custom-input" />}
         /> */}
         <input
-        type="date"
-        id="date"
-        value={selectedDateTime}
-        onChange={handleDateChange}
+          type="date"
+          id="date"
+          value={selectedDateTime}
+          onChange={handleDateChange}
         />
-        <Button variant="outline-secondary" id="button-addon2" onClick={handleSearchByPlate}>
+        <Button
+          variant="outline-secondary"
+          id="button-addon2"
+          onClick={handleSearchByPlate}
+        >
           Tìm kiếm
-        </Button> 
+        </Button>
       </InputGroup>
       <Tabs
         defaultActiveKey="Waiting"

@@ -8,15 +8,23 @@ import config from "../../config";
 
 const StorePage = () => {
   const [datas, setDatas] = useState({ Called: [], Finished: [], Waiting: [] });
+  const [dateTime, setDateTime] = useState(() => {
+    const today = new Date();
+    const formattedDate = today.toISOString().split("T")[0];
+    return formattedDate;
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       console.log("Checkkkk resfesk: ");
       NProgress.start();
       try {
+        const today = new Date();
+        const formattedDate = today.toISOString().split("T")[0];
         let response = await axios(`${config.API_BASE_URL}/getOrderData`, {
           method: "POST",
-          timeout: 10000 
+          timeout: 10000,
+          data: { DateTimeIn: dateTime },
         });
 
         let result = await response.data;
@@ -24,7 +32,7 @@ const StorePage = () => {
         console.log("dữ liệu: ", result);
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error);
-        if (error.code === 'ECONNABORTED') {
+        if (error.code === "ECONNABORTED") {
           console.error("Yêu cầu đã hết thời gian chờ");
         }
       } finally {
@@ -172,7 +180,7 @@ const StorePage = () => {
   ];
   return (
     <div className={styles.container}>
-      <AFCStore datas={datas}></AFCStore>
+      <AFCStore datas={datas} dateTime={dateTime}></AFCStore>
     </div>
   );
 };
