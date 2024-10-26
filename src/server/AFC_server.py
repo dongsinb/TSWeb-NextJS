@@ -20,27 +20,33 @@ class CallingDataHandler():
         self.dbmanager = dbmanager
         self.reset()
 
-    def reset(self):
-        self.line_platenumber_data = {"Line1" : "",
-                                      "Line2" : "",
-                                      "Line3" : "",
-                                      "Line4" : "",
-                                      "Line5" : ""}
-        self.calling_data = {"Line1" : {},
-                             "Line2" : {},
-                             "Line3" : {},
-                             "Line4" : {},
-                             "Line5" : {}}
-        self.orders_status = {"Line1" : {"currentOrderName": "",
-                                        "product": {}},
-                              "Line2": {"currentOrderName": "",
-                                        "product": {}},
-                              "Line3": {"currentOrderName": "",
-                                        "product": {}},
-                              "Line4": {"currentOrderName": "",
-                                        "product": {}},
-                              "Line5": {"currentOrderName": "",
-                                        "product": {}}}
+    def reset(self, line=""):
+        if line == "":  # reset all lines
+            self.line_platenumber_data = {"Line1" : "",
+                                          "Line2" : "",
+                                          "Line3" : "",
+                                          "Line4" : "",
+                                          "Line5" : ""}
+            self.calling_data = {"Line1" : {},
+                                 "Line2" : {},
+                                 "Line3" : {},
+                                 "Line4" : {},
+                                 "Line5" : {}}
+            self.orders_status = {"Line1" : {"currentOrderName": "",
+                                            "product": {}},
+                                  "Line2": {"currentOrderName": "",
+                                            "product": {}},
+                                  "Line3": {"currentOrderName": "",
+                                            "product": {}},
+                                  "Line4": {"currentOrderName": "",
+                                            "product": {}},
+                                  "Line5": {"currentOrderName": "",
+                                            "product": {}}}
+        else:   # reset specific line
+            self.line_platenumber_data[line] = ""
+            self.calling_data[line] = {}
+            self.orders_status[line] = {"currentOrderName": "",
+                                        "product": {}}
 
     def init_orders_status(self, line):
         self.orders_status[line] = {"currentOrderName": "",
@@ -276,6 +282,8 @@ class DBManagerment():
 
         # Check the result
         if result.modified_count > 0:
+
+
             print("Document updated successfully.")
             return True
         else:
@@ -501,6 +509,11 @@ def refreshData():
                     "PlateNumber": dataHandler.calling_data[line]["PlateNumber"],
                     "SortList": dataHandler.calling_data[line]["SortList"]}
             dataHandler.set_calling_data(dbmanager.orders_sorting(data), data)
+
+            dataHandler.check_AllOrderFull(line)
+            if dataHandler.calling_data[line]["IsAllOrderFull"]:
+                dbmanager.update_finish_status(dataHandler.calling_data[line]["DateTimeIn"],
+                                                    dataHandler.calling_data[line]["PlateNumber"])
     return jsonify(dataHandler.calling_data)
 
 # [TSVision] Get list counting product
@@ -528,6 +541,7 @@ def getConfuseData():
 def updateOrderData():
     data = request.json
     isUpdate = dbmanager.update_OrderData(data)
+    refreshData()
     return jsonify(isUpdate)
 
 # [TSWeb] Classify confuse data
@@ -551,7 +565,9 @@ def getCountingData():
 @app.route('/resetCountingData', methods=['POST'])
 def resetCountingData():
     try:
-        dataHandler.reset()
+        data = request.json
+        line = data["Line"]
+        dataHandler.reset(line)
         return jsonify(dataHandler.calling_data)
     except Exception as e:
         return jsonify({"error": str(e)})
