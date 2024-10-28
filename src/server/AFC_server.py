@@ -489,6 +489,7 @@ def countingData():
         productCode = data["ProductCode"]
         dataHandler.counting(line, productCode)
     else:
+        count_id =  data["CountID"]
         dbmanager.insert_ConfuseData(data, dataHandler.calling_data[line]['PlateNumber'], dataHandler.orders_status[line]['currentOrderName'], list(dataHandler.orders_status[line]['product'].keys()))
         dataHandler.calling_data[line]["IsError"] = True
     return jsonify(dataHandler.calling_data)
@@ -521,7 +522,10 @@ def refreshData():
 def getListProductCode():
     data = request.json
     line = data["Line"]
-    return jsonify(dataHandler.orders_status[line])
+    plate_number = dataHandler.line_platenumber_data["line"]
+    return_data = copy.deepcopy(dataHandler.orders_status[line])
+    return_data["PlateNumber"] = plate_number
+    return jsonify(return_data)
 
 # [TSWeb] Get confuse data
 @app.route("/getConfuseData", methods=['POST'])
