@@ -522,7 +522,7 @@ def refreshData():
 def getListProductCode():
     data = request.json
     line = data["Line"]
-    plate_number = dataHandler.line_platenumber_data["line"]
+    plate_number = dataHandler.line_platenumber_data[line]
     return_data = copy.deepcopy(dataHandler.orders_status[line])
     return_data["PlateNumber"] = plate_number
     return jsonify(return_data)
