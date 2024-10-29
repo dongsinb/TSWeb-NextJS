@@ -198,26 +198,34 @@ class DBManagerment():
             data.append(document)
         return data
 
-    def get_documents_by_platenumber(self, plate_number):
+    def get_documents_by_platenumber(self, plate_number, search_date):
         data = {}
         for status in ["Waiting", "Finished"]:
             docs = []
             doc_dict = {}
-            cursor = self.orderCollection.find({"Status": status})
+            if search_date != "":
+                date = "^" + search_date  # for search regex all document have value start with date
+                cursor = self.orderCollection.find({"DateTimeIn": {"$regex": date},
+                                                      "PlateNumber": plate_number,
+                                                      "Status": status})
+            else:
+                cursor = self.orderCollection.find({"PlateNumber": plate_number,
+                                                      "Status": status})
             for document in cursor:
-                if document['PlateNumber'] == plate_number:
-                    document['_id'] = str(document['_id'])
-                    date = document['DateTimeIn'].split('T')[0]
-                    if date not in doc_dict:
-                        doc_dict[date] = copy.deepcopy(document)
-                        doc_dict[date]["Orders"] = {document["OrderName"]: copy.deepcopy(document["Orders"])}
-                        doc_dict[date]["Orders"][document["OrderName"]]["_id"] = copy.deepcopy(document['_id'])
-                        doc_dict[date].pop('_id', None)
-                        doc_dict[date].pop('OrderName', None)
-                        doc_dict[date].pop('Status', None)
-                    else:
-                        doc_dict[date]["Orders"][document["OrderName"]] = copy.deepcopy(document["Orders"])
-                        doc_dict[date]["Orders"][document["OrderName"]]["_id"] = copy.deepcopy(document['_id'])
+                print('alo')
+                print(document)
+                document['_id'] = str(document['_id'])
+                date = document['DateTimeIn'].split('T')[0]
+                if date not in doc_dict:
+                    doc_dict[date] = copy.deepcopy(document)
+                    doc_dict[date]["Orders"] = {document["OrderName"]: copy.deepcopy(document["Orders"])}
+                    doc_dict[date]["Orders"][document["OrderName"]]["_id"] = copy.deepcopy(document['_id'])
+                    doc_dict[date].pop('_id', None)
+                    doc_dict[date].pop('OrderName', None)
+                    doc_dict[date].pop('Status', None)
+                else:
+                    doc_dict[date]["Orders"][document["OrderName"]] = copy.deepcopy(document["Orders"])
+                    doc_dict[date]["Orders"][document["OrderName"]]["_id"] = copy.deepcopy(document['_id'])
             if doc_dict:
                 for k, v in doc_dict.items():
                     docs.append(v)
@@ -452,14 +460,11 @@ def getOrderData():
 # [TSWeb] Get all data by plate number from mongodb to web
 @app.route('/getDatabyPlateNumber', methods=['POST'])
 def getDatabyPlateNumber():
-    data = request.json
-    # print(data)
-    plate_number = data.get('PlateNumber')
-    # print(plate_number)
-    if not plate_number:
-        return jsonify({"error": "PlateNumber is required"}), 400
     try:
-        return jsonify(dbmanager.get_documents_by_platenumber(plate_number))
+        data = request.json
+        plate_number = data.get('PlateNumber')
+        date = data.get('DateTimeIn')
+        return jsonify(dbmanager.get_documents_by_platenumber(plate_number, date))
     except Exception as e:
         return jsonify({"error": str(e)})
 
