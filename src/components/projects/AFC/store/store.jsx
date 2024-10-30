@@ -26,6 +26,14 @@ function AFCStore(props) {
   };
 
   useEffect(() => {
+    console.log("selectedDateTime đã thay đổi: ", selectedDateTime);
+    if (selectedDateTime === "") {
+      console.log("selectedDateTime không được để trống.");
+      // Thực hiện các hành động cần thiết khi selectedDateTime để trống
+    }
+  }, [selectedDateTime]);
+
+  useEffect(() => {
     console.log("datas AFC: ", datas);
     // Cập nhật waitingOrders và finishedOrders khi datas thay đổi
     setWaitingOrders(
@@ -43,16 +51,39 @@ function AFCStore(props) {
   }, [datas]);
 
   const handleSearchByPlate = async () => {
-    console.log("test sear");
+    console.log("test searh");
     if (plateNumber === "") {
-      toast.warn("Biển số xe không được để trống.");
-      return;
+      try {
+        const response = await axios.post(
+          `${config.API_BASE_URL}/getOrderData`,
+          {
+            DateTimeIn: selectedDateTime,
+          }
+        );
+        const datasSearch = response.data;
+        setWaitingOrders(
+          datasSearch["Waiting"].map((order) => ({
+            ...order,
+            Status: "Waiting",
+          }))
+        );
+        setFinishedOrders(
+          datasSearch["Finished"].map((order) => ({
+            ...order,
+            Status: "Finished",
+          }))
+        );
+        // Xử lý dữ liệu nhận được nếu cần
+      } catch (error) {
+        console.error("Có lỗi xảy ra khi tìm kiếm:", error);
+      }
     } else {
       try {
         const response = await axios.post(
           `${config.API_BASE_URL}/getDatabyPlateNumber`,
           {
             PlateNumber: plateNumber,
+            DateTimeIn: selectedDateTime,
           }
         );
         const datasSearch = response.data;

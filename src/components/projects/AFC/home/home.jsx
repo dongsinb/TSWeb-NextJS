@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Card, Button, Form } from "react-bootstrap";
 import BagCounting from "../bagCounting/bagCounting";
 import axios from "axios";
@@ -17,9 +17,16 @@ const AFCHome = () => {
   const [isShaking, setIsShaking] = useState(false);
   const [currentBell, setCurrentBell] = useState(null);
   const [showHandleNGModal, setShowHandleNGModal] = useState(false);
+  const [confirmAll, setConfirmAll] = useState(false);
   //   let allOrder = {};
+  const alertSound = useRef(null);
 
-  // Sửa lại handleShak chỉ để mở modal
+  useEffect(() => {
+    console.log("test load audio first");
+    alertSound.current = new Audio(`/audios/alert.mp3`);
+    alertSound.current.load(); // Tải âm thanh trước
+  }, []);
+
   const handleShak = () => {
     if (isShaking) {
       setShowHandleNGModal(true);
@@ -35,20 +42,21 @@ const AFCHome = () => {
   const handleConfirm = () => {
     setIsShaking(false);
     setShowHandleNGModal(false);
+    setConfirmAll(true);
   };
 
   // Hàm kiểm tra trạng thái lỗi
   function checkErrorStatus(data) {
     for (const line in data) {
       if (data[line].IsError === true) {
-        setIsShaking(true); // Bắt đầu rung chuông
+        setIsShaking(true);
 
-        // Tự động gọi handleConfirm sau 100 giây nếu không có phản hồi
-        const timeoutId = setTimeout(() => {
-          if (isShaking) {
-            handleConfirm();
-          }
-        }, 10000); // 100 giây
+        // const timeoutId = setTimeout(() => {
+        //   if (isShaking) {
+        //     console.log("auto confrim");
+        //     // handleConfirm();
+        //   }
+        // }, 10000); // 100 giây
 
         return true;
       }
@@ -56,21 +64,68 @@ const AFCHome = () => {
     return false;
   }
 
-  // Phát âm thanh khi có rung chuông
+  //   useEffect(() => {
+  //     if (isShaking) {
+  //       const timeoutId = setTimeout(() => {
+  //         if (isShaking) {
+  //           // Kiểm tra qua tham chiếu thay vì state
+  //           console.log("auto confirm");
+  //           setShowHandleNGModal(true);
+  //           setConfirmAll(true);
+  //         }
+  //       }, 20000); // 10 giây
+
+  //       // Dọn dẹp timeout nếu isShaking thay đổi hoặc component bị hủy
+  //       return () => clearTimeout(timeoutId);
+  //     }
+  //   }, [isShaking]);
+
   useEffect(() => {
-    const alertSound = new Audio(`/audios/alert.mp3`);
     if (isShaking) {
-      alertSound.play();
-      alertSound.loop = true;
-    } else {
-      alertSound.pause();
-      alertSound.currentTime = 0;
+      console.log("audio played");
+      alertSound.current.play().catch((err) => {
+        console.error("Error playing alert sound:", err);
+      });
+      alertSound.current.loop = true;
+      const timeoutId = setTimeout(() => {
+        if (isShaking) {
+          // Kiểm tra qua tham chiếu thay vì state
+          console.log("auto confirm");
+          setShowHandleNGModal(true);
+          setConfirmAll(true);
+        }
+      }, 500000); // 10 giây
+      return () => clearTimeout(timeoutId);
+    } else if (alertSound.current) {
+      alertSound.current.pause();
+      alertSound.current.currentTime = 0;
     }
     return () => {
-      alertSound.pause();
-      alertSound.currentTime = 0;
+      if (alertSound.current) {
+        alertSound.current.pause();
+        alertSound.current.currentTime = 0;
+      }
     };
   }, [isShaking]);
+
+  //   useEffect(() => {
+  //     if (isShaking && alertSound.current) {
+  //       console.log("audio played");
+  //       alertSound.current.play().catch((err) => {
+  //         console.error("Error playing alert sound:", err);
+  //       });
+  //       alertSound.current.loop = true;
+  //     } else if (alertSound.current) {
+  //       alertSound.current.pause();
+  //       alertSound.current.currentTime = 0;
+  //     }
+  //     return () => {
+  //       if (alertSound.current) {
+  //         alertSound.current.pause();
+  //         alertSound.current.currentTime = 0;
+  //       }
+  //     };
+  //   }, [isShaking]);
 
   // Lấy dữ liệu từ API và kiểm tra lỗi
   useEffect(() => {
@@ -239,7 +294,13 @@ const AFCHome = () => {
       try {
         NProgress.start();
         alert(index);
-        const response = await axios.post(`${config.API_BASE_URL}/refreshData`);
+        const lineSelected = `Line${index + 1}`;
+        const response = await axios.post(
+          `${config.API_BASE_URL}/refreshData`,
+          {
+            Line: lineSelected,
+          }
+        );
         console.log("response.data", response.data);
         setData(response.data);
         NProgress.done();
@@ -254,26 +315,36 @@ const AFCHome = () => {
     refreshCountingData(index);
   };
 
-  //   const handleResetCountingData = () => {
-  //     const resetCountingData = async () => {
-  //       try {
-  //         NProgress.start();
-  //         const response = await axios.post(
-  //           `${config.API_BASE_URL}/resetCountingData`
-  //         );
-  //         console.log("response.data", response.data);
-  //         setData(response.data);
-  //         NProgress.done();
-  //       } catch (error) {
-  //         console.error("Error refreshing data:", error);
-  //         NProgress.done();
-  //       } finally {
-  //         NProgress.done();
-  //       }
-  //     };
-
-  //     resetCountingData();
-  //   };
+  const handleResetCountingData = (index) => {
+    const resetCountingData = async (index) => {
+      try {
+        NProgress.start();
+        const lineSelected = `Line${index + 1}`;
+        const response = await axios.post(
+          `${config.API_BASE_URL}/resetCountingData`,
+          {
+            Line: lineSelected,
+          }
+        );
+        console.log("response.data", response.data);
+        setData(response.data);
+        NProgress.done();
+      } catch (error) {
+        console.error("Error refreshing data:", error);
+        NProgress.done();
+      } finally {
+        NProgress.done();
+      }
+    };
+    const confirmReset = confirm(
+      `Bạn chắc chắn muốn xóa đơn hàng ở cổng số ${index + 1}?`
+    );
+    if (confirmReset) {
+      resetCountingData(index);
+    } else {
+      console.log("Không xóa đơn hàng");
+    }
+  };
 
   return (
     <div>
@@ -282,7 +353,7 @@ const AFCHome = () => {
           display: "flex",
           alignItems: "stretch",
           justifyContent: "space-between",
-          height: "100%",
+          //   height: "100%",
         }}
       >
         <div style={{ height: "100%" }}>
@@ -330,7 +401,7 @@ const AFCHome = () => {
                 height: "100%",
               }}
             >
-              <Button
+              {/* <Button
                 variant="outline-info"
                 onClick={() => handleRefreshCountingData(selectedOrder)}
                 style={{
@@ -339,7 +410,7 @@ const AFCHome = () => {
                 }}
               >
                 Làm mới đơn hàng
-              </Button>
+              </Button> */}
 
               <Form.Select
                 aria-label="Chọn đơn hàng số"
@@ -451,19 +522,27 @@ const AFCHome = () => {
                   <div
                     style={{
                       display: "flex",
-                      justifyContent: "center",
+                      justifyContent: "space-evenly",
                       marginBottom: "10px",
                       alignItems: "center",
                     }}
                   >
-                    <Button
+                    {/* <Button
                       variant="outline-info"
                       onClick={() => {
                         handleRefreshCountingData(index);
                       }}
                     >
                       Làm mới đơn hàng
-                    </Button>
+                    </Button> */}
+                    {/* <Button
+                      variant="outline-danger"
+                      onClick={() => {
+                        handleResetCountingData(index);
+                      }}
+                    >
+                      Xóa đơn hàng
+                    </Button> */}
                   </div>
                   <BagCounting counting_data={order} />
                 </div>
@@ -476,6 +555,9 @@ const AFCHome = () => {
         show={showHandleNGModal}
         setShow={setShowHandleNGModal}
         handleConfirm={handleConfirm}
+        confirmAll={confirmAll}
+        setConfirmAll={setConfirmAll}
+        setIsShaking={setIsShaking}
       />
     </div>
   );

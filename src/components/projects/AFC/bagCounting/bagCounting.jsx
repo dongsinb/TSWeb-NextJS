@@ -1,8 +1,39 @@
 import React from "react";
-import { Table } from "react-bootstrap";
+import { Button, Table } from "react-bootstrap";
 import styles from "./bagCounting.module.css";
+import axios from "axios";
+import NProgress from "../../../loadingBar/nprogress-config";
+import config from "../../../../app/config";
 
 const BagCounting = ({ counting_data }) => {
+  const handleResetCountingData = (line) => {
+    const resetCountingData = async () => {
+      try {
+        NProgress.start();
+        const response = await axios.post(
+          `${config.API_BASE_URL}/resetCountingData`,
+          {
+            Line: line,
+          }
+        );
+        console.log("response.data", response.data);
+        NProgress.done();
+      } catch (error) {
+        console.error("Error refreshing data:", error);
+        NProgress.done();
+      } finally {
+        NProgress.done();
+      }
+    };
+    const confirmReset = confirm(
+      `Bạn chắc chắn muốn xóa đơn hàng ở cổng số ${line}?`
+    );
+    if (confirmReset) {
+      resetCountingData(line);
+    } else {
+      console.log("Không xóa đơn hàng");
+    }
+  };
   // console.log("counting_data: ", JSON.stringify(counting_data))
   if (!counting_data.IsCombine) {
     const sortedData = {};
@@ -29,6 +60,19 @@ const BagCounting = ({ counting_data }) => {
               <br />
               <strong>Trạng thái đếm:</strong>
               {data.IsCombine ? " Đếm gộp" : " Đếm theo đơn"}
+            </td>
+          </tr>
+          <tr className={styles.tableRow}>
+            <td colSpan="4">
+              <strong>Xóa đơn hàng: </strong>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  handleResetCountingData(data.Line);
+                }}
+              >
+                Xóa đơn hàng
+              </Button>
             </td>
           </tr>
           <tr className={styles.tableRow}>

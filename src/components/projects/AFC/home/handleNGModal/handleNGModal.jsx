@@ -3,7 +3,14 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import HandlingError from "../../handlingError/handlingError";
 
-function HandleNGModal({ show, setShow, handleConfirm }) {
+function HandleNGModal({
+  show,
+  setShow,
+  handleConfirm,
+  confirmAll,
+  setConfirmAll,
+  setIsShaking,
+}) {
   const handleClose = () => setShow(false);
 
   return (
@@ -22,7 +29,13 @@ function HandleNGModal({ show, setShow, handleConfirm }) {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <HandlingError handleConfirm={handleConfirm}></HandlingError>
+          <HandlingError
+            confirmAll={confirmAll}
+            setConfirmAll={setConfirmAll}
+            handleConfirm={handleConfirm}
+            handleClose={handleClose}
+            setIsShaking={setIsShaking}
+          ></HandlingError>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>

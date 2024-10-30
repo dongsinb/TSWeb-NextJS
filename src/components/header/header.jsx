@@ -8,6 +8,12 @@ const HeaderTS = ({ user }) => {
   const pathname = usePathname();
   const pagename = pathname.split("/").pop();
   const router = useRouter();
+  const traslatedPageName = {
+    home: "Màn hình đếm",
+    store: "Quản lý đơn hàng",
+    addOrder: "Thêm đơn hàng",
+    info: "Thông tin về TS Vision",
+  };
 
   const handleLogin = () => {
     router.push("/login");
@@ -16,7 +22,9 @@ const HeaderTS = ({ user }) => {
   return (
     <div className={styles.container}>
       <div className={styles.title}>
-        {pagename === "" ? "AFC" : pagename}
+        {pagename === ""
+          ? "AFC"
+          : traslatedPageName[pagename] || "Trang không tồn tại"}
       </div>
 
       {user === "admin" ? (

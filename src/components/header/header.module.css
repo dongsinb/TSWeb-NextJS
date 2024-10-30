@@ -12,6 +12,7 @@
   color: var(--soft-text-color);
   font-weight: bold;
   text-transform: capitalize;
+  font-size: 1.5rem;
 }
 
 .user {

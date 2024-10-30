@@ -7,7 +7,13 @@ import axios from "axios";
 import NProgress from "../../../loadingBar/nprogress-config";
 import config from "../../../../app/config";
 
-const HandlingError = ({ handleConfirm }) => {
+const HandlingError = ({
+  confirmAll,
+  setConfirmAll,
+  handleConfirm,
+  handleClose,
+  setIsShaking,
+}) => {
   const [datas, setDatas] = useState([]);
   const isFirstRender = useRef(true);
   const fetchConfuseData = async () => {
@@ -44,7 +50,8 @@ const HandlingError = ({ handleConfirm }) => {
       isFirstRender.current = false;
     } else if (datas.length === 0) {
       console.log("tesstttttttttt");
-      handleConfirm();
+      setIsShaking(false);
+      handleClose();
     }
   }, [datas]);
   //   const [datas, setDatas] = useState([
@@ -188,6 +195,43 @@ const HandlingError = ({ handleConfirm }) => {
 
     // Xóa hàng khỏi dữ liệu
     setDatas((prevDatas) => prevDatas.filter((_, index) => index !== rowIndex));
+  };
+
+  useEffect(() => {
+    console.log("datas confirm all: ", datas);
+    if (confirmAll && datas.length > 0) {
+      console.log("confirm All");
+      handleConfirmAllNG();
+    }
+  }, [confirmAll, datas]);
+
+  const handleConfirmAllNG = async () => {
+    for (const [rowIndex, data] of datas.entries()) {
+      const data_send_API = {
+        Line: data.Line,
+        DateTimeIn: data.DateTimeIn,
+        OrderName: data.OrderName,
+        PlateNumber: data.PlateNumber,
+        ProductCode: "", // Không có sản phẩm nào được chọn, nên ProductCode rỗng
+        _id: data._id,
+      };
+
+      try {
+        // Gửi dữ liệu NG cho API
+        const response = await axios.post(
+          "http://192.168.100.134:5000/classifyConfuseData",
+          data_send_API
+        );
+        console.log(`NG response for row ${rowIndex}: `, response.data);
+      } catch (error) {
+        console.error(`Error sending NG for row ${rowIndex}: `, error);
+      }
+    }
+
+    // Sau khi gửi NG cho tất cả đơn hàng, xóa dữ liệu khỏi danh sách
+    setDatas([]);
+    setConfirmAll(false);
+    setIsShaking(false);
   };
 
   return (
