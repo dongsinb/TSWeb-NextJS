@@ -303,6 +303,7 @@ class DBManagerment():
             is_updated = False
             update_value =  line_calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"]
             # update value follow priority of orderNameList
+            totalCountedQuantity = 0
             for orderName in orderNameList:
                 cursor = self.orderCollection.find({"OrderName": orderName})
                 for document in cursor:
@@ -310,9 +311,12 @@ class DBManagerment():
                         if document["Orders"][productCode]["CurrentQuantity"] < document["Orders"][productCode]["ProductCount"]:
                             data = copy.deepcopy(document["Orders"])
                             data["_id"] = copy.copy(document["_id"])
-                            data[productCode]["CurrentQuantity"] = update_value
+                            data[productCode]["CurrentQuantity"] = update_value - totalCountedQuantity
                             self.update_OrderData(data)
                             is_updated = True
+                        else:
+                            totalCountedQuantity += document["Orders"][productCode]["ProductCount"]
+                        break
                 if is_updated:
                     break
         else:
