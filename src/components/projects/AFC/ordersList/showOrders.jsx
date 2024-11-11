@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import styles from "./showOrders.module.css";
-import { Table, Button } from "react-bootstrap";
+import { Table, Button, Card } from "react-bootstrap";
 import { useRouter } from "next/navigation";
 import AdvancedPagination from "../../../pagination/pagination";
 import CreateModeCall from "../createModalCall/createModalCall";
@@ -10,9 +10,10 @@ import CreateModalEditAFC from "../createModalEdit/createModalEdit";
 import axios from "axios";
 import { toast } from "react-toastify";
 import config from "../../../../app/config";
+import { AiFillMail } from "react-icons/ai";
 
 function ShowOrders(props) {
-  const { datas, status } = props;
+  const { datas, status, selectedDateTime } = props;
   console.log("show Oder datas: ", datas);
   const router = useRouter();
   const [expandedRow, setExpandedRow] = useState(null);
@@ -121,96 +122,131 @@ function ShowOrders(props) {
   };
 
   return (
-    <div className={styles.table_layout}>
-      <Table striped bordered hover>
-        <thead>
-          <tr className={styles.tableRow}>
-            <th>STT</th>
-            <th>Ngày vào</th>
-            <th>Biển số xe</th>
-            <th>Trạng thái</th>
-            <th>Đơn hàng</th>
-            {status !== "Called" && status !== "Finished" && (
-              <th>Gọi vào kho</th>
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {currentItems.map((data, i) => (
-            <tr key={`${data.PlateNumber}-${i}`} className={styles.tableRow}>
-              <td>{indexOfFirstItem + i + 1}</td>
-              <td>{data.DateTimeIn}</td>
-              <td>{data.PlateNumber}</td>
-              <td>{data.Status}</td>
-              <td>
-                <Button onClick={() => toggleRow(i)}>
-                  {expandedRow === i ? "Ẩn" : "Hiển thị chi tiết"}
-                </Button>
-                {expandedRow === i && (
-                  <div className={styles.details}>
-                    <Table bordered size="sm" className={styles.ordersTable}>
-                      <thead>
-                        <tr>
-                          <th>
-                            <p className="mb-0">Đơn hàng</p>
-                            {/* <FaEdit
-                              className={styles.editIcon}
-                              onClick={() => handleEditOrder(data)}
-                            /> */}
-                          </th>
-                          <th>Mã SP</th>
-                          <th>Số Lượng</th>
-                          <th>Số Lượng HT</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.entries(data.Orders).map(([orderName, items]) =>
-                          Object.entries(items).map(
-                            ([productCode, item], itemIndex) => (
-                              <tr
-                                key={`${data._id}-${orderName}-${productCode}-${itemIndex}`}
-                                className={styles.tableRow}
-                              >
-                                {itemIndex === 0 && (
-                                  <td rowSpan={Object.keys(items).length}>
-                                    <p>{orderName}</p>
-                                    <FaEdit
-                                      className={styles.editIcon}
-                                      onClick={() =>
-                                        handleEditOrder({
-                                          ...data.Orders[orderName],
-                                        })
-                                      }
-                                    />
-                                  </td>
-                                )}
-                                {productCode !== "_id" && (
-                                  <>
-                                    <td>{productCode}</td>
-                                    <td>{item.ProductCount}</td>
-                                    <td>{item.CurrentQuantity}</td>
-                                  </>
-                                )}
-                              </tr>
-                            )
-                          )
-                        )}
-                      </tbody>
-                    </Table>
-                  </div>
+    <div>
+      <div className={styles.table_layout}>
+        {datas.length === 0 ? (
+          <div>
+            <Card className="text-center" style={{ marginBottom: "10px" }}>
+              <Card.Body>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    marginTop: "10px",
+                  }}
+                >
+                  <AiFillMail style={{ fontSize: "50px", color: "gray" }} />
+                </div>
+                <Card.Title>Không có dữ liệu</Card.Title>
+                <Card.Text>
+                  Không thấy đơn hàng{" "}
+                  {status === "Waiting" ? "chưa được gọi" : "đã hoàn thành"}{" "}
+                  trong ngày: {selectedDateTime}
+                </Card.Text>
+              </Card.Body>
+            </Card>
+          </div>
+        ) : (
+          <Table striped bordered hover>
+            <thead>
+              <tr className={styles.tableRow}>
+                <th>STT</th>
+                <th>Ngày vào</th>
+                <th>Biển số xe</th>
+                <th>Trạng thái</th>
+                <th>Đơn hàng</th>
+                {status !== "Called" && status !== "Finished" && (
+                  <th>Gọi vào kho</th>
                 )}
-              </td>
-              {status !== "Called" && status !== "Finished" && (
-                <td>
-                  <Button onClick={() => handleCallOrder(data)}>
-                    Gọi vào kho
-                  </Button>
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+              </tr>
+            </thead>
+            <tbody>
+              {currentItems.map((data, i) => (
+                <tr
+                  key={`${data.PlateNumber}-${i}`}
+                  className={styles.tableRow}
+                >
+                  <td>{indexOfFirstItem + i + 1}</td>
+                  <td>{data.DateTimeIn}</td>
+                  <td>{data.PlateNumber}</td>
+                  <td>{data.Status}</td>
+                  <td>
+                    <Button onClick={() => toggleRow(i)}>
+                      {expandedRow === i ? "Ẩn" : "Hiển thị chi tiết"}
+                    </Button>
+                    {expandedRow === i && (
+                      <div className={styles.details}>
+                        <Table
+                          bordered
+                          size="sm"
+                          className={styles.ordersTable}
+                        >
+                          <thead>
+                            <tr>
+                              <th>
+                                <p className="mb-0">Đơn hàng</p>
+                                {/* <FaEdit
+                                className={styles.editIcon}
+                                onClick={() => handleEditOrder(data)}
+                              /> */}
+                              </th>
+                              <th>Mã SP</th>
+                              <th>Số Lượng</th>
+                              <th>Số Lượng HT</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Object.entries(data.Orders).map(
+                              ([orderName, items]) =>
+                                Object.entries(items).map(
+                                  ([productCode, item], itemIndex) => (
+                                    <tr
+                                      key={`${data._id}-${orderName}-${productCode}-${itemIndex}`}
+                                      className={styles.tableRow}
+                                    >
+                                      {itemIndex === 0 && (
+                                        <td rowSpan={Object.keys(items).length}>
+                                          <p>{orderName}</p>
+                                          <FaEdit
+                                            className={styles.editIcon}
+                                            onClick={() =>
+                                              handleEditOrder({
+                                                ...data.Orders[orderName],
+                                              })
+                                            }
+                                          />
+                                        </td>
+                                      )}
+                                      {productCode !== "_id" && (
+                                        <>
+                                          <td>{productCode}</td>
+                                          <td>{item.ProductCount}</td>
+                                          <td>{item.CurrentQuantity}</td>
+                                        </>
+                                      )}
+                                    </tr>
+                                  )
+                                )
+                            )}
+                          </tbody>
+                        </Table>
+                      </div>
+                    )}
+                  </td>
+                  {status !== "Called" && status !== "Finished" && (
+                    <td>
+                      <Button onClick={() => handleCallOrder(data)}>
+                        Gọi vào kho
+                      </Button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        )}
+      </div>
       <div className={styles.showPagination}>
         <AdvancedPagination
           totalItems={datas.length}

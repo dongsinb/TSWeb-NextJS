@@ -10,8 +10,8 @@ import base64
 import copy
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
-
+# CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+CORS(app)
 global_image = None
 ocr_results = None
 

@@ -5,7 +5,7 @@ import BagCounting from "../bagCounting/bagCounting";
 import axios from "axios";
 import NProgress from "../../../loadingBar/nprogress-config";
 import config from "../../../../app/config";
-import { AiFillBell } from "react-icons/ai";
+import { AiFillBell, AiFillMail } from "react-icons/ai";
 import styles from "./homeAfc.module.css";
 import HandleNGModal from "./handleNGModal/handleNGModal";
 
@@ -346,6 +346,19 @@ const AFCHome = () => {
     }
   };
 
+  function isAllEmptyObjects(allOrder) {
+    // Kiểm tra xem array có phải là một mảng không và các phần tử có phải là đối tượng rỗng không
+    return (
+      Array.isArray(allOrder) &&
+      allOrder.every(
+        (item) =>
+          typeof item === "object" &&
+          item !== null &&
+          Object.keys(item).length === 0
+      )
+    );
+  }
+
   return (
     <div>
       <div
@@ -450,19 +463,41 @@ const AFCHome = () => {
           allOrder[selectedOrder] &&
           Object.keys(allOrder[selectedOrder]).length === 0 ? (
             <div>
-              <Card className="text-center" style={{ marginTop: "20px" }}>
+              <Card className="text-center" style={{ marginTop: "10px" }}>
                 <Card.Body>
-                  <Card.Title>OrderName: {selectedOrder + 1}</Card.Title>
+                  <Card.Title>
+                    Cổng xuất hàng số: {selectedOrder + 1}
+                  </Card.Title>
                   <Card.Title>Không có dữ liệu</Card.Title>
                   <Card.Text>Chưa có đơn hàng được gọi</Card.Text>
                 </Card.Body>
               </Card>
             </div>
           ) : (
-            <div>
+            <div style={{ marginTop: "10px" }}>
               <BagCounting counting_data={allOrder[selectedOrder]} />
             </div>
           )
+        ) : isAllEmptyObjects(allOrder) ? (
+          <div>
+            <Card className="text-center" style={{ marginTop: "10px" }}>
+              <Card.Body>
+                <Card.Title>Hiển thị tất cả các đơn hàng</Card.Title>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    marginTop: "10px",
+                  }}
+                >
+                  <AiFillMail style={{ fontSize: "50px", color: "gray" }} />
+                </div>
+                <Card.Title>Không có dữ liệu</Card.Title>
+                <Card.Text>Chưa có đơn hàng được gọi</Card.Text>
+              </Card.Body>
+            </Card>
+          </div>
         ) : (
           <div
             style={{

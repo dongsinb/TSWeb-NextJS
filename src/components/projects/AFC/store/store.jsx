@@ -146,13 +146,21 @@ function AFCStore(props) {
         >
           <div className={styles.showLayout}>
             <h5 className={styles.label}>Danh sách xe</h5>
-            <ShowOrders datas={waitingOrders} status={"Waiting"}></ShowOrders>
+            <ShowOrders
+              datas={waitingOrders}
+              status={"Waiting"}
+              selectedDateTime={selectedDateTime}
+            ></ShowOrders>
           </div>
         </Tab>
         <Tab eventKey="Finished" title="Xe đã lấy hàng">
           <div className={styles.showLayout}>
             <h5 className={styles.label}>Danh sách xe</h5>
-            <ShowOrders datas={finishedOrders} status={"Finished"}></ShowOrders>
+            <ShowOrders
+              datas={finishedOrders}
+              status={"Finished"}
+              selectedDateTime={selectedDateTime}
+            ></ShowOrders>
           </div>
         </Tab>
       </Tabs>

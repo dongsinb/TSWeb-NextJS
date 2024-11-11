@@ -56,7 +56,8 @@ const BagCounting = ({ counting_data }) => {
           {/* Hiển thị status và license plate */}
           <tr className={styles.tableRow}>
             <td colSpan="4">
-              <strong>Line:</strong> {data.Line}
+              <strong>Cổng xuất hàng số:</strong>{" "}
+              {data.Line.replace("Line", "")}
               <br />
               <strong>Trạng thái đếm:</strong>
               {data.IsCombine ? " Đếm gộp" : " Đếm theo đơn"}
