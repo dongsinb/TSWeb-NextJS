@@ -8,7 +8,7 @@ import cv2
 import io
 import base64
 import copy
-import json
+import socket
 from bson.json_util import dumps
 
 app = Flask(__name__)
@@ -17,9 +17,62 @@ CORS(app)
 global_image = None
 ocr_results = None
 
+class LedManagerment():
+    def __init__(self):
+        self.client_socket = {"Line1" : None,
+                              "Line2" : None,
+                              "Line3" : None,
+                              "Line4" : None,
+                              "Line5" : None}
+
+        # Connect led server 1
+        client_socket1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket1.connect(('192.168.43.250', 10000))
+        self.client_socket["Line1"] = client_socket1
+
+        # Connect led server 2
+        client_socket2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket2.connect(('192.168.43.250', 10000))
+        self.client_socket["Line2"] = client_socket2
+
+        # Connect led server 3
+        client_socket3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket3.connect(('192.168.43.250', 10000))
+        self.client_socket["Line3"] = client_socket3
+
+        # Connect led server 4
+        client_socket4 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket4.connect(('192.168.43.250', 10000))
+        self.client_socket["Line4"] = client_socket4
+
+        # Connect led server 5
+        client_socket5 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket5.connect(('192.168.43.250', 10000))
+        self.client_socket["Line5"] = client_socket5
+
+    def updateLed(self, line, total_count, orders, is_counting):
+        if is_counting:
+            message = "*[H1][C1]Đang đếm*[H2][C1]Tổng: {}".format(total_count)
+            line_count = 3
+            for productCode in orders.keys():
+                productCount = orders[productCode]["ProductCount"]
+                currentQuantity = orders[productCode]["CurrentQuantity"]
+                if currentQuantity < productCount:
+                    message += "*[H{}][C1]{}: {}/{}".format(line_count,productCode,currentQuantity,productCount)
+                    line_count += 1
+                    if line_count > 8:
+                        break
+            message += "[!]"
+        else:
+            message = "*[H1][C5]Dừng đếm[!]"
+
+        self.client_socket[line].sendall(message.encode())
+
+
 class CallingDataHandler():
-    def __init__(self, dbmanager):
+    def __init__(self, dbmanager, ledManager):
         self.dbmanager = dbmanager
+        self.ledManager = ledManager
         self.reset()
 
     def reset(self, line=""):
@@ -35,24 +88,31 @@ class CallingDataHandler():
                                  "Line4" : {},
                                  "Line5" : {}}
             self.orders_status = {"Line1" : {"currentOrderName": "",
-                                            "product": {}},
+                                            "product": {},
+                                            "total_count": 0},
                                   "Line2": {"currentOrderName": "",
-                                            "product": {}},
+                                            "product": {},
+                                            "total_count": 0},
                                   "Line3": {"currentOrderName": "",
-                                            "product": {}},
+                                            "product": {},
+                                            "total_count": 0},
                                   "Line4": {"currentOrderName": "",
-                                            "product": {}},
+                                            "product": {},
+                                            "total_count": 0},
                                   "Line5": {"currentOrderName": "",
-                                            "product": {}}}
+                                            "product": {},
+                                            "total_count": 0}}
         else:   # reset specific line
             self.line_platenumber_data[line] = ""
             self.calling_data[line] = {}
             self.orders_status[line] = {"currentOrderName": "",
-                                        "product": {}}
+                                        "product": {},
+                                        "total_count": 0}
 
     def init_orders_status(self, line):
         self.orders_status[line] = {"currentOrderName": "",
-                                        "product": {}}
+                                    "product": {},
+                                    "total_count": 0}
         if self.calling_data[line]["IsCombine"]:
             self.orders_status[line]["currentOrderName"] = "ordername"
         else:
@@ -100,6 +160,8 @@ class CallingDataHandler():
 
     def counting(self, line, productCode):
         isUpdate = False
+        self.orders_status[line]["total_count"] += 1
+        self.ledManager.updateLed(line, self.orders_status[line]["total_count"], self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]], is_counting=True)
         if self.calling_data[line]["IsCombine"]:
             if self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] < self.calling_data[line]["Orders"]["ordername"][productCode]["ProductCount"]:
                 self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] += 1
@@ -121,6 +183,9 @@ class CallingDataHandler():
         self.check_AllOrderFull(line)
         if self.calling_data[line]["IsAllOrderFull"]:
             self.dbmanager.update_finish_status(self.calling_data[line]["DateTimeIn"], self.calling_data[line]["PlateNumber"])
+            self.ledManager.updateLed(line, self.orders_status[line]["total_count"],
+                                      self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]],
+                                      is_counting=False)
         return isUpdate
 
     def check_line(self, line, dateTimeIn):
@@ -378,7 +443,9 @@ class DBManagerment():
 # dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09slu1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 # dbmanager = DBManagerment(uri="mongodb://localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 dbmanager = DBManagerment(uri="mongodb://test:123@localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
-dataHandler = CallingDataHandler(dbmanager)
+ledManager = LedManagerment()
+dataHandler = CallingDataHandler(dbmanager, ledManager)
+
 
 # [TSWeb] Upload image from phone to server
 @app.route('/upload_img', methods=['POST'])
@@ -459,7 +526,6 @@ def getOrderData():
         data = request.json
         dateTimeIn = data.get('DateTimeIn')
         return_data = dbmanager.get_order_documents(dateTimeIn)
-        print("return_data: ", return_data)
         return dumps(return_data)
         # return jsonify(return_data)
     except Exception as e:
