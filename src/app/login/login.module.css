@@ -59,3 +59,23 @@
 .back:hover {
   background-color: var(--highlight-negative-button-color);
 }
+
+.passwordContainer {
+  width: 100%;
+  position: relative;
+}
+
+.passwordContainer input {
+  width: 100%;
+  padding-right: 35px; /* Thêm khoảng trống bên phải để có chỗ cho biểu tượng */
+  padding-left: 10px;
+}
+
+.toggleIcon {
+  position: absolute;
+  right: 10px; /* Đặt biểu tượng ở bên trong trường input */
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--text-color);
+}

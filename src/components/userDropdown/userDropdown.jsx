@@ -10,6 +10,23 @@ const UserDropdown = () => {
     setIsOpen(!isOpen);
   };
 
+  const handleLogout = async () => {
+    const response = await fetch("/api/logout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      console.log(data.message);
+      window.location.href = "/login";
+    } else {
+      console.error("Logout failed:", data.message);
+    }
+  };
+
   return (
     <div className={styles.dropdown}>
       <div className={styles.user} onClick={toggleDropdown}>
@@ -30,7 +47,11 @@ const UserDropdown = () => {
           <Link href="/settings" className={styles.dropdownItem}>
             Settings
           </Link>
-          <Link href="/login" className={styles.dropdownItem}>
+          <Link
+            href="/login"
+            className={styles.dropdownItem}
+            onClick={handleLogout}
+          >
             Logout
           </Link>
         </div>

@@ -8,6 +8,8 @@ import cv2
 import io
 import base64
 import copy
+import json
+from bson.json_util import dumps
 
 app = Flask(__name__)
 # CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
@@ -457,7 +459,9 @@ def getOrderData():
         data = request.json
         dateTimeIn = data.get('DateTimeIn')
         return_data = dbmanager.get_order_documents(dateTimeIn)
-        return jsonify(return_data)
+        print("return_data: ", return_data)
+        return dumps(return_data)
+        # return jsonify(return_data)
     except Exception as e:
         return jsonify({"error": str(e)})
 

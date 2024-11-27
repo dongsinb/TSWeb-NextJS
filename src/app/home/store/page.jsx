@@ -26,7 +26,9 @@ const StorePage = () => {
           timeout: 10000,
           data: { DateTimeIn: dateTime },
         });
-
+        // let rawData = response.data;
+        // let parsedData = JSON.parse(JSON.stringify(rawData));
+        // setDatas(parsedData);
         let result = await response.data;
         setDatas(result);
         console.log("dữ liệu: ", result);

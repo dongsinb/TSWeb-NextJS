@@ -19,7 +19,7 @@ const BetrimexInfo = () => {
         <div className={styles.address}>
           <h3>Thông tin liên hệ</h3>
           <p>
-            CÔNG TY TNHH GIẢI PHÁP CÔNG NGHỆ TSTECH VIỆT NAM <br></br>
+            CÔNG TY TNHH GIẢI PHÁP CÔNG NGHỆ TSTECH VN <br></br>
             Địa chỉ: 165 Nguyễn Lương Bằng, Quang Trung, Đống Đa, Hà Nội, Việt
             Nam <br></br>
             Điện thoại: 0376321055 <br></br>

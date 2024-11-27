@@ -94,7 +94,7 @@ const AFCHome = () => {
           setShowHandleNGModal(true);
           setConfirmAll(true);
         }
-      }, 500000); // 10 giây
+      }, 600000); // 10 phút
       return () => clearTimeout(timeoutId);
     } else if (alertSound.current) {
       alertSound.current.pause();
