@@ -166,7 +166,7 @@ class CallingDataHandler():
             if self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] < self.calling_data[line]["Orders"]["ordername"][productCode]["ProductCount"]:
                 self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] += 1
                 isUpdate = True
-                self.dbmanager.update_OrderData_counting(productCode, dataHandler.calling_data[line]["SortList"], dataHandler.calling_data[line])
+                self.dbmanager.update_OrderData_counting(productCode, self.calling_data[line]["SortList"], self.calling_data[line])
                 if self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] == self.calling_data[line]["Orders"]["ordername"][productCode]["ProductCount"]:
                     self.orders_status[line]["product"][productCode] = True
             else:
@@ -175,7 +175,7 @@ class CallingDataHandler():
             if self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["CurrentQuantity"] < self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["ProductCount"]:
                 self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["CurrentQuantity"] += 1
                 isUpdate = True
-                self.dbmanager.update_OrderData_counting(productCode, [self.orders_status[line]["currentOrderName"]], dataHandler.calling_data[line])
+                self.dbmanager.update_OrderData_counting(productCode, [self.orders_status[line]["currentOrderName"]], self.calling_data[line])
                 if self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["CurrentQuantity"] == self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["ProductCount"]:
                     self.orders_status[line]["product"][productCode] = True
             else:
@@ -368,9 +368,6 @@ class DBManagerment():
     def update_OrderData_counting(self, productCode, orderNameList, line_calling_data):
         if line_calling_data["IsCombine"]:
             is_updated = False
-            update_value =  line_calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"]
-            # update value follow priority of orderNameList
-            totalCountedQuantity = 0
             for orderName in orderNameList:
                 cursor = self.orderCollection.find({"OrderName": orderName})
                 for document in cursor:
@@ -378,12 +375,11 @@ class DBManagerment():
                         if document["Orders"][productCode]["CurrentQuantity"] < document["Orders"][productCode]["ProductCount"]:
                             data = copy.deepcopy(document["Orders"])
                             data["_id"] = copy.copy(document["_id"])
-                            data[productCode]["CurrentQuantity"] = update_value - totalCountedQuantity
+                            data[productCode]["CurrentQuantity"] += 1
                             self.update_OrderData(data)
                             is_updated = True
                         else:
-                            totalCountedQuantity += document["Orders"][productCode]["ProductCount"]
-                        break
+                            break
                 if is_updated:
                     break
         else:
