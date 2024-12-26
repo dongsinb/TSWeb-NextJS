@@ -32,12 +32,35 @@ class PLCManagement():
                                       "Line3": 0,
                                       "Line4": 0,
                                       "Line5": 0}
-
-        self.clientPLC["Line1"] = ModbusClient(host='192.168.100.5', port=502, unit_id=1, timeout=30.00, debug=True)
-        # self.clientPLC["Line2"] = ModbusClient(host='192.168.100.4', port=502, unit_id=1, timeout=30.00, debug=True)
-        # self.clientPLC["Line3"] = ModbusClient(host='192.168.100.3', port=502, unit_id=1, timeout=30.00, debug=True)
-        # self.clientPLC["Line4"] = ModbusClient(host='192.168.100.2', port=502, unit_id=1, timeout=30.00, debug=True)
-        # self.clientPLC["Line5"] = ModbusClient(host='192.168.100.1', port=502, unit_id=1, timeout=30.00, debug=True)
+        self.connect_PLC()
+    def connect_PLC(self):
+        if self.clientPLC["Line1"] is None:
+            try:
+                self.clientPLC["Line1"] = ModbusClient(host='192.168.100.5', port=502, unit_id=1, timeout=2.00, debug=True)
+            except:
+                print('Can not connect PLC at line 1')
+        '''
+        if self.clientPLC["Line2"] is None:
+            try:
+                self.clientPLC["Line2"] = ModbusClient(host='192.168.100.4', port=502, unit_id=1, timeout=2.00, debug=True)
+            except:
+                print('Can not connect PLC at line 2')
+        if self.clientPLC["Line3"] is None:
+            try:
+                self.clientPLC["Line3"] = ModbusClient(host='192.168.100.3', port=502, unit_id=1, timeout=2.00, debug=True)
+            except:
+                print('Can not connect PLC at line 3')
+        if self.clientPLC["Line4"] is None:
+            try:
+                self.clientPLC["Line4"] = ModbusClient(host='192.168.100.2', port=502, unit_id=1, timeout=2.00, debug=True)
+            except:
+                print('Can not connect PLC at line 4')
+        if self.clientPLC["Line5"] is None:
+            try:
+                self.clientPLC["Line5"] = ModbusClient(host='192.168.100.1', port=502, unit_id=1, timeout=2.00, debug=True)
+            except:
+                print('Can not connect PLC at line 5')
+        '''
 
     def start_program(self, line):
         _ = self.clientPLC[line].write_single_register(5, 1)
@@ -261,7 +284,13 @@ class CallingDataHandler():
         if productCode != "":   # classify OK, only update product that have classification infor
             isUpdate = self.counting(line, productCode)
         else:   # classify NG, send counting to PLC for employee bring out
-            plcManager.set_current_NG_counting(line)
+            try:
+                plcManager.set_current_NG_counting(line)
+            except:
+                print("Lost connecting, can not send current index NG to PLC")
+                # reconnect
+                plcManager.clientPLC[line] = None
+                plcManager.connect_PLC()
 
         # check line still have error order or have classified
         is_error = self.check_line(line, self.calling_data[line]["DateTimeIn"])
