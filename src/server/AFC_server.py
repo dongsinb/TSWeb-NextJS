@@ -150,9 +150,10 @@ class LedManagerment():
 
 
 class CallingDataHandler():
-    def __init__(self, dbmanager, ledManager):
+    def __init__(self, dbmanager, ledManager, plcManager):
         self.dbmanager = dbmanager
         self.ledManager = ledManager
+        self.plcManager = plcManager
         self.reset()
 
     def reset(self, line=""):
@@ -276,21 +277,29 @@ class CallingDataHandler():
                 is_error = False
         return is_error
 
-    def classify_ConfuseData(self, data, plcManager):
+    def classify_ConfuseData(self, data):
         line = data["Line"]
         productCode = data["ProductCode"]
         result = self.dbmanager.confuseCollection.update_one({"_id": ObjectId(data['_id'])}, {"$set": {"IsConfirm": True}})   # update IsConfirm of current confuse data to True
         isUpdate = True
         if productCode != "":   # classify OK, only update product that have classification infor
             isUpdate = self.counting(line, productCode)
+            try:
+                self.plcManager.run_conveyor(line)
+            except:
+                print("Lost connecting, can not send run conveyor to PLC")
+                # reconnect
+                self.plcManager.clientPLC[line] = None
+                self.plcManager.connect_PLC()
         else:   # classify NG, send counting to PLC for employee bring out
             try:
-                plcManager.set_current_NG_counting(line)
+                self.plcManager.set_current_NG_counting(line)
+                self.plcManager.set_light_yellow(line)      # PLC will auto set run conveyor and light to green again after some seconds
             except:
                 print("Lost connecting, can not send current index NG to PLC")
                 # reconnect
-                plcManager.clientPLC[line] = None
-                plcManager.connect_PLC()
+                self.plcManager.clientPLC[line] = None
+                self.plcManager.connect_PLC()
 
         # check line still have error order or have classified
         is_error = self.check_line(line, self.calling_data[line]["DateTimeIn"])
@@ -528,7 +537,7 @@ dbmanager = DBManagerment(uri="mongodb://test:123@localhost:27017", dbname="AFC"
 plcManager = PLCManagement()
 # ledManager = LedManagerment()
 ledManager = None
-dataHandler = CallingDataHandler(dbmanager, ledManager)
+dataHandler = CallingDataHandler(dbmanager, ledManager, plcManager)
 
 
 
@@ -641,6 +650,7 @@ def insertData():
 @app.route('/sortingData', methods=['POST'])
 def sortingData():
     data = request.json
+    plcManager.start_program(data["Line"])
     dataHandler.set_calling_data(dbmanager.orders_sorting(data), data)
     return jsonify(dataHandler.calling_data)
 
@@ -656,6 +666,14 @@ def countingData():
     else:
         dbmanager.insert_ConfuseData(data, dataHandler.calling_data[line]['PlateNumber'], dataHandler.orders_status[line]['currentOrderName'], list(dataHandler.orders_status[line]['product'].keys()))
         dataHandler.calling_data[line]["IsError"] = True
+        try:
+            plcManager.stop_conveyor(line)
+        except:
+            print("Lost connecting, can not send stop conveyor to PLC")
+            # reconnect
+            plcManager.clientPLC[line] = None
+            plcManager.connect_PLC()
+
     return jsonify(dataHandler.calling_data)
 
 # [TSWeb] Refresh data, update lastest data after edit
@@ -716,7 +734,7 @@ def updateOrderData():
 @app.route("/classifyConfuseData", methods=['POST'])
 def classifyConfuseData():
     data = request.json
-    isUpdate = dataHandler.classify_ConfuseData(data, plcManager)
+    isUpdate = dataHandler.classify_ConfuseData(data)
     if isUpdate:
         return jsonify({"Message": "Thành công ! Mã sản phẩm đã được cập nhật vào đơn hàng hiện tại"})
     else:
