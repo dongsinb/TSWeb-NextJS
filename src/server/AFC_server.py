@@ -10,12 +10,69 @@ import base64
 import copy
 import socket
 from bson.json_util import dumps
+from pyModbusTCP.client import ModbusClient
 
 app = Flask(__name__)
 # CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 CORS(app)
 global_image = None
 ocr_results = None
+
+class PLCManagement():
+    def __init__(self):
+        self.clientPLC = {"Line1": None,
+                          "Line2": None,
+                          "Line3": None,
+                          "Line4": None,
+                          "Line5": None}
+
+        # value of number products that are counted from server
+        self.server_product_count = {"Line1": 0,
+                                      "Line2": 0,
+                                      "Line3": 0,
+                                      "Line4": 0,
+                                      "Line5": 0}
+
+        self.clientPLC["Line1"] = ModbusClient(host='192.168.100.5', port=502, unit_id=1, timeout=30.00, debug=True)
+        # self.clientPLC["Line2"] = ModbusClient(host='192.168.100.4', port=502, unit_id=1, timeout=30.00, debug=True)
+        # self.clientPLC["Line3"] = ModbusClient(host='192.168.100.3', port=502, unit_id=1, timeout=30.00, debug=True)
+        # self.clientPLC["Line4"] = ModbusClient(host='192.168.100.2', port=502, unit_id=1, timeout=30.00, debug=True)
+        # self.clientPLC["Line5"] = ModbusClient(host='192.168.100.1', port=502, unit_id=1, timeout=30.00, debug=True)
+
+    def start_program(self, line):
+        _ = self.clientPLC[line].write_single_register(5, 1)
+
+    def finish_program(self, line):
+        _ = self.clientPLC[line].write_single_register(5, 0)
+
+    def run_conveyor(self, line):
+        _ = self.clientPLC[line].write_single_register(6, 0)
+
+    def stop_conveyor(self, line):
+        _ = self.clientPLC[line].write_single_register(6, 1)
+
+    def set_light_yellow(self, line):
+        _ = self.clientPLC[line].write_single_register(7, 1)
+
+    def set_light_green(self, line):
+        _ = self.clientPLC[line].write_single_register(7, 0)
+
+    def check_slots_pass(self, line):
+        # Read 5 holding registers starting from address 0, it means reading value of registers 0,1,2,3,4
+        slots = self.clientPLC[line].read_holding_registers(0, 5)
+        PLC_product_count = self.clientPLC[line].read_holding_registers(9, 1)  # value of number product that are counted from sensors
+        for idx, value in enumerate(slots):
+            if PLC_product_count > value:
+                _ = self.clientPLC[line].write_single_register(idx, 0)
+
+    def set_current_NG_counting(self, line):
+        self.check_slots_pass(line)
+        # Read 5 holding registers starting from address 0, it means reading value of registers 0,1,2,3,4
+        slots = self.clientPLC[line].read_holding_registers(0, 5)
+        for idx, value in enumerate(slots):
+            if value == 0:
+                _ = self.clientPLC[line].write_single_register(idx, self.server_product_count[line])
+                break
 
 class LedManagerment():
     def __init__(self):
@@ -32,22 +89,22 @@ class LedManagerment():
 
         # Connect led server 2
         client_socket2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket2.connect(('192.168.43.250', 10000))
+        client_socket2.connect(('192.168.43.251', 10000))
         self.client_socket["Line2"] = client_socket2
 
         # Connect led server 3
         client_socket3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket3.connect(('192.168.43.250', 10000))
+        client_socket3.connect(('192.168.43.252', 10000))
         self.client_socket["Line3"] = client_socket3
 
         # Connect led server 4
         client_socket4 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket4.connect(('192.168.43.250', 10000))
+        client_socket4.connect(('192.168.43.253', 10000))
         self.client_socket["Line4"] = client_socket4
 
         # Connect led server 5
         client_socket5 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket5.connect(('192.168.43.250', 10000))
+        client_socket5.connect(('192.168.43.254', 10000))
         self.client_socket["Line5"] = client_socket5
 
     def updateLed(self, line, total_count, orders, is_counting):
@@ -161,7 +218,7 @@ class CallingDataHandler():
     def counting(self, line, productCode):
         isUpdate = False
         self.orders_status[line]["total_count"] += 1
-        self.ledManager.updateLed(line, self.orders_status[line]["total_count"], self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]], is_counting=True)
+        #self.ledManager.updateLed(line, self.orders_status[line]["total_count"], self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]], is_counting=True)
         if self.calling_data[line]["IsCombine"]:
             if self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] < self.calling_data[line]["Orders"]["ordername"][productCode]["ProductCount"]:
                 self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] += 1
@@ -183,9 +240,7 @@ class CallingDataHandler():
         self.check_AllOrderFull(line)
         if self.calling_data[line]["IsAllOrderFull"]:
             self.dbmanager.update_finish_status(self.calling_data[line]["DateTimeIn"], self.calling_data[line]["PlateNumber"])
-            self.ledManager.updateLed(line, self.orders_status[line]["total_count"],
-                                      self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]],
-                                      is_counting=False)
+            #self.ledManager.updateLed(line, self.orders_status[line]["total_count"], self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]], is_counting=False)
         return isUpdate
 
     def check_line(self, line, dateTimeIn):
@@ -198,13 +253,15 @@ class CallingDataHandler():
                 is_error = False
         return is_error
 
-    def classify_ConfuseData(self, data):
+    def classify_ConfuseData(self, data, plcManager):
         line = data["Line"]
         productCode = data["ProductCode"]
         result = self.dbmanager.confuseCollection.update_one({"_id": ObjectId(data['_id'])}, {"$set": {"IsConfirm": True}})   # update IsConfirm of current confuse data to True
         isUpdate = True
-        if productCode != "":   # only update product that have classification infor
+        if productCode != "":   # classify OK, only update product that have classification infor
             isUpdate = self.counting(line, productCode)
+        else:   # classify NG, send counting to PLC for employee bring out
+            plcManager.set_current_NG_counting(line)
 
         # check line still have error order or have classified
         is_error = self.check_line(line, self.calling_data[line]["DateTimeIn"])
@@ -439,8 +496,11 @@ class DBManagerment():
 # dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09slu1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 # dbmanager = DBManagerment(uri="mongodb://localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 dbmanager = DBManagerment(uri="mongodb://test:123@localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
-ledManager = LedManagerment()
+plcManager = PLCManagement()
+# ledManager = LedManagerment()
+ledManager = None
 dataHandler = CallingDataHandler(dbmanager, ledManager)
+
 
 
 # [TSWeb] Upload image from phone to server
@@ -560,11 +620,11 @@ def sortingData():
 def countingData():
     data = request.json
     line = data["Line"]
+    plcManager.server_product_count[line] += 1
     if data['imageBase64'] == "":
         productCode = data["ProductCode"]
         dataHandler.counting(line, productCode)
     else:
-        count_id =  data["CountID"]
         dbmanager.insert_ConfuseData(data, dataHandler.calling_data[line]['PlateNumber'], dataHandler.orders_status[line]['currentOrderName'], list(dataHandler.orders_status[line]['product'].keys()))
         dataHandler.calling_data[line]["IsError"] = True
     return jsonify(dataHandler.calling_data)
@@ -627,7 +687,7 @@ def updateOrderData():
 @app.route("/classifyConfuseData", methods=['POST'])
 def classifyConfuseData():
     data = request.json
-    isUpdate = dataHandler.classify_ConfuseData(data)
+    isUpdate = dataHandler.classify_ConfuseData(data, plcManager)
     if isUpdate:
         return jsonify({"Message": "Thành công ! Mã sản phẩm đã được cập nhật vào đơn hàng hiện tại"})
     else:
