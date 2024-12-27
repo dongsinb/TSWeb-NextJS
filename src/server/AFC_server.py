@@ -154,6 +154,7 @@ class CallingDataHandler():
         self.dbmanager = dbmanager
         self.ledManager = ledManager
         self.plcManager = plcManager
+        self.not_count_weight = ['05'] # do not count this kind of weight of product
         self.reset()
 
     def reset(self, line=""):
@@ -205,11 +206,26 @@ class CallingDataHandler():
                 else:
                     self.orders_status[line]["product"][productCode] = True
 
+    def preprocess_calling_data(self, calling_data):
+        # set all product has weight in not_count_weight list is full
+        if calling_data["IsCombine"]:
+            for productCode in calling_data["Orders"]["ordername"].keys():
+                weight = productCode.split('-')[-1]
+                if weight not in self.not_count_weight:
+                    calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"] = calling_data["Orders"]["ordername"][productCode]["ProductCount"]
+        else:
+            for ordername in calling_data["Orders"].keys():
+                for productCode in calling_data["Orders"][ordername].keys():
+                    weight = productCode.split('-')[-1]
+                    if weight not in self.not_count_weight:
+                        calling_data["Orders"][ordername][productCode]["CurrentQuantity"] = calling_data["Orders"][ordername][productCode]["ProductCount"]
+        return calling_data
+
     def set_calling_data(self, calling_data, data):
         line = data['Line']
         plateNumber = data['PlateNumber']
         self.line_platenumber_data[line] = plateNumber
-        self.calling_data[line] = calling_data
+        self.calling_data[line] = self.preprocess_calling_data(calling_data)
         if self.calling_data[line]:
             self.init_orders_status(line)
 
@@ -240,32 +256,36 @@ class CallingDataHandler():
                     self.calling_data[line]["IsAllOrderFull"] = True
 
     def counting(self, line, productCode):
-        isUpdate = False
-        self.orders_status[line]["total_count"] += 1
-        #self.ledManager.updateLed(line, self.orders_status[line]["total_count"], self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]], is_counting=True)
-        if self.calling_data[line]["IsCombine"]:
-            if self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] < self.calling_data[line]["Orders"]["ordername"][productCode]["ProductCount"]:
-                self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] += 1
-                isUpdate = True
-                self.dbmanager.update_OrderData_counting(productCode, self.calling_data[line]["SortList"], self.calling_data[line])
-                if self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] == self.calling_data[line]["Orders"]["ordername"][productCode]["ProductCount"]:
+        weight = productCode.split('-')[-1]
+        if weight not in self.not_count_weight:
+            isUpdate = False
+            self.orders_status[line]["total_count"] += 1
+            #self.ledManager.updateLed(line, self.orders_status[line]["total_count"], self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]], is_counting=True)
+            if self.calling_data[line]["IsCombine"]:
+                if self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] < self.calling_data[line]["Orders"]["ordername"][productCode]["ProductCount"]:
+                    self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] += 1
+                    isUpdate = True
+                    self.dbmanager.update_OrderData_counting(productCode, self.calling_data[line]["SortList"], self.calling_data[line])
+                    if self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] == self.calling_data[line]["Orders"]["ordername"][productCode]["ProductCount"]:
+                        self.orders_status[line]["product"][productCode] = True
+                else:
                     self.orders_status[line]["product"][productCode] = True
             else:
-                self.orders_status[line]["product"][productCode] = True
-        else:
-            if self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["CurrentQuantity"] < self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["ProductCount"]:
-                self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["CurrentQuantity"] += 1
-                isUpdate = True
-                self.dbmanager.update_OrderData_counting(productCode, [self.orders_status[line]["currentOrderName"]], self.calling_data[line])
-                if self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["CurrentQuantity"] == self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["ProductCount"]:
+                if self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["CurrentQuantity"] < self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["ProductCount"]:
+                    self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["CurrentQuantity"] += 1
+                    isUpdate = True
+                    self.dbmanager.update_OrderData_counting(productCode, [self.orders_status[line]["currentOrderName"]], self.calling_data[line])
+                    if self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["CurrentQuantity"] == self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]][productCode]["ProductCount"]:
+                        self.orders_status[line]["product"][productCode] = True
+                else:
                     self.orders_status[line]["product"][productCode] = True
-            else:
-                self.orders_status[line]["product"][productCode] = True
-        self.check_AllOrderFull(line)
-        if self.calling_data[line]["IsAllOrderFull"]:
-            self.dbmanager.update_finish_status(self.calling_data[line]["DateTimeIn"], self.calling_data[line]["PlateNumber"])
-            #self.ledManager.updateLed(line, self.orders_status[line]["total_count"], self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]], is_counting=False)
-        return isUpdate
+            self.check_AllOrderFull(line)
+            if self.calling_data[line]["IsAllOrderFull"]:
+                self.dbmanager.update_finish_status(self.calling_data[line]["DateTimeIn"], self.calling_data[line]["PlateNumber"])
+                #self.ledManager.updateLed(line, self.orders_status[line]["total_count"], self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]], is_counting=False)
+            return isUpdate
+        else:   # do not count
+            return True
 
     def check_line(self, line, dateTimeIn):
         is_error = True
