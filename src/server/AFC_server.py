@@ -1,4 +1,6 @@
 # app.py
+import time
+
 from flask import Flask, request, Response, jsonify, send_file
 from flask_cors import CORS
 from bson.objectid import ObjectId
@@ -9,6 +11,7 @@ import io
 import base64
 import copy
 import socket
+import threading
 from bson.json_util import dumps
 from pyModbusTCP.client import ModbusClient
 
@@ -32,70 +35,98 @@ class PLCManagement():
                                       "Line3": 0,
                                       "Line4": 0,
                                       "Line5": 0}
+        self.self_PLC_infor = {"Line1": {"host":'192.168.100.5',
+                                    "port":502},
+                          "Line2": {"host":'192.168.100.4',
+                                    "port":502},
+                          "Line3": {"host":'192.168.100.3',
+                                    "port":502},
+                          "Line4": {"host":'192.168.100.2',
+                                    "port":502},
+                          "Line5": {"host":'192.168.100.1',
+                                    "port":502}}
+        self.lock = threading.Lock()  # To ensure thread-safe operations
         self.connect_PLC()
-    def connect_PLC(self):
-        if self.clientPLC["Line1"] is None:
-            try:
-                self.clientPLC["Line1"] = ModbusClient(host='192.168.100.5', port=502, unit_id=1, timeout=2.00, debug=True)
-            except:
-                print('Can not connect PLC at line 1')
-        '''
-        if self.clientPLC["Line2"] is None:
-            try:
-                self.clientPLC["Line2"] = ModbusClient(host='192.168.100.4', port=502, unit_id=1, timeout=2.00, debug=True)
-            except:
-                print('Can not connect PLC at line 2')
-        if self.clientPLC["Line3"] is None:
-            try:
-                self.clientPLC["Line3"] = ModbusClient(host='192.168.100.3', port=502, unit_id=1, timeout=2.00, debug=True)
-            except:
-                print('Can not connect PLC at line 3')
-        if self.clientPLC["Line4"] is None:
-            try:
-                self.clientPLC["Line4"] = ModbusClient(host='192.168.100.2', port=502, unit_id=1, timeout=2.00, debug=True)
-            except:
-                print('Can not connect PLC at line 4')
-        if self.clientPLC["Line5"] is None:
-            try:
-                self.clientPLC["Line5"] = ModbusClient(host='192.168.100.1', port=502, unit_id=1, timeout=2.00, debug=True)
-            except:
-                print('Can not connect PLC at line 5')
-        '''
+    def connect_PLC(self, lines=None):
+        if lines is None:
+            lines = list(self.clientPLC.keys())
+        def connect():
+            for line in lines:
+                if self.clientPLC[line] is None:
+                    try:
+                        with self.lock:  # Ensure thread-safe access to `clientPLC`
+                            self.clientPLC[line] = ModbusClient(
+                                host=self.self_PLC_infor[line]['host'],
+                                port=self.self_PLC_infor[line]['port'],
+                                unit_id=1,
+                                timeout=2.00,
+                                debug=True
+                            )
+                            if not self.clientPLC[line].open():
+                                raise ConnectionError(f"Failed to open connection to {line}")
+                    except Exception as e:
+                        print(f"Error connecting to PLC at {line}: {e}")
+                        self.clientPLC[line] = None
+
+        # Run connection PLC in a thread
+        thread = threading.Thread(target=connect, daemon=True)  # set daemon=True to terminate automatically when the main program exits.
+        thread.start()
 
     def start_program(self, line):
-        _ = self.clientPLC[line].write_single_register(5, 1)
+        if self.clientPLC[line] is not None:
+            _ = self.clientPLC[line].write_single_register(5, 1)
+        else:
+            self.connect_PLC([line])
 
     def finish_program(self, line):
-        _ = self.clientPLC[line].write_single_register(5, 0)
+        if self.clientPLC[line] is not None:
+            _ = self.clientPLC[line].write_single_register(5, 0)
+        else:
+            self.connect_PLC([line])
 
     def run_conveyor(self, line):
-        _ = self.clientPLC[line].write_single_register(6, 0)
+        if self.clientPLC[line] is not None:
+            _ = self.clientPLC[line].write_single_register(6, 0)
+        else:
+            self.connect_PLC([line])
 
     def stop_conveyor(self, line):
-        _ = self.clientPLC[line].write_single_register(6, 1)
+        if self.clientPLC[line] is not None:
+            _ = self.clientPLC[line].write_single_register(6, 1)
+        else:
+            self.connect_PLC([line])
 
     def set_light_yellow(self, line):
-        _ = self.clientPLC[line].write_single_register(7, 1)
+        if self.clientPLC[line] is not None:
+            _ = self.clientPLC[line].write_single_register(7, 1)
+        else:
+            self.connect_PLC([line])
 
     def set_light_green(self, line):
-        _ = self.clientPLC[line].write_single_register(7, 0)
+        if self.clientPLC[line] is not None:
+            _ = self.clientPLC[line].write_single_register(7, 0)
+        else:
+            self.connect_PLC([line])
 
     def check_slots_pass(self, line):
         # Read 5 holding registers starting from address 0, it means reading value of registers 0,1,2,3,4
         slots = self.clientPLC[line].read_holding_registers(0, 5)
         PLC_product_count = self.clientPLC[line].read_holding_registers(9, 1)  # value of number product that are counted from sensors
         for idx, value in enumerate(slots):
-            if PLC_product_count > value:
+            if int(PLC_product_count[0]) > value:
                 _ = self.clientPLC[line].write_single_register(idx, 0)
 
     def set_current_NG_counting(self, line):
-        self.check_slots_pass(line)
-        # Read 5 holding registers starting from address 0, it means reading value of registers 0,1,2,3,4
-        slots = self.clientPLC[line].read_holding_registers(0, 5)
-        for idx, value in enumerate(slots):
-            if value == 0:
-                _ = self.clientPLC[line].write_single_register(idx, self.server_product_count[line])
-                break
+        if self.clientPLC[line] is not None:
+            self.check_slots_pass(line)
+            # Read 5 holding registers starting from address 0, it means reading value of registers 0,1,2,3,4
+            slots = self.clientPLC[line].read_holding_registers(0, 5)
+            for idx, value in enumerate(slots):
+                if value == 0:
+                    _ = self.clientPLC[line].write_single_register(idx, self.server_product_count[line])
+                    break
+        else:
+            self.connect_PLC([line])
 
 class LedManagerment():
     def __init__(self):
@@ -304,22 +335,10 @@ class CallingDataHandler():
         isUpdate = True
         if productCode != "":   # classify OK, only update product that have classification infor
             isUpdate = self.counting(line, productCode)
-            try:
-                self.plcManager.run_conveyor(line)
-            except:
-                print("Lost connecting, can not send run conveyor to PLC")
-                # reconnect
-                self.plcManager.clientPLC[line] = None
-                self.plcManager.connect_PLC()
+            self.plcManager.run_conveyor(line)
         else:   # classify NG, send counting to PLC for employee bring out
-            try:
-                self.plcManager.set_current_NG_counting(line)
-                self.plcManager.set_light_yellow(line)      # PLC will auto set run conveyor and light to green again after some seconds
-            except:
-                print("Lost connecting, can not send current index NG to PLC")
-                # reconnect
-                self.plcManager.clientPLC[line] = None
-                self.plcManager.connect_PLC()
+            self.plcManager.set_current_NG_counting(line)
+            self.plcManager.set_light_yellow(line)      # PLC will auto set run conveyor and light to green again after some seconds
 
         # check line still have error order or have classified
         is_error = self.check_line(line, self.calling_data[line]["DateTimeIn"])
@@ -555,8 +574,7 @@ class DBManagerment():
 # dbmanager = DBManagerment(uri="mongodb://localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 dbmanager = DBManagerment(uri="mongodb://test:123@localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 plcManager = PLCManagement()
-# ledManager = LedManagerment()
-ledManager = None
+ledManager = LedManagerment()
 dataHandler = CallingDataHandler(dbmanager, ledManager, plcManager)
 
 
@@ -680,19 +698,14 @@ def countingData():
     data = request.json
     line = data["Line"]
     plcManager.server_product_count[line] += 1
+
     if data['imageBase64'] == "":
         productCode = data["ProductCode"]
         dataHandler.counting(line, productCode)
     else:
         dbmanager.insert_ConfuseData(data, dataHandler.calling_data[line]['PlateNumber'], dataHandler.orders_status[line]['currentOrderName'], list(dataHandler.orders_status[line]['product'].keys()))
         dataHandler.calling_data[line]["IsError"] = True
-        try:
-            plcManager.stop_conveyor(line)
-        except:
-            print("Lost connecting, can not send stop conveyor to PLC")
-            # reconnect
-            plcManager.clientPLC[line] = None
-            plcManager.connect_PLC()
+        plcManager.stop_conveyor(line)
 
     return jsonify(dataHandler.calling_data)
 
