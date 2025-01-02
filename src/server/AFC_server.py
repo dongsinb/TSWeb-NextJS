@@ -23,28 +23,28 @@ ocr_results = None
 
 class PLCManagement():
     def __init__(self):
-        self.clientPLC = {"Line1": None,
-                          "Line2": None,
-                          "Line3": None,
-                          "Line4": None,
-                          "Line5": None}
+        self.clientPLC = {"Line1": None,}
+                          # "Line2": None,
+                          # "Line3": None,
+                          # "Line4": None,
+                          # "Line5": None}
 
         # value of number products that are counted from server
-        self.server_product_count = {"Line1": 0,
-                                      "Line2": 0,
-                                      "Line3": 0,
-                                      "Line4": 0,
-                                      "Line5": 0}
-        self.self_PLC_infor = {"Line1": {"host":'192.168.100.5',
-                                    "port":502},
-                          "Line2": {"host":'192.168.100.4',
-                                    "port":502},
-                          "Line3": {"host":'192.168.100.3',
-                                    "port":502},
-                          "Line4": {"host":'192.168.100.2',
-                                    "port":502},
-                          "Line5": {"host":'192.168.100.1',
-                                    "port":502}}
+        self.server_product_count = {"Line1": 0,}
+                                      # "Line2": 0,
+                                      # "Line3": 0,
+                                      # "Line4": 0,
+                                      # "Line5": 0}
+        self.self_PLC_infor = {"Line1": {"host":'192.168.100.164',
+                                    "port":10000},}
+                          # "Line2": {"host":'192.168.100.4',
+                          #           "port":502},
+                          # "Line3": {"host":'192.168.100.3',
+                          #           "port":502},
+                          # "Line4": {"host":'192.168.100.2',
+                          #           "port":502},
+                          # "Line5": {"host":'192.168.100.1',
+                          #           "port":502}}
         self.lock = threading.Lock()  # To ensure thread-safe operations
         self.connect_PLC()
     def connect_PLC(self, lines=None):
@@ -242,13 +242,13 @@ class CallingDataHandler():
         if calling_data["IsCombine"]:
             for productCode in calling_data["Orders"]["ordername"].keys():
                 weight = productCode.split('-')[-1]
-                if weight not in self.not_count_weight:
+                if weight in self.not_count_weight:
                     calling_data["Orders"]["ordername"][productCode]["CurrentQuantity"] = calling_data["Orders"]["ordername"][productCode]["ProductCount"]
         else:
             for ordername in calling_data["Orders"].keys():
                 for productCode in calling_data["Orders"][ordername].keys():
                     weight = productCode.split('-')[-1]
-                    if weight not in self.not_count_weight:
+                    if weight in self.not_count_weight:
                         calling_data["Orders"][ordername][productCode]["CurrentQuantity"] = calling_data["Orders"][ordername][productCode]["ProductCount"]
         return calling_data
 
@@ -332,11 +332,15 @@ class CallingDataHandler():
         line = data["Line"]
         productCode = data["ProductCode"]
         result = self.dbmanager.confuseCollection.update_one({"_id": ObjectId(data['_id'])}, {"$set": {"IsConfirm": True}})   # update IsConfirm of current confuse data to True
-        isUpdate = True
         if productCode != "":   # classify OK, only update product that have classification infor
             isUpdate = self.counting(line, productCode)
+            if isUpdate:
+                mess = {"Message": "Thành công ! Mã sản phẩm đã được cập nhật vào đơn hàng hiện tại"}
+            else:
+                mess = {"Message": "Lỗi ! Đơn hàng hiện tại đã đầy, không thể cập nhật thêm"}
             self.plcManager.run_conveyor(line)
         else:   # classify NG, send counting to PLC for employee bring out
+            mess = {"Message": "Hàng đã phân loại là lỗi"}
             self.plcManager.set_current_NG_counting(line)
             self.plcManager.set_light_yellow(line)      # PLC will auto set run conveyor and light to green again after some seconds
 
@@ -344,7 +348,7 @@ class CallingDataHandler():
         is_error = self.check_line(line, self.calling_data[line]["DateTimeIn"])
         self.calling_data[line]["IsError"] = is_error
 
-        return isUpdate
+        return mess
 
 class DBManagerment():
     def __init__(self, uri, dbname, OrderCollection, ConfuseCollection) -> None:
@@ -574,7 +578,8 @@ class DBManagerment():
 # dbmanager = DBManagerment(uri="mongodb://localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 dbmanager = DBManagerment(uri="mongodb://test:123@localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 plcManager = PLCManagement()
-ledManager = LedManagerment()
+#ledManager = LedManagerment()
+ledManager = None
 dataHandler = CallingDataHandler(dbmanager, ledManager, plcManager)
 
 
@@ -767,11 +772,8 @@ def updateOrderData():
 @app.route("/classifyConfuseData", methods=['POST'])
 def classifyConfuseData():
     data = request.json
-    isUpdate = dataHandler.classify_ConfuseData(data)
-    if isUpdate:
-        return jsonify({"Message": "Thành công ! Mã sản phẩm đã được cập nhật vào đơn hàng hiện tại"})
-    else:
-        return jsonify({"Message": "Lỗi ! Đơn hàng hiện tại đã đầy, không thể cập nhật thêm"})
+    mess = dataHandler.classify_ConfuseData(data)
+    return jsonify(mess)
 
 # [TSWeb] get current calling data
 @app.route('/getCountingData', methods=['POST'])
