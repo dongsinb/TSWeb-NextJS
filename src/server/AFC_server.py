@@ -23,95 +23,93 @@ ocr_results = None
 
 class PLCManagement():
     def __init__(self):
+        # Initializing PLC connection states and related data
         self.clientPLC = {"Line1": None,}
                           # "Line2": None,
                           # "Line3": None,
                           # "Line4": None,
                           # "Line5": None}
 
-        # value of number products that are counted from server
+        # Value of number of products counted from server
         self.server_product_count = {"Line1": 0,}
                                       # "Line2": 0,
                                       # "Line3": 0,
                                       # "Line4": 0,
                                       # "Line5": 0}
-        self.self_PLC_infor = {"Line1": {"host":'192.168.100.164',
-                                    "port":10000},}
-                          # "Line2": {"host":'192.168.100.4',
-                          #           "port":502},
-                          # "Line3": {"host":'192.168.100.3',
-                          #           "port":502},
-                          # "Line4": {"host":'192.168.100.2',
-                          #           "port":502},
-                          # "Line5": {"host":'192.168.100.1',
-                          #           "port":502}}
-        self.lock = threading.Lock()  # To ensure thread-safe operations
-        self.connect_PLC()
-    def connect_PLC(self, lines=None):
-        if lines is None:
-            lines = list(self.clientPLC.keys())
-        def connect():
-            for line in lines:
-                if self.clientPLC[line] is None:
-                    try:
-                        with self.lock:  # Ensure thread-safe access to `clientPLC`
-                            self.clientPLC[line] = ModbusClient(
-                                host=self.self_PLC_infor[line]['host'],
-                                port=self.self_PLC_infor[line]['port'],
-                                unit_id=1,
-                                timeout=2.00,
-                                debug=True
-                            )
-                            if not self.clientPLC[line].open():
-                                raise ConnectionError(f"Failed to open connection to {line}")
-                    except Exception as e:
-                        print(f"Error connecting to PLC at {line}: {e}")
-                        self.clientPLC[line] = None
 
-        # Run connection PLC in a thread
-        thread = threading.Thread(target=connect, daemon=True)  # set daemon=True to terminate automatically when the main program exits.
-        thread.start()
+        # PLC information (IP and port)
+        self.self_PLC_infor = {"Line1": {"host": '192.168.100.164', "port": 10000},}
+                              # "Line2": {"host":'192.168.100.4', "port":502},
+                              # "Line3": {"host":'192.168.100.3', "port":502},
+                              # "Line4": {"host":'192.168.100.2', "port":502},
+                              # "Line5": {"host":'192.168.100.1', "port":502}}
+
+        self.lock = threading.Lock()  # To ensure thread-safe operations
+
+        # Start the background thread to handle PLC connections and disconnections
+        self.connection_thread = threading.Thread(target=self.auto_connect_PLC, daemon=True)
+        self.connection_thread.start()
+
+    def connect_PLC(self, line):
+        # This method is called only during initialization or reconnect attempts
+        try:
+            with self.lock:
+                # Initialize a new ModbusClient for the given line
+                self.clientPLC[line] = ModbusClient(
+                    host=self.self_PLC_infor[line]['host'],
+                    port=self.self_PLC_infor[line]['port'],
+                    unit_id=1,
+                    timeout=2.00,
+                    debug=True
+                )
+
+                # Try to open the connection to the PLC
+                if not self.clientPLC[line].open():
+                    raise ConnectionError(f"Failed to open connection to {line}")
+                print(f"Successfully connected to {line}")
+
+        except Exception as e:
+            print(f"Error connecting to PLC at {line}: {e}")
+            self.clientPLC[line] = None
+
+    def auto_connect_PLC(self):
+        # Continuously monitor and reconnect disconnected PLCs
+        while True:
+            for line, plc in self.clientPLC.items():
+                # If PLC is disconnected (None), attempt to reconnect
+                if plc is None:
+                    print(f"{line} is disconnected, attempting to reconnect...")
+                    self.connect_PLC(line)  # Reconnect the PLC
+            time.sleep(5)  # Check every 5 seconds
 
     def start_program(self, line):
         if self.clientPLC[line] is not None:
             _ = self.clientPLC[line].write_single_register(5, 1)
-        else:
-            self.connect_PLC([line])
 
     def finish_program(self, line):
         if self.clientPLC[line] is not None:
             _ = self.clientPLC[line].write_single_register(5, 0)
-        else:
-            self.connect_PLC([line])
 
     def run_conveyor(self, line):
         if self.clientPLC[line] is not None:
             _ = self.clientPLC[line].write_single_register(6, 0)
-        else:
-            self.connect_PLC([line])
 
     def stop_conveyor(self, line):
         if self.clientPLC[line] is not None:
             _ = self.clientPLC[line].write_single_register(6, 1)
-        else:
-            self.connect_PLC([line])
 
     def set_light_yellow(self, line):
         if self.clientPLC[line] is not None:
             _ = self.clientPLC[line].write_single_register(7, 1)
-        else:
-            self.connect_PLC([line])
 
     def set_light_green(self, line):
         if self.clientPLC[line] is not None:
             _ = self.clientPLC[line].write_single_register(7, 0)
-        else:
-            self.connect_PLC([line])
 
     def check_slots_pass(self, line):
-        # Read 5 holding registers starting from address 0, it means reading value of registers 0,1,2,3,4
+        # Read 5 holding registers starting from address 0
         slots = self.clientPLC[line].read_holding_registers(0, 5)
-        PLC_product_count = self.clientPLC[line].read_holding_registers(9, 1)  # value of number product that are counted from sensors
+        PLC_product_count = self.clientPLC[line].read_holding_registers(9, 1)  # Product count from sensors
         for idx, value in enumerate(slots):
             if int(PLC_product_count[0]) > value:
                 _ = self.clientPLC[line].write_single_register(idx, 0)
@@ -119,14 +117,12 @@ class PLCManagement():
     def set_current_NG_counting(self, line):
         if self.clientPLC[line] is not None:
             self.check_slots_pass(line)
-            # Read 5 holding registers starting from address 0, it means reading value of registers 0,1,2,3,4
+            # Read the 5 holding registers
             slots = self.clientPLC[line].read_holding_registers(0, 5)
             for idx, value in enumerate(slots):
                 if value == 0:
                     _ = self.clientPLC[line].write_single_register(idx, self.server_product_count[line])
                     break
-        else:
-            self.connect_PLC([line])
 
 class LedManagerment():
     def __init__(self):
@@ -574,9 +570,9 @@ class DBManagerment():
         return result
 
 
-# dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09slu1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
+dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09slu1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 # dbmanager = DBManagerment(uri="mongodb://localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
-dbmanager = DBManagerment(uri="mongodb://test:123@localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
+# dbmanager = DBManagerment(uri="mongodb://test:123@localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 plcManager = PLCManagement()
 #ledManager = LedManagerment()
 ledManager = None
@@ -807,5 +803,5 @@ def getLineInfor():
 
 if __name__ == '__main__':
     # app.run(host='192.168.88.132', port=5000)
-    app.run(host='192.168.100.134', port=5000)
-    # app.run(host='192.168.100.164', port=5000)
+    # app.run(host='192.168.100.134', port=5000)
+    app.run(host='192.168.100.164', port=5000)
