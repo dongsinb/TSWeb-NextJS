@@ -38,7 +38,7 @@ class PLCManagement():
                                       # "Line5": 0}
 
         # PLC information (IP and port)
-        self.self_PLC_infor = {"Line1": {"host": '192.168.100.164', "port": 10000},}
+        self.self_PLC_infor = {"Line1": {"host": '192.168.100.164', "port": 502},}
                               # "Line2": {"host":'192.168.100.4', "port":502},
                               # "Line3": {"host":'192.168.100.3', "port":502},
                               # "Line4": {"host":'192.168.100.2', "port":502},
@@ -65,8 +65,8 @@ class PLCManagement():
 
                 # Try to open the connection to the PLC
                 if not self.clientPLC[line].open():
-                    raise ConnectionError(f"Failed to open connection to {line}")
-                print(f"Successfully connected to {line}")
+                    raise ConnectionError(f"Failed to open connection to PLC at {line}")
+                print(f"Successfully connected to PLC at {line}")
 
         except Exception as e:
             print(f"Error connecting to PLC at {line}: {e}")
@@ -78,33 +78,51 @@ class PLCManagement():
             for line, plc in self.clientPLC.items():
                 # If PLC is disconnected (None), attempt to reconnect
                 if plc is None:
-                    print(f"{line} is disconnected, attempting to reconnect...")
+                    print(f"PLC at {line} is disconnected, attempting to reconnect...")
                     self.connect_PLC(line)  # Reconnect the PLC
             time.sleep(5)  # Check every 5 seconds
 
     def start_program(self, line):
         if self.clientPLC[line] is not None:
-            _ = self.clientPLC[line].write_single_register(5, 1)
+            try:
+                _ = self.clientPLC[line].write_single_register(5, 1)
+            except:
+                self.clientPLC[line] = None
 
     def finish_program(self, line):
         if self.clientPLC[line] is not None:
-            _ = self.clientPLC[line].write_single_register(5, 0)
+            try:
+                _ = self.clientPLC[line].write_single_register(5, 0)
+            except:
+                self.clientPLC[line] = None
 
     def run_conveyor(self, line):
         if self.clientPLC[line] is not None:
-            _ = self.clientPLC[line].write_single_register(6, 0)
+            try:
+                _ = self.clientPLC[line].write_single_register(6, 0)
+            except:
+                self.clientPLC[line] = None
 
     def stop_conveyor(self, line):
         if self.clientPLC[line] is not None:
-            _ = self.clientPLC[line].write_single_register(6, 1)
+            try:
+                _ = self.clientPLC[line].write_single_register(6, 1)
+            except:
+                self.clientPLC[line] = None
 
     def set_light_yellow(self, line):
         if self.clientPLC[line] is not None:
-            _ = self.clientPLC[line].write_single_register(7, 1)
+            try:
+                _ = self.clientPLC[line].write_single_register(7, 1)
+            except:
+                self.clientPLC[line] = None
 
     def set_light_green(self, line):
         if self.clientPLC[line] is not None:
-            _ = self.clientPLC[line].write_single_register(7, 0)
+            try:
+                _ = self.clientPLC[line].write_single_register(7, 0)
+            except:
+                self.clientPLC[line] = None
 
     def check_slots_pass(self, line):
         # Read 5 holding registers starting from address 0
@@ -116,64 +134,90 @@ class PLCManagement():
 
     def set_current_NG_counting(self, line):
         if self.clientPLC[line] is not None:
-            self.check_slots_pass(line)
-            # Read the 5 holding registers
-            slots = self.clientPLC[line].read_holding_registers(0, 5)
-            for idx, value in enumerate(slots):
-                if value == 0:
-                    _ = self.clientPLC[line].write_single_register(idx, self.server_product_count[line])
-                    break
+            try:
+                self.check_slots_pass(line)
+                # Read the 5 holding registers
+                slots = self.clientPLC[line].read_holding_registers(0, 5)
+                for idx, value in enumerate(slots):
+                    if value == 0:
+                        _ = self.clientPLC[line].write_single_register(idx, self.server_product_count[line])
+                        break
+            except:
+                self.clientPLC[line] = None
 
 class LedManagerment():
     def __init__(self):
-        self.client_socket = {"Line1" : None,
-                              "Line2" : None,
-                              "Line3" : None,
-                              "Line4" : None,
-                              "Line5" : None}
+        self.clientLed = {"Line1" : None,}
+                              # "Line2" : None,
+                              # "Line3" : None,
+                              # "Line4" : None,
+                              # "Line5" : None}
 
-        # Connect led server 1
-        client_socket1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket1.connect(('192.168.43.250', 10000))
-        self.client_socket["Line1"] = client_socket1
+        # PLC information (IP and port)
+        self.self_Led_infor = {"Line1": {"host": '192.168.100.164', "port": 10000}, }
+        # "Line2": {"host":'192.168.100.4', "port":10000},
+        # "Line3": {"host":'192.168.100.3', "port":10000},
+        # "Line4": {"host":'192.168.100.2', "port":10000},
+        # "Line5": {"host":'192.168.100.1', "port":10000}}
 
-        # Connect led server 2
-        client_socket2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket2.connect(('192.168.43.251', 10000))
-        self.client_socket["Line2"] = client_socket2
+        self.lock = threading.Lock()  # To ensure thread-safe operations
 
-        # Connect led server 3
-        client_socket3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket3.connect(('192.168.43.252', 10000))
-        self.client_socket["Line3"] = client_socket3
+        # Start the background thread to handle PLC connections and disconnections
+        self.connection_thread = threading.Thread(target=self.auto_connect_Led, daemon=True)
+        self.connection_thread.start()
 
-        # Connect led server 4
-        client_socket4 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket4.connect(('192.168.43.253', 10000))
-        self.client_socket["Line4"] = client_socket4
+    def connect_Led(self, line):
+        # This method is called only during initialization or reconnect attempts
+        try:
+            with self.lock:
+                # Initialize a new Led socket for the given line
+                self.clientLed[line] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                try:
+                    self.clientLed[line].connect((self.self_Led_infor[line]['host'], self.self_Led_infor[line]['port']))
+                    print(f"Successfully connected to Led at {line}")
+                except:
+                    raise ConnectionError(f"Failed to open connection to Led at {line}")
+        except Exception as e:
+            print(f"Error connecting to Led at {line}: {e}")
+            self.clientLed[line] = None
 
-        # Connect led server 5
-        client_socket5 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket5.connect(('192.168.43.254', 10000))
-        self.client_socket["Line5"] = client_socket5
+    def auto_connect_Led(self):
+        # Continuously monitor and reconnect disconnected Leds
+        while True:
+            for line, led in self.clientLed.items():
+                # If Led is disconnected (None), attempt to reconnect
+                if led is None:
+                    print(f"Led at {line} is disconnected, attempting to reconnect...")
+                    self.connect_Led(line)  # Reconnect the Led
+            time.sleep(5)  # Check every 5 seconds
 
-    def updateLed(self, line, total_count, orders, is_counting):
-        if is_counting:
-            message = "*[H1][C1]Đang đếm*[H2][C1]Tổng: {}".format(total_count)
-            line_count = 3
-            for productCode in orders.keys():
-                productCount = orders[productCode]["ProductCount"]
-                currentQuantity = orders[productCode]["CurrentQuantity"]
-                if currentQuantity < productCount:
-                    message += "*[H{}][C1]{}: {}/{}".format(line_count,productCode,currentQuantity,productCount)
-                    line_count += 1
-                    if line_count > 8:
-                        break
-            message += "[!]"
-        else:
-            message = "*[H1][C5]Dừng đếm[!]"
+    def updateLed(self, line, plateNumber, count, total_count, current_productCode, orders, is_counting):
+        try:
+            if is_counting:
+                message = "*[H1][C4]{}[H2][C5]SL:{}/{}[H3][C4]{}[H4][C5]{}/{}".format(plateNumber, count, total_count, current_productCode, orders[current_productCode]["CurrentQuantity"], orders[current_productCode]["ProductCount"])
+                line_count = 5
+                for productCode in orders.keys():
+                    if productCode != '_id':
+                        productCount = orders[productCode]["ProductCount"]
+                        currentQuantity = orders[productCode]["CurrentQuantity"]
+                        if productCode != current_productCode:
+                            if currentQuantity < productCount:
+                                message += "[H{}][C2]{}: {}/{}".format(line_count, productCode, currentQuantity, productCount)
+                                line_count += 1
+                                if line_count > 8:
+                                    break
+                            else:
+                                message += "[H{}][C7]{}: {}/{}".format(line_count, productCode, currentQuantity, productCount)
+                                line_count += 1
+                                if line_count > 8:
+                                    break
+                message += "[!]"
+            else:
+                message = "*[H1][C1]Các đơn hàng đã đầy[!]"
 
-        self.client_socket[line].sendall(message.encode())
+            self.clientLed[line].sendall(message.encode())
+        except:
+            self.clientLed[line] = None
 
 
 class CallingDataHandler():
@@ -198,34 +242,51 @@ class CallingDataHandler():
                                  "Line5" : {}}
             self.orders_status = {"Line1" : {"currentOrderName": "",
                                             "product": {},
+                                             "count": 0,
                                             "total_count": 0},
                                   "Line2": {"currentOrderName": "",
                                             "product": {},
+                                            "count": 0,
                                             "total_count": 0},
                                   "Line3": {"currentOrderName": "",
                                             "product": {},
+                                            "count": 0,
                                             "total_count": 0},
                                   "Line4": {"currentOrderName": "",
                                             "product": {},
+                                            "count": 0,
                                             "total_count": 0},
                                   "Line5": {"currentOrderName": "",
                                             "product": {},
+                                            "count": 0,
                                             "total_count": 0}}
         else:   # reset specific line
             self.line_platenumber_data[line] = ""
             self.calling_data[line] = {}
             self.orders_status[line] = {"currentOrderName": "",
                                         "product": {},
+                                        "count": 0,
                                         "total_count": 0}
 
     def init_orders_status(self, line):
         self.orders_status[line] = {"currentOrderName": "",
                                     "product": {},
+                                    "count": 0,
                                     "total_count": 0}
         if self.calling_data[line]["IsCombine"]:
-            self.orders_status[line]["currentOrderName"] = "ordername"
+            self.orders_status[line]["currentOrderName"] = "ordername"  # default ordername of combine order is ordername
+            # get total product count in all orders of current car
+            for productCode, product in self.calling_data[line]["Orders"]["ordername"].items():
+                if productCode != "_id":
+                    self.orders_status[line]["total_count"] += self.calling_data[line]["Orders"]["ordername"][productCode]["ProductCount"]
         else:
-            self.orders_status[line]["currentOrderName"] = list(self.calling_data[line]["Orders"].keys())[0]
+            self.orders_status[line]["currentOrderName"] = list(self.calling_data[line]["Orders"].keys())[0]    # set first ordername of order list is current ordername
+            # get total product count in all orders of current car
+            for ordername in self.calling_data[line]["Orders"].keys():
+                for productCode, product in self.calling_data[line]["Orders"][ordername].items():
+                    if productCode != "_id":
+                        self.orders_status[line]["total_count"] += self.calling_data[line]["Orders"][ordername][productCode]["ProductCount"]
+
         for productCode, product in self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]].items():
             if productCode != "_id":
                 if product["CurrentQuantity"] < product["ProductCount"]:
@@ -286,8 +347,7 @@ class CallingDataHandler():
         weight = productCode.split('-')[-1]
         if weight not in self.not_count_weight:
             isUpdate = False
-            self.orders_status[line]["total_count"] += 1
-            #self.ledManager.updateLed(line, self.orders_status[line]["total_count"], self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]], is_counting=True)
+            self.orders_status[line]["count"] += 1
             if self.calling_data[line]["IsCombine"]:
                 if self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] < self.calling_data[line]["Orders"]["ordername"][productCode]["ProductCount"]:
                     self.calling_data[line]["Orders"]["ordername"][productCode]["CurrentQuantity"] += 1
@@ -309,7 +369,9 @@ class CallingDataHandler():
             self.check_AllOrderFull(line)
             if self.calling_data[line]["IsAllOrderFull"]:
                 self.dbmanager.update_finish_status(self.calling_data[line]["DateTimeIn"], self.calling_data[line]["PlateNumber"])
-                #self.ledManager.updateLed(line, self.orders_status[line]["total_count"], self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]], is_counting=False)
+                self.ledManager.updateLed(line, None, None, None, None, None, is_counting=False)
+            else:
+                self.ledManager.updateLed(line, self.line_platenumber_data[line], self.orders_status[line]["count"], self.orders_status[line]["total_count"], productCode, self.calling_data[line]["Orders"][self.orders_status[line]["currentOrderName"]], is_counting=True)
             return isUpdate
         else:   # do not count
             return True
@@ -574,8 +636,8 @@ dbmanager = DBManagerment(uri="mongodb+srv://quannguyen:quanmongo94@cluster0.b09
 # dbmanager = DBManagerment(uri="mongodb://localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 # dbmanager = DBManagerment(uri="mongodb://test:123@localhost:27017", dbname="AFC", OrderCollection="OrderData", ConfuseCollection="ConfuseData")
 plcManager = PLCManagement()
-#ledManager = LedManagerment()
-ledManager = None
+ledManager = LedManagerment()
+#ledManager = None
 dataHandler = CallingDataHandler(dbmanager, ledManager, plcManager)
 
 
@@ -704,7 +766,11 @@ def countingData():
         productCode = data["ProductCode"]
         dataHandler.counting(line, productCode)
     else:
-        dbmanager.insert_ConfuseData(data, dataHandler.calling_data[line]['PlateNumber'], dataHandler.orders_status[line]['currentOrderName'], list(dataHandler.orders_status[line]['product'].keys()))
+        productCode_list = []
+        for productCode, isFull in dataHandler.orders_status[line]['product'].items():
+            if not isFull:
+                productCode_list.append(productCode) # filter all productCode is full
+        dbmanager.insert_ConfuseData(data, dataHandler.calling_data[line]['PlateNumber'], dataHandler.orders_status[line]['currentOrderName'], productCode_list)
         dataHandler.calling_data[line]["IsError"] = True
         plcManager.stop_conveyor(line)
 
