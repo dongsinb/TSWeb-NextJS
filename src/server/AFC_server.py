@@ -194,7 +194,7 @@ class LedManagerment():
     def updateLed(self, line, plateNumber, count, total_count, current_productCode, orders, is_counting):
         try:
             if is_counting:
-                message = "*[H1][C4]{}[H2][C5]SL:{}/{}[H3][C4]{}[H4][C5]{}/{}".format(plateNumber, count, total_count, current_productCode, orders[current_productCode]["CurrentQuantity"], orders[current_productCode]["ProductCount"])
+                message = "*[H1][C4]{}[H2][C5]SL:{}|{}[H3][C4]{}[H4][C5]{}|{}".format(plateNumber, count, total_count, current_productCode, orders[current_productCode]["CurrentQuantity"], orders[current_productCode]["ProductCount"])
                 line_count = 5
                 for productCode in orders.keys():
                     if productCode != '_id':
@@ -202,12 +202,12 @@ class LedManagerment():
                         currentQuantity = orders[productCode]["CurrentQuantity"]
                         if productCode != current_productCode:
                             if currentQuantity < productCount:
-                                message += "[H{}][C2]{}: {}/{}".format(line_count, productCode, currentQuantity, productCount)
+                                message += "[H{}][C2]{}: {}|{}".format(line_count, productCode, currentQuantity, productCount)
                                 line_count += 1
                                 if line_count > 8:
                                     break
                             else:
-                                message += "[H{}][C7]{}: {}/{}".format(line_count, productCode, currentQuantity, productCount)
+                                message += "[H{}][C7]{}: {}|{}".format(line_count, productCode, currentQuantity, productCount)
                                 line_count += 1
                                 if line_count > 8:
                                     break
